@@ -37,77 +37,16 @@ class _HomeState extends State<Home> {
   String _searchQuery = "";
 
   // Example list of donors (You can fetch this from a backend or a local source)
-  final List<Map<String, String>> _donors = [];
+  // final List<Map<String, String>> _donors = [];
 
-  // Controllers for adding new donor
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _locationController = TextEditingController();
 
-  // Method to add a new donor
-  void _addDonor(String name, String location) {
-    setState(() {
-      _donors.add({
-        "name": name,
-        "location": location,
-      });
-    });
-    Navigator.of(context).pop(); // Close the dialog after adding
-  }
+
   final DatabaseService _databaseService = DatabaseService.instance;
 
   @override
   Widget build(BuildContext context) {
     // Filter the list based on search query
-    List<Map<String, String>> filteredDonors = _donors
-        .where((donor) =>
-            donor["name"]!.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-            donor["location"]!
-                .toLowerCase()
-                .contains(_searchQuery.toLowerCase()))
-        .toList();
-
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Open dialog to add a new donor
-          showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: const Text('Add Request'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: _nameController,
-                    decoration: const InputDecoration(hintText: "Patient Name"),
-                  ),
-                  TextField(
-                    controller: _locationController,
-                    decoration: const InputDecoration(hintText: "Location"),
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    _addDonor(_nameController.text, _locationController.text);
-                    _nameController.clear();
-                    _locationController.clear();
-                  },
-                  child: const Text('Add'),
-                ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  child: const Text('Cancel'),
-                ),
-              ],
-            ),
-          );
-        },
-        child: const Icon(Icons.add),
-      ),
       body: SizedBox(
         height: MediaQuery.of(context).size.height,
         width: MediaQuery.of(context).size.width,
@@ -135,7 +74,7 @@ class _HomeState extends State<Home> {
             // List of donors
             Expanded(
               child:FutureBuilder(
-                future: _databaseService.getTask(),
+                future: _databaseService.getRequest(),
                 builder:  (context,snapshot){
                   return ListView.builder(
                       itemCount: snapshot.data?.length ?? 0,
@@ -159,7 +98,9 @@ class _HomeState extends State<Home> {
                                   children: <Widget>[
                                     TextButton(
                                       child: const Text('Details'),
-                                      onPressed: () {/* ... */},
+                                      onPressed: () {
+
+                                      },
                                     ),
                                     const SizedBox(width: 8),
                                   ],

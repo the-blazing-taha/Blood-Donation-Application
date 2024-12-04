@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 
 class Details extends StatefulWidget {
-  const Details({Key? key}) : super(key: key);
+  const Details({super.key});
 
   @override
   _DetailsState createState() => _DetailsState();
@@ -15,7 +15,7 @@ class _DetailsState extends State<Details> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'Details',
           style: TextStyle(
             fontWeight: FontWeight.bold,
@@ -23,7 +23,7 @@ class _DetailsState extends State<Details> {
           ),
         ),
         leading: IconButton(
-          icon: Icon(
+          icon: const Icon(
             Icons.menu,
             color: Colors.white,
           ),
@@ -34,7 +34,7 @@ class _DetailsState extends State<Details> {
         backgroundColor: Colors.red[900],
         centerTitle: true,
       ),
-      body: Container(
+      body: SizedBox(
         height: MediaQuery.of(context).size.height,
         width: MediaQuery.of(context).size.width,
         child: Padding(
@@ -42,14 +42,14 @@ class _DetailsState extends State<Details> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(
+              const SizedBox(
                   height: 10,
               ),
-              Text("Blood needed before:"),
-              SizedBox(
+              const Text("Blood needed before:"),
+              const SizedBox(
                 height: 5,
               ),
-              Align(
+              const Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
                   '10 February, 2024',
@@ -58,14 +58,14 @@ class _DetailsState extends State<Details> {
                   ),
                 ),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 20,
               ),
-              Text("Patient Name:"),
-              SizedBox(
+              const Text("Patient Name:"),
+              const SizedBox(
                 height: 5,
               ),
-              Align(
+              const Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
                   'Taha Ahmad',
@@ -74,14 +74,14 @@ class _DetailsState extends State<Details> {
                   ),
                 ),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 20,
               ),
-              Text("Location:"),
-              SizedBox(
+              const Text("Location:"),
+              const SizedBox(
                 height: 5,
               ),
-              Align(
+              const Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
                   'Sukh Chayn Gardens, Pattoki',
@@ -90,14 +90,14 @@ class _DetailsState extends State<Details> {
                   ),
                 ),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 20,
               ),
-              Text("Blood Group:"),
-              SizedBox(
+              const Text("Blood Group:"),
+              const SizedBox(
                 height: 5,
               ),
-              Align(
+              const Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
                   'A+',
@@ -106,14 +106,14 @@ class _DetailsState extends State<Details> {
                   ),
                 ),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 20,
               ),
-              Text("Contact Number:"),
-              SizedBox(
+              const Text("Contact Number:"),
+              const SizedBox(
                 height: 5,
               ),
-              Align(
+              const Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
                   '+92 3221040476',
@@ -122,14 +122,14 @@ class _DetailsState extends State<Details> {
                   ),
                 ),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 20,
               ),
-              Text("Cause:"),
-              SizedBox(
+              const Text("Cause:"),
+              const SizedBox(
                 height: 5,
               ),
-              Align(
+              const Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
 
@@ -139,14 +139,14 @@ class _DetailsState extends State<Details> {
                   ),
                 ),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 20,
               ),
-              Text("Number of Bags:"),
-              SizedBox(
+              const Text("Number of Bags:"),
+              const SizedBox(
                 height: 5,
               ),
-              Align(
+              const Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
                   '2',
@@ -155,14 +155,14 @@ class _DetailsState extends State<Details> {
                   ),
                 ),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 20,
               ),
-              Text("Others:"),
-              SizedBox(
+              const Text("Others:"),
+              const SizedBox(
                 height: 5,
               ),
-              Align(
+              const Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
                   'Needed Urgently',
@@ -171,7 +171,7 @@ class _DetailsState extends State<Details> {
                   ),
                 ),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 15,
               ),
               Container(
@@ -183,13 +183,13 @@ class _DetailsState extends State<Details> {
                   style: ElevatedButton.styleFrom(
                     foregroundColor: Colors.white,
                     backgroundColor: Colors.red[900], // Background color
-                    padding: EdgeInsets.symmetric(horizontal: 120, vertical: 10), // Padding
+                    padding: const EdgeInsets.symmetric(horizontal: 120, vertical: 10), // Padding
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10), // Rounded corners
                     ),
                     elevation: 5, // Shadow elevation
                   ),
-                  child: Text(
+                  child: const Text(
                     'Call',
                     style: TextStyle(
                       fontSize: 18, // Font size
@@ -198,7 +198,7 @@ class _DetailsState extends State<Details> {
                   ),
                 ),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 10,
               ),
               Container(
@@ -210,14 +210,14 @@ class _DetailsState extends State<Details> {
                   style: ElevatedButton.styleFrom(
                     foregroundColor: Colors.red[900],
                     // backgroundColor: , // Background color
-                    padding: EdgeInsets.symmetric(horizontal: 100, vertical: 10), // Padding
+                    padding: const EdgeInsets.symmetric(horizontal: 100, vertical: 10), // Padding
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10), // Rounded corners
                     ),
 
                     elevation: 5, // Shadow elevation
                   ),
-                  child: Text(
+                  child: const Text(
                     'Message',
                     style: TextStyle(
                       fontSize: 18, // Font size

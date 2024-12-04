@@ -65,7 +65,7 @@ class DatabaseService {
     });
   }
 
-  Future<List<Request>> getTask() async {
+  Future<List<Request>> getRequest() async {
     final db = await database;
     final data = await db.query(requestsTableName);
     List<Request> requests = data
@@ -84,7 +84,7 @@ class DatabaseService {
     return requests;
   }
 
-  Future<void> updateTask(int id, String name, String contact, String hospital, String residence, String case_, int bags, String bloodGroup,String gender) async {
+  Future<void> updateRequest(int id, String name, String contact, String hospital, String residence, String case_, int bags, String bloodGroup,String gender) async {
     final db = await database;
     await db.update(
       requestsTableName,
@@ -102,7 +102,7 @@ class DatabaseService {
     );
   }
 
-  Future<void> deleteTask(int id) async {
+  Future<void> deleteRequest(int id) async {
     final db = await database;
     try {
       await db

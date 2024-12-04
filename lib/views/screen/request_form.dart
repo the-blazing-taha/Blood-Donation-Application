@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 
+import '../../controllers/databaseController.dart';
+
 
 class RequestForm extends StatefulWidget {
   const RequestForm({super.key});
@@ -24,7 +26,7 @@ class _RequestFormState extends State<RequestForm> {
    String residence="";
    String _case="";
    String contact="";
-
+   String details="";
   final List<bool> _selectedGenders = <bool>[
     false,
     false,
@@ -64,6 +66,7 @@ class _RequestFormState extends State<RequestForm> {
   static List<String> list = <String>['Anemia', 'Cancer', 'Hemophilia', 'Sickle cell disease'];
 
   bool vertical = false;
+  final DatabaseService _databaseService = DatabaseService.instance;
 
   @override
   Widget build(BuildContext context) {
@@ -338,7 +341,46 @@ class _RequestFormState extends State<RequestForm> {
                       ),
                     ),
 
-
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    const Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Details',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    TextFormField(
+                      onChanged: (value){
+                        setState(() {
+                          details=value;
+                        });
+                      },
+                      decoration: InputDecoration(
+                        // label: const Text('Number of Bags'),
+                        hintText: 'e.g I have been suffering a lot so kindly give me the blood.',
+                        enabledBorder: OutlineInputBorder(
+                          borderSide:
+                          BorderSide(color: Colors.red[900]!, width: 2.5),
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: Colors.red[900]!,
+                            width: 3,
+                          ),
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        errorBorder: OutlineInputBorder(
+                          borderSide: const BorderSide(
+                            color: Colors.red,
+                            width: 2,
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
                     const SizedBox(
                       height: 20,
                     ),
@@ -459,7 +501,7 @@ class _RequestFormState extends State<RequestForm> {
                       alignment: Alignment.center,
                       child: ElevatedButton(
                         onPressed:()async{
-
+                          _databaseService.addRequest(patient, contact, hospital, residence, _case, bags, bloodGroup, gender);
                         },
                         style: ElevatedButton.styleFrom(
                           foregroundColor: Colors.white,
