@@ -1,4 +1,4 @@
-# blood
+# Life Sync
 
 A new Flutter project.
 
