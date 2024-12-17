@@ -1,4 +1,4 @@
-import 'package:blood/views/screen/auth/registerScreen.dart';
+import 'package:blood/views/auth/registerScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../controllers/auth_controller.dart';

@@ -1,12 +1,18 @@
 import 'dart:core';
-import 'package:blood/views/screen/home.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
-
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 import '../../controllers/databaseController.dart';
 
 
+// class RequestForm extends StatefulWidget {
+//   const RequestForm({super.key});
+//
+//   @override
+//   State<RequestForm> createState() => _RequestFormState();
+// }
 class RequestForm extends StatefulWidget {
   const RequestForm({super.key});
 
@@ -14,19 +20,86 @@ class RequestForm extends StatefulWidget {
   State<RequestForm> createState() => _RequestFormState();
 }
 
+// class _RequestFormState extends State<RequestForm> {
+//   @override
+//   Widget build(BuildContext context) {
+//     return const Placeholder();
+//   }
+// }
+
 class _RequestFormState extends State<RequestForm> {
+  String? _currentAddress;
+  Position? _currentPosition;
+
+
+  Future<void> _getCurrentPosition() async {
+    final hasPermission = await _handleLocationPermission();
+    if (!hasPermission) return;
+    await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high)
+        .then((Position position) {
+      setState(() => _currentPosition = position);
+    }).catchError((e) {
+      debugPrint(e);
+    });
+  }
+
+
+  Future<bool> _handleLocationPermission() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(
+              'Location services are disabled. Please enable the services')));
+      return false;
+    }
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Location permissions are denied')));
+        return false;
+      }
+    }
+    if (permission == LocationPermission.deniedForever) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(
+              'Location permissions are permanently denied, we cannot request permissions.')));
+      return false;
+    }
+    return true;
+  }
+
+  Future<void> _getAddressFromLatLng(Position position) async {
+    await placemarkFromCoordinates(
+        _currentPosition!.latitude, _currentPosition!.longitude)
+        .then((List<Placemark> placemarks) {
+      Placemark place = placemarks[0];
+      setState(() {
+        _currentAddress = '${place.street}, ${place.subLocality}, '
+            '${place.subAdministrativeArea}, ${place.postalCode}';
+      });
+    }).catchError((e) {
+      debugPrint(e);
+    });
+  }
+
 
   final GlobalKey<FormState> formkey = GlobalKey<FormState>();
 
-   String bloodGroup = '';
-   String gender = '';
-   int bags=0;
-   String hospital='';
-   String patient="";
-   String residence="";
-   String _case="";
-   String contact="";
-   String details="";
+  String bloodGroup = '';
+  String gender = '';
+  int bags = 0;
+  String hospital = '';
+  String patient = "";
+  String residence = "";
+  String _case = "";
+  String contact = "";
+  String details = "";
   final List<bool> _selectedGenders = <bool>[
     false,
     false,
@@ -62,8 +135,12 @@ class _RequestFormState extends State<RequestForm> {
     const Text('AB-'),
     const Text('O-'),
   ];
-
-  static List<String> list = <String>['Anemia', 'Cancer', 'Hemophilia', 'Sickle cell disease'];
+  List<String> list = <String>[
+    'Anemia',
+    'Cancer',
+    'Hemophilia',
+    'Sickle cell disease'
+  ];
 
   bool vertical = false;
   final DatabaseService _databaseService = DatabaseService.instance;
@@ -116,7 +193,7 @@ class _RequestFormState extends State<RequestForm> {
                         hintText: 'e.g Mohammad Aliar',
                         enabledBorder: OutlineInputBorder(
                           borderSide:
-                              BorderSide(color: Colors.red[900]!, width: 2.5),
+                          BorderSide(color: Colors.red[900]!, width: 2.5),
                           borderRadius: BorderRadius.circular(5),
                         ),
                         focusedBorder: OutlineInputBorder(
@@ -277,8 +354,8 @@ class _RequestFormState extends State<RequestForm> {
                               (states) => states.contains(WidgetState.focused)
                               ?  const OutlineInputBorder(borderSide: BorderSide(color: Colors.red))
                               :  const OutlineInputBorder(
-                            borderSide: BorderSide(color: Colors.red,width: 3,),
-                                  borderRadius:BorderRadius.all(Radius.circular(10.0))
+                              borderSide: BorderSide(color: Colors.red,width: 3,),
+                              borderRadius:BorderRadius.all(Radius.circular(10.0))
                           ),
 
                         ),
@@ -456,7 +533,7 @@ class _RequestFormState extends State<RequestForm> {
                       spacing: 13.0, // Add spacing between buttons
                       runSpacing: 13.0, // Add spacing between rows
                       children:
-                          List<Widget>.generate(genders.length, (int index) {
+                      List<Widget>.generate(genders.length, (int index) {
                         return ChoiceChip(
                           showCheckmark: false, // Remove the tick mark
                           padding: const EdgeInsets.symmetric(
@@ -500,8 +577,11 @@ class _RequestFormState extends State<RequestForm> {
                     Container(
                       alignment: Alignment.center,
                       child: ElevatedButton(
-                        onPressed:()async{
+                        onPressed:() async {
                           _databaseService.addRequest(patient, contact, hospital, residence, _case, bags, bloodGroup, gender);
+                          setState(() {
+
+                          });
                         },
                         style: ElevatedButton.styleFrom(
                           foregroundColor: Colors.white,
@@ -530,4 +610,7 @@ class _RequestFormState extends State<RequestForm> {
       ),
     );
   }
+
+
 }
+

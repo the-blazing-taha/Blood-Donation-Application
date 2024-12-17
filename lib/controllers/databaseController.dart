@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:blood/models/requests.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -16,19 +18,19 @@ class DatabaseService {
   }
 
   final String requestsTableName = "requests";
-  final String _requestIdColumnName = "_id"; // Corrected to match your model
+  final String _requestIdColumnName = "_id";
   final String _patientNameColumnName = "name";
   final String _contactColumnName = "contact";
   final String _hospitalNameColumn= "hospital";
   final String _residenceNameColumn = "residence";
-  final String _caseNameColumn = "case";
+  final String _caseNameColumn = "case_";
   final String _bagsNumberColumn = "bags";
   final String _bloodGroupColumn = "bloodGroup";
   final String _genderTypeColumn = "gender";
 
   Future<Database> getDatabase() async {
     final databaseDirPath = await getDatabasesPath();
-    final databasePath = join(databaseDirPath, "bloodbank.db");
+    final databasePath = join(databaseDirPath, "bloodsystem.db");
     final database = await openDatabase(
       databasePath,
       version: 1,
@@ -70,13 +72,13 @@ class DatabaseService {
     final data = await db.query(requestsTableName);
     List<Request> requests = data
         .map((e) => Request(
-      id: e[_requestIdColumnName] as int, // Use the correct column name
+      id: e[_requestIdColumnName] as int,
       name: e[_patientNameColumnName] as String,
       contact: e[_contactColumnName] as String,
       hospital: e[_hospitalNameColumn] as String,
       residence: e[_residenceNameColumn] as String,
       case_: e[_residenceNameColumn] as String,
-      bags: e[_bagsNumberColumn] as String,
+      bags: e[_bagsNumberColumn] as int,
       bloodGroup: e[_bloodGroupColumn] as String,
         gender: e[_genderTypeColumn] as String
     ))

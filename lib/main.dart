@@ -1,12 +1,14 @@
 import 'dart:io';
-import 'package:blood/views/screen/home.dart';
-import 'package:blood/views/screen/profile.dart';
-import 'package:blood/views/screen/registerdonor.dart';
-import 'package:blood/views/screen/request_form.dart';
+import 'package:blood/controllers/databaseController.dart';
+import 'package:blood/views/admin/inventory.dart';
+import 'package:blood/views/user/home.dart';
+import 'package:blood/views/user/registerdonor.dart';
+import 'package:blood/views/user/request_form.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
+
 
 
 void setLocale() {
@@ -39,7 +41,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
       // home: NavigationExample(),
-      home: NavigationExample(),
+      home: Inventory(),
     );
   }
 }
@@ -81,7 +83,7 @@ class _NavigationExampleState extends State<NavigationExample> {
     });
   }
   static List<String> list = <String>['Anemia', 'Cancer', 'Hemophilia', 'Sickle cell disease'];
-
+  final DatabaseService databaseService = DatabaseService.instance;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -127,7 +129,7 @@ class _NavigationExampleState extends State<NavigationExample> {
         opacity: 0.6,
         child: Drawer(
           backgroundColor: Colors.red[900],
-        
+
           child: ListView(
             padding: EdgeInsets.zero,
             children: [
@@ -233,9 +235,9 @@ class _NavigationExampleState extends State<NavigationExample> {
         ],
       ),
       body: <Widget>[
-          Home(),
+          const Home(),
           const RequestForm(),
-          RequestDonor(),
+          const RequestDonor(),
           // Profile(),
         ][currentPageIndex],
 

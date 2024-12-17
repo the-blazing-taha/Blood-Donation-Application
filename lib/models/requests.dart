@@ -5,7 +5,7 @@ class Request {
   final String hospital;
   final String residence;
   final String case_;
-  final String bags;
+  final int bags;
   final String bloodGroup;
   final String gender;
 

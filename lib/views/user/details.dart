@@ -1,18 +1,45 @@
-import 'dart:async';
+import 'package:blood/models/requests.dart';
 import 'package:flutter/material.dart';
 
+import '../../controllers/databaseController.dart';
 
 class Details extends StatefulWidget {
-  const Details({super.key});
+  final dynamic patient;
+  final dynamic contact;
+  final dynamic hospital;
+  final dynamic residence;
+  final dynamic case_;
+  final dynamic bags;
+  final dynamic bloodGroup;
+  final dynamic gender;
+
+  const Details(
+      {super.key,
+      required this.patient,
+      required this.contact,
+      required this.hospital,
+      required this.residence,
+      required this.case_,
+      required this.bags,
+      required this.bloodGroup,
+      required this.gender});
 
   @override
-  _DetailsState createState() => _DetailsState();
+  DetailsState createState() => DetailsState();
 }
 
-class _DetailsState extends State<Details> {
-
+class DetailsState extends State<Details> {
   @override
   Widget build(BuildContext context) {
+    final String patientName = widget.patient; // Assuming patient is a String
+    final String contact = widget.contact;
+    final String hospital = widget.hospital;
+    final String residence = widget.residence;
+    final String case_ = widget.case_; // Assuming case_ is a String
+    final int bags = widget.bags; // Assuming bags is an int
+    final String bloodGroup = widget.bloodGroup;
+    final String gender = widget.gender;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -43,7 +70,7 @@ class _DetailsState extends State<Details> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(
-                  height: 10,
+                height: 10,
               ),
               const Text("Blood needed before:"),
               const SizedBox(
@@ -65,11 +92,11 @@ class _DetailsState extends State<Details> {
               const SizedBox(
                 height: 5,
               ),
-              const Align(
+               Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  'Taha Ahmad',
-                  style: TextStyle(
+                  patientName,
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -81,11 +108,11 @@ class _DetailsState extends State<Details> {
               const SizedBox(
                 height: 5,
               ),
-              const Align(
+               Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  'Sukh Chayn Gardens, Pattoki',
-                  style: TextStyle(
+                  residence,
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -97,11 +124,11 @@ class _DetailsState extends State<Details> {
               const SizedBox(
                 height: 5,
               ),
-              const Align(
+               Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  'A+',
-                  style: TextStyle(
+                  bloodGroup,
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -113,11 +140,11 @@ class _DetailsState extends State<Details> {
               const SizedBox(
                 height: 5,
               ),
-              const Align(
+               Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  '+92 3221040476',
-                  style: TextStyle(
+                  contact,
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -129,12 +156,11 @@ class _DetailsState extends State<Details> {
               const SizedBox(
                 height: 5,
               ),
-              const Align(
+               Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-
-                  'Cancer',
-                  style: TextStyle(
+                  case_,
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -146,11 +172,11 @@ class _DetailsState extends State<Details> {
               const SizedBox(
                 height: 5,
               ),
-              const Align(
+               Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  '2',
-                  style: TextStyle(
+                  bags.toString(),
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -183,9 +209,11 @@ class _DetailsState extends State<Details> {
                   style: ElevatedButton.styleFrom(
                     foregroundColor: Colors.white,
                     backgroundColor: Colors.red[900], // Background color
-                    padding: const EdgeInsets.symmetric(horizontal: 120, vertical: 10), // Padding
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 120, vertical: 10), // Padding
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10), // Rounded corners
+                      borderRadius:
+                          BorderRadius.circular(10), // Rounded corners
                     ),
                     elevation: 5, // Shadow elevation
                   ),
@@ -210,9 +238,11 @@ class _DetailsState extends State<Details> {
                   style: ElevatedButton.styleFrom(
                     foregroundColor: Colors.red[900],
                     // backgroundColor: , // Background color
-                    padding: const EdgeInsets.symmetric(horizontal: 100, vertical: 10), // Padding
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 100, vertical: 10), // Padding
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10), // Rounded corners
+                      borderRadius:
+                          BorderRadius.circular(10), // Rounded corners
                     ),
 
                     elevation: 5, // Shadow elevation
@@ -230,9 +260,6 @@ class _DetailsState extends State<Details> {
           ),
         ),
       ),
-
-
-
     );
   }
 }

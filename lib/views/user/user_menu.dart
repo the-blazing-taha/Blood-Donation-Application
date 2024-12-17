@@ -34,14 +34,14 @@ class _UserMenuState extends State<UserMenu> {
                           // Add your onPressed code here!
                         },
                         style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: CupertinoColors.systemYellow, width: 10),
-                          shape: CircleBorder(),
-                          padding: EdgeInsets.all(20),
+                          side: const BorderSide(color: CupertinoColors.systemYellow, width: 10),
+                          shape: const CircleBorder(),
+                          padding: const EdgeInsets.all(20),
                         ),
-                        child: Icon(Icons.person_outline_outlined, size: 60, color: CupertinoColors.systemYellow),
+                        child: const Icon(Icons.person_outline_outlined, size: 60, color: CupertinoColors.systemYellow),
                       ),
                       const SizedBox(height: 20),
-                      Text(
+                      const Text(
                         "Profile",
                         style: TextStyle(
                           color: CupertinoColors.systemYellow,
@@ -59,9 +59,9 @@ class _UserMenuState extends State<UserMenu> {
                           // Add your onPressed code here!
                         },
                         style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: Colors.orange, width: 10),
-                          shape: CircleBorder(),
-                          padding: EdgeInsets.all(20),
+                          side: const BorderSide(color: Colors.orange, width: 10),
+                          shape: const CircleBorder(),
+                          padding: const EdgeInsets.all(20),
                         ),
                         child: Icon(Icons.list, size: 60, color: Colors.orange[900]),
                       ),
@@ -85,8 +85,8 @@ class _UserMenuState extends State<UserMenu> {
                         },
                         style: OutlinedButton.styleFrom(
                           side: BorderSide(color: Colors.red[900]!, width: 10),
-                          shape: CircleBorder(),
-                          padding: EdgeInsets.all(20),
+                          shape: const CircleBorder(),
+                          padding: const EdgeInsets.all(20),
                         ),
                         child: Icon(Icons.bloodtype_outlined, size: 60, color: Colors.red[900]),
                       ),
@@ -116,8 +116,8 @@ class _UserMenuState extends State<UserMenu> {
                         },
                         style: OutlinedButton.styleFrom(
                           side: BorderSide(color: Colors.blue[900]!, width: 10),
-                          shape: CircleBorder(),
-                          padding: EdgeInsets.all(20),
+                          shape: const CircleBorder(),
+                          padding: const EdgeInsets.all(20),
                         ),
                         child: Icon(Icons.star_border_outlined, size: 60, color: Colors.blue[900]),
                       ),
@@ -140,14 +140,14 @@ class _UserMenuState extends State<UserMenu> {
                           // Add your onPressed code here!
                         },
                         style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: CupertinoColors.activeGreen, width: 10),
-                          shape: CircleBorder(),
-                          padding: EdgeInsets.all(20),
+                          side: const BorderSide(color: CupertinoColors.activeGreen, width: 10),
+                          shape: const CircleBorder(),
+                          padding: const EdgeInsets.all(20),
                         ),
-                        child: Icon(Icons.logout, size: 60, color: CupertinoColors.activeGreen),
+                        child: const Icon(Icons.logout, size: 60, color: CupertinoColors.activeGreen),
                       ),
                       const SizedBox(height: 20),
-                      Text(
+                      const Text(
                         "Logout",
                         style: TextStyle(
                           color: CupertinoColors.activeGreen,
@@ -166,8 +166,8 @@ class _UserMenuState extends State<UserMenu> {
                         },
                         style: OutlinedButton.styleFrom(
                           side: BorderSide(color: Colors.orange[900]!, width: 10),
-                          shape: CircleBorder(),
-                          padding: EdgeInsets.all(20),
+                          shape: const CircleBorder(),
+                          padding: const EdgeInsets.all(20),
                         ),
                         child: Icon(Icons.settings_outlined, size: 60, color: Colors.orange[900]),
                       ),

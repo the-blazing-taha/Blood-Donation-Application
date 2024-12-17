@@ -44,13 +44,17 @@ dependencies:
   firebase_app_check: ^0.3.0+3
   get: ^4.6.6
   google_maps_flutter: ^2.7.0
-#  geolocator: ^12.0.0
+  geolocator: ^13.0.2
   sqflite: ^2.3.3+2
   path_provider: ^2.1.4
   show_hide_password: ^0.0.2
   iconsax: ^0.0.8
   email_auth: ^2.0.0
   http: ^1.2.2
+  mysql_client: ^0.0.27
+  web_socket_channel: ^3.0.1
+  geocoding: ^3.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

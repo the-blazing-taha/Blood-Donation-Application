@@ -1,6 +1,6 @@
 import 'dart:core';
 import 'package:blood/controllers/auth_controller.dart';
-import 'package:blood/views/screen/auth/loginScreen.dart';
+import 'package:blood/views/auth/loginScreen.dart';
 import 'package:email_auth/email_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';

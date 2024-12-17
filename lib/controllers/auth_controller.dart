@@ -11,9 +11,9 @@ class AuthController{
   final ImagePicker _imagePicker = ImagePicker();
 
   Future<Uint8List> pickProfileImage(ImageSource source)async{
-    final XFile? _file = await _imagePicker.pickImage(source: source);
-    if(_file!=null){
-      return await _file.readAsBytes();
+    final XFile? file = await _imagePicker.pickImage(source: source);
+    if(file!=null){
+      return await file.readAsBytes();
     }
     else{
       throw Exception('No image selected!');

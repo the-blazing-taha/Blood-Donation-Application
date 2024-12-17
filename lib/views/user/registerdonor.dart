@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 
 class RequestDonor extends StatefulWidget {
+  const RequestDonor({super.key});
+
   @override
   State<RequestDonor> createState() => _RequestDonorState();
 }
