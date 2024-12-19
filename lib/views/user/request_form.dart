@@ -1,18 +1,17 @@
 import 'dart:core';
+import 'package:blood/views/user/profile.dart';
+import 'package:blood/views/user/registerdonor.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:geocoding/geocoding.dart';
+
 import '../../controllers/databaseController.dart';
+import 'donors_list.dart';
+import 'home.dart';
+import 'my_requests.dart';
 
 
-// class RequestForm extends StatefulWidget {
-//   const RequestForm({super.key});
-//
-//   @override
-//   State<RequestForm> createState() => _RequestFormState();
-// }
 class RequestForm extends StatefulWidget {
   const RequestForm({super.key});
 
@@ -20,86 +19,19 @@ class RequestForm extends StatefulWidget {
   State<RequestForm> createState() => _RequestFormState();
 }
 
-// class _RequestFormState extends State<RequestForm> {
-//   @override
-//   Widget build(BuildContext context) {
-//     return const Placeholder();
-//   }
-// }
-
 class _RequestFormState extends State<RequestForm> {
-  String? _currentAddress;
-  Position? _currentPosition;
-
-
-  Future<void> _getCurrentPosition() async {
-    final hasPermission = await _handleLocationPermission();
-    if (!hasPermission) return;
-    await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high)
-        .then((Position position) {
-      setState(() => _currentPosition = position);
-    }).catchError((e) {
-      debugPrint(e);
-    });
-  }
-
-
-  Future<bool> _handleLocationPermission() async {
-    bool serviceEnabled;
-    LocationPermission permission;
-
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text(
-              'Location services are disabled. Please enable the services')));
-      return false;
-    }
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Location permissions are denied')));
-        return false;
-      }
-    }
-    if (permission == LocationPermission.deniedForever) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text(
-              'Location permissions are permanently denied, we cannot request permissions.')));
-      return false;
-    }
-    return true;
-  }
-
-  Future<void> _getAddressFromLatLng(Position position) async {
-    await placemarkFromCoordinates(
-        _currentPosition!.latitude, _currentPosition!.longitude)
-        .then((List<Placemark> placemarks) {
-      Placemark place = placemarks[0];
-      setState(() {
-        _currentAddress = '${place.street}, ${place.subLocality}, '
-            '${place.subAdministrativeArea}, ${place.postalCode}';
-      });
-    }).catchError((e) {
-      debugPrint(e);
-    });
-  }
-
 
   final GlobalKey<FormState> formkey = GlobalKey<FormState>();
 
   String bloodGroup = '';
   String gender = '';
-  int bags = 0;
-  String hospital = '';
-  String patient = "";
-  String residence = "";
-  String _case = "";
-  String contact = "";
-  String details = "";
+  int bags=0;
+  String hospital='';
+  String patient="";
+  String residence="";
+  String _case="";
+  String contact="";
+  String details="";
   final List<bool> _selectedGenders = <bool>[
     false,
     false,
@@ -135,12 +67,8 @@ class _RequestFormState extends State<RequestForm> {
     const Text('AB-'),
     const Text('O-'),
   ];
-  List<String> list = <String>[
-    'Anemia',
-    'Cancer',
-    'Hemophilia',
-    'Sickle cell disease'
-  ];
+
+  static List<String> list = <String>['Anemia', 'Cancer', 'Hemophilia', 'Sickle cell disease'];
 
   bool vertical = false;
   final DatabaseService _databaseService = DatabaseService.instance;
@@ -148,8 +76,239 @@ class _RequestFormState extends State<RequestForm> {
   @override
   Widget build(BuildContext context) {
     String dropdownValue = list.first;
+    int _selectedIndex = 0;
+
+    void _onItemTapped(int index) {
+      setState(() {
+        _selectedIndex = index;
+      });
+    }
+    signout(){
+      FirebaseAuth.instance.signOut();
+    }
 
     return Scaffold(
+
+      appBar: AppBar(
+        title: const Text(
+          "Request Form",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        actions: [
+          IconButton(
+            splashRadius: 10,
+            padding: const EdgeInsets.all(1.0),
+            onPressed: () {},
+            icon: const Icon(
+              Icons.person,
+              color: Colors.white,
+            ),
+          )
+        ],
+        leading: Builder(
+          builder: (BuildContext context) {
+            return IconButton(
+              icon: const Icon(
+                Icons.menu,
+                color: Colors.white,
+              ),
+              onPressed: () {
+                Scaffold.of(context).openDrawer();
+              },
+            );
+          },
+        ),
+        backgroundColor: Colors.red[900],
+        centerTitle: true,
+      ),
+      drawer: Opacity(
+        opacity: 0.6,
+        child: Drawer(
+          backgroundColor: Colors.red[900],
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              DrawerHeader(
+                decoration: BoxDecoration(
+                  color: Colors.red[900],
+                ),
+                child: const Text(
+                  'Life Sync',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 30),
+                ),
+              ),
+              ListTile(
+                leading: const Icon(
+                  Icons.home,
+                  color: Colors.white,
+                ),
+                title: const Text(
+                  'Home',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16),
+                ),
+                selected: _selectedIndex == 0,
+                onTap: () {
+                  _onItemTapped(0);
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const Home(),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(
+                  Icons.bloodtype_sharp,
+                  color: Colors.white,
+                ),
+                title: const Text(
+                  'Your Requests',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16),
+                ),
+                selected: _selectedIndex == 1,
+                onTap: () {
+                  _onItemTapped(1);
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const Requests(),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(
+                  Icons.people,
+                  color: Colors.white,
+                ),
+                title: const Text(
+                  'All Donors',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16),
+                ),
+                selected: _selectedIndex == 2,
+                onTap: () {
+                  _onItemTapped(2);
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const DonorList(),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(
+                  Icons.person,
+                  color: Colors.white,
+                ),
+                title: const Text('Register as Donor',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16)),
+                selected: _selectedIndex == 3,
+                onTap: () {
+                  _onItemTapped(3);
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const RequestDonor(),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(
+                  Icons.request_page,
+                  color: Colors.white,
+                ),
+                title: const Text('Add Blood Request',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16)),
+                selected: _selectedIndex == 4,
+                onTap: () {
+                  _onItemTapped(4);
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const RequestForm(),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(
+                  Icons.request_page,
+                  color: Colors.white,
+                ),
+                title: const Text('Profile',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16)),
+                selected: _selectedIndex == 5,
+                onTap: () {
+                  _onItemTapped(5);
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const Profile(),
+                    ),
+                  );
+                },
+              ),
+
+              ListTile(
+                leading: const Icon(
+                  Icons.logout,
+                  color: Colors.white,
+                ),
+                title: const Text('Log Out',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16)),
+                selected: _selectedIndex == 6,
+                onTap: () {
+                  _onItemTapped(6);
+                  Navigator.pop(context);
+                  signout();
+                },
+              ),
+
+              // Other ListTiles...
+            ],
+          ),
+        ),
+      ),
+
+
+
+
       body: SizedBox(
         height: MediaQuery.of(context).size.height,
         width: MediaQuery.of(context).size.width,
@@ -577,11 +736,8 @@ class _RequestFormState extends State<RequestForm> {
                     Container(
                       alignment: Alignment.center,
                       child: ElevatedButton(
-                        onPressed:() async {
+                        onPressed:()async{
                           _databaseService.addRequest(patient, contact, hospital, residence, _case, bags, bloodGroup, gender);
-                          setState(() {
-
-                          });
                         },
                         style: ElevatedButton.styleFrom(
                           foregroundColor: Colors.white,
@@ -610,7 +766,4 @@ class _RequestFormState extends State<RequestForm> {
       ),
     );
   }
-
-
 }
-

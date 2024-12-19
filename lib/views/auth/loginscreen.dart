@@ -1,4 +1,5 @@
-import 'package:blood/views/auth/registerScreen.dart';
+import 'package:blood/views/auth/registerscreen.dart';
+import 'package:blood/views/user/home.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../controllers/auth_controller.dart';
@@ -28,6 +29,7 @@ class _LoginScreenState extends State<LoginScreen> {
         isLoading = false;
       });
       if (res == 'success') {
+        Get.to(const Home());
         setState(() {
           isLoading = false;
         });

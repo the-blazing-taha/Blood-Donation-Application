@@ -1,25 +1,24 @@
+import 'package:blood/models/donations.dart';
+import 'package:blood/views/user/donor_details.dart';
 import 'package:blood/views/user/profile.dart';
 import 'package:blood/views/user/registerdonor.dart';
 import 'package:blood/views/user/request_form.dart';
 import 'package:flutter/material.dart';
+
 import '../../controllers/databaseController.dart';
-import '../../models/requests.dart';
-import 'details.dart';
-import 'donors_list.dart';
 import 'home.dart';
 import 'my_donation_appeal.dart';
-import 'package:geolocator/geolocator.dart';
+import 'my_requests.dart';
+
+class DonorList extends StatefulWidget {
+  const DonorList({super.key});
 
 
-
-class Requests extends StatefulWidget {
-
-  const Requests({super.key});
   @override
-  State<Requests> createState() => _RequestsState();
+  State<DonorList> createState() => _DonorListState();
 }
 
-class _RequestsState extends State<Requests> {
+class _DonorListState extends State<DonorList> {
 
 
   final TextEditingController _searchController = TextEditingController();
@@ -61,6 +60,7 @@ class _RequestsState extends State<Requests> {
       ),
     );
 
+
     int _selectedIndex = 0;
 
     void _onItemTapped(int index) {
@@ -70,9 +70,10 @@ class _RequestsState extends State<Requests> {
     }
 
     return Scaffold(
+
       appBar: AppBar(
         title: const Text(
-          "Request for Blood",
+          "All Donors Available",
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: Colors.white,
@@ -270,14 +271,13 @@ class _RequestsState extends State<Requests> {
 
 
 
-
       body: FutureBuilder(
-        future: databaseService.getRequest(),
+        future: databaseService.getDonation(),
         builder:  (context,snapshot){
           return ListView.builder(
               itemCount: snapshot.data?.length ?? 0,
               itemBuilder: (BuildContext context, int index) {
-                Request request = snapshot.data![index];
+                Donation donation = snapshot.data![index];
                 return Center(
                     child: Card(
                       child: Column(
@@ -293,7 +293,7 @@ class _RequestsState extends State<Requests> {
                                 ),
                                 padding: const EdgeInsets.all(5.0), // Keep this padding small
                                 child: Text(
-                                  request.bloodGroup,
+                                  donation.bloodGroup,
                                   style: const TextStyle(
                                     fontSize: 22,
                                     color: Colors.white,
@@ -304,7 +304,7 @@ class _RequestsState extends State<Requests> {
                           ),
 
                           ListTile(
-                            title: Text(request.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                            title: Text(donation.name, style: const TextStyle(fontWeight: FontWeight.bold)),
                             leading: const CircleAvatar(
                               radius: 20,
                               child: Icon(
@@ -312,12 +312,12 @@ class _RequestsState extends State<Requests> {
                                 size: 20,
                               ),
                             ),
-                            trailing: Text("${request.bags} Bags | ${request.case_}" ,style:  const TextStyle(color: Colors.grey,fontSize: 15),),
+                            trailing: Text("${donation.donationsDone} Donations done" ,style:  const TextStyle(color: Colors.grey,fontSize: 15),),
                             subtitle: Row(
                               children: [
                                 const Icon(Icons.location_on_rounded), // Location icon
                                 const SizedBox(width: 4), // Space between the icon and the text
-                                Text(request.residence), // Subtitle text
+                                Text(donation.residence), // Subtitle text
                               ],
 
                             ),
@@ -325,17 +325,6 @@ class _RequestsState extends State<Requests> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: <Widget>[
-                              OutlinedButton(
-                                style: OutlinedButton.styleFrom(
-                                  disabledBackgroundColor:Colors.white,
-                                ),
-                                onPressed: () {
-                                  databaseService.deleteRequest(request.id);
-                                  setState(() {});
-                                },
-                                child: Text('Delete', style: TextStyle(color: Colors.red[900])),
-                              ),
-                              const SizedBox(width: 4,),
                               ElevatedButton(
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.red[900],
@@ -344,15 +333,14 @@ class _RequestsState extends State<Requests> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => Details(
-                                        patient: request.name,
-                                        contact: request.contact,
-                                        hospital: request.hospital,
-                                        residence: request.residence,
-                                        case_: request.case_,
-                                        bags: request.bags,
-                                        bloodGroup: request.bloodGroup,
-                                        gender: request.gender,
+                                      builder: (context) => DonorDetails(
+                                        patient: donation.name,
+                                        contact: donation.contact,
+                                        hospital: donation.hospital,
+                                        residence: donation.residence,
+                                        bloodGroup: donation.bloodGroup,
+                                        gender: donation.gender,
+                                        noOfDonations: donation.donationsDone,
                                       ),
                                     ),
                                   );
@@ -371,5 +359,3 @@ class _RequestsState extends State<Requests> {
     );
   }
 }
-
-

@@ -1,3 +1,4 @@
+import 'package:blood/views/admin/inventory.dart';
 import 'package:flutter/material.dart';
 
 
@@ -5,23 +6,23 @@ class Dashboard extends StatefulWidget {
 
   const Dashboard({super.key});
   @override
-  State<Dashboard> createState() => _HomeState();
+  State<Dashboard> createState() => _DashboardState();
 }
 
-class _HomeState extends State<Dashboard> {
+class _DashboardState extends State<Dashboard> {
 
   int _selectedIndex = 0;
-
+  void onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
 
 
   @override
   Widget build(BuildContext context) {
 
-    void onItemTapped(int index) {
-      setState(() {
-        _selectedIndex = index;
-      });
-    }
+
 
     return Scaffold(
       appBar: AppBar(
@@ -84,6 +85,12 @@ class _HomeState extends State<Dashboard> {
                 onTap: () {
                   onItemTapped(0);
                   Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const Dashboard(),
+                    ),
+                  );
                 },
               ),
 
@@ -94,6 +101,12 @@ class _HomeState extends State<Dashboard> {
                 onTap: () {
                   onItemTapped(1);
                   Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const Inventory(),
+                    ),
+                  );
                 },
               ),
             ],

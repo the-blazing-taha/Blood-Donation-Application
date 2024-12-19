@@ -1,8 +1,7 @@
 import 'dart:ffi';
 
+import 'package:blood/models/donations.dart';
 import 'package:blood/models/requests.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -16,7 +15,6 @@ class DatabaseService {
     _db = await getDatabase();
     return _db!;
   }
-
   final String requestsTableName = "requests";
   final String _requestIdColumnName = "_id";
   final String _patientNameColumnName = "name";
@@ -27,6 +25,14 @@ class DatabaseService {
   final String _bagsNumberColumn = "bags";
   final String _bloodGroupColumn = "bloodGroup";
   final String _genderTypeColumn = "gender";
+
+
+  final String donationsTableName = "donations";
+  final String _donationIdColumnName = "_id";
+  final String _donationsNumberColumn = "donations";
+
+
+
 
   Future<Database> getDatabase() async {
     final databaseDirPath = await getDatabasesPath();
@@ -44,6 +50,18 @@ class DatabaseService {
             $_residenceNameColumn TEXT NOT NULL,
             $_caseNameColumn TEXT NOT NULL,
             $_bagsNumberColumn INTEGER NOT NULL,
+            $_bloodGroupColumn TEXT NOT NULL,
+            $_genderTypeColumn TEXT NOT NULL
+          )
+        ''');
+        await db.execute('''
+          CREATE TABLE $donationsTableName (
+            $_donationIdColumnName INTEGER PRIMARY KEY,
+            $_patientNameColumnName TEXT NOT NULL,
+            $_contactColumnName TEXT NOT NULL,
+            $_hospitalNameColumn TEXT NOT NULL,
+            $_residenceNameColumn TEXT NOT NULL,
+            $_donationsNumberColumn INTEGER,
             $_bloodGroupColumn TEXT NOT NULL,
             $_genderTypeColumn TEXT NOT NULL
           )
@@ -67,6 +85,21 @@ class DatabaseService {
     });
   }
 
+  Future<void> addDonation(String name, String contact, String hospital, String residence, int donationNumber, String bloodGroup,String gender) async {
+    final db = await database;
+    await db.insert(donationsTableName, {
+      _patientNameColumnName: name,
+      _contactColumnName: contact,
+      _hospitalNameColumn: hospital,
+      _residenceNameColumn: residence,
+      _donationsNumberColumn: donationNumber,
+      _bloodGroupColumn: bloodGroup,
+      _genderTypeColumn: gender
+    });
+  }
+
+
+
   Future<List<Request>> getRequest() async {
     final db = await database;
     final data = await db.query(requestsTableName);
@@ -86,23 +119,41 @@ class DatabaseService {
     return requests;
   }
 
-  Future<void> updateRequest(int id, String name, String contact, String hospital, String residence, String case_, int bags, String bloodGroup,String gender) async {
+  Future<List<Donation>> getDonation() async {
     final db = await database;
-    await db.update(
-      requestsTableName,
-      {
-        _patientNameColumnName: name,
-        _contactColumnName: contact,
-        _hospitalNameColumn: hospital,
-        _residenceNameColumn: residence,
-        _bagsNumberColumn:bags,
-        _bloodGroupColumn:bloodGroup,
-        _genderTypeColumn: gender,
-      },
-      where: '$_requestIdColumnName = ?', // Use the correct column name
-      whereArgs: [id,],
-    );
+    final data = await db.query(donationsTableName);
+    List<Donation> donations = data
+        .map((e) => Donation(
+        id: e[_requestIdColumnName] as int,
+        name: e[_patientNameColumnName] as String,
+        contact: e[_contactColumnName] as String,
+        hospital: e[_hospitalNameColumn] as String,
+        residence: e[_residenceNameColumn] as String,
+        bloodGroup: e[_bloodGroupColumn] as String,
+        gender: e[_genderTypeColumn] as String,
+        donationsDone: e[_donationsNumberColumn] as int,
+    ))
+        .toList();
+    return donations;
   }
+
+  // Future<void> updateRequest(int id, String name, String contact, String hospital, String residence, String case_, int bags, String bloodGroup,String gender) async {
+  //   final db = await database;
+  //   await db.update(
+  //     requestsTableName,
+  //     {
+  //       _patientNameColumnName: name,
+  //       _contactColumnName: contact,
+  //       _hospitalNameColumn: hospital,
+  //       _residenceNameColumn: residence,
+  //       _bagsNumberColumn:bags,
+  //       _bloodGroupColumn:bloodGroup,
+  //       _genderTypeColumn: gender,
+  //     },
+  //     where: '$_requestIdColumnName = ?', // Use the correct column name
+  //     whereArgs: [id,],
+  //   );
+  // }
 
   Future<void> deleteRequest(int id) async {
     final db = await database;
@@ -113,30 +164,10 @@ class DatabaseService {
       ]);
     }
     catch(e){
-      print(e);
-    }
-  }
-}
-
-
-class AuthServices {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-
-  Future<String> signUpUser({required username,required String email,required String password})async{
-    String res= "Some error occured!";
-    try{
-      UserCredential credential = await _auth.createUserWithEmailAndPassword(email: email,password: password);
-      await _firestore.collection("users").doc(credential.user!.uid).set({
-        'name':username,
-        'email': email,
-        'uid':credential.user!.uid,
-      });
-      res = "Successfully";
-    }
-    catch(e){
       print(e.toString());
     }
-    return res;
   }
+
 }
+
+

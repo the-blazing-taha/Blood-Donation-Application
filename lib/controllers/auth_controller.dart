@@ -31,11 +31,9 @@ class AuthController{
           'email' : email,
           'buyerId' : userCredential.user!.uid,
         });
-        print('Document successfully written!');
         res = 'success';
     }
     catch(e){
-        print("errorrrrr!");
         res = e.toString();
     }
     return res;
@@ -60,6 +58,4 @@ class AuthController{
       }
       return res;
   }
-
-
 }

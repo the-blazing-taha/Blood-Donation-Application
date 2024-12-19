@@ -1,7 +1,15 @@
 import 'dart:core';
 import 'package:blood/controllers/auth_controller.dart';
+import 'package:blood/views/user/profile.dart';
+import 'package:blood/views/user/request_form.dart';
 import 'package:flutter/material.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
+
+import '../../controllers/databaseController.dart';
+import 'donors_list.dart';
+import 'home.dart';
+import 'my_donation_appeal.dart';
+import 'my_requests.dart';
 
 class RequestDonor extends StatefulWidget {
   const RequestDonor({super.key});
@@ -15,9 +23,13 @@ class _RequestDonorState extends State<RequestDonor> {
 
   final GlobalKey<FormState> formkey = GlobalKey<FormState>();
 
+  late String name='';
+  late String hospital ='';
+  late String residence = '';
+  late String contact = '';
+  late int noOfDonation;
   late String bloodGroup = '';
   late String gender = '';
-  late int bags;
 
   final List<bool> _selectedGenders = <bool>[
     false,
@@ -55,10 +67,218 @@ class _RequestDonorState extends State<RequestDonor> {
     const Text('O-'),
   ];
   bool vertical = false;
+  final DatabaseService _databaseService = DatabaseService.instance;
+  int _selectedIndex = 0;
 
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          "Register as donor",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        actions: [
+          IconButton(
+            splashRadius: 10,
+            padding: const EdgeInsets.all(1.0),
+            onPressed: () {},
+            icon: const Icon(
+              Icons.person,
+              color: Colors.white,
+            ),
+          )
+        ],
+        leading: Builder(
+          builder: (BuildContext context) {
+            return IconButton(
+              icon: const Icon(
+                Icons.menu,
+                color: Colors.white,
+              ),
+              onPressed: () {
+                Scaffold.of(context).openDrawer();
+              },
+            );
+          },
+        ),
+        backgroundColor: Colors.red[900],
+        centerTitle: true,
+      ),
+      drawer: Opacity(
+        opacity: 0.6,
+        child: Drawer(
+          backgroundColor: Colors.red[900],
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              DrawerHeader(
+                decoration: BoxDecoration(
+                  color: Colors.red[900],
+                ),
+                child: const Text(
+                  'Life Sync',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 30),
+                ),
+              ),
+              ListTile(
+                leading: const Icon(
+                  Icons.home,
+                  color: Colors.white,
+                ),
+                title: const Text(
+                  'Home',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16),
+                ),
+                selected: _selectedIndex == 0,
+                onTap: () {
+                  _onItemTapped(0);
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const Home(),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(
+                  Icons.bloodtype_sharp,
+                  color: Colors.white,
+                ),
+                title: const Text(
+                  'Your Requests',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16),
+                ),
+                selected: _selectedIndex == 1,
+                onTap: () {
+                  _onItemTapped(1);
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const Requests(),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(
+                  Icons.people,
+                  color: Colors.white,
+                ),
+                title: const Text(
+                  'All Donors',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16),
+                ),
+                selected: _selectedIndex == 2,
+                onTap: () {
+                  _onItemTapped(2);
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const DonorList(),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(
+                  Icons.person,
+                  color: Colors.white,
+                ),
+                title: const Text('Register as Donor',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16)),
+                selected: _selectedIndex == 3,
+                onTap: () {
+                  _onItemTapped(3);
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const RequestDonor(),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(
+                  Icons.request_page,
+                  color: Colors.white,
+                ),
+                title: const Text('Add Blood Request',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16)),
+                selected: _selectedIndex == 4,
+                onTap: () {
+                  _onItemTapped(4);
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const RequestForm(),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(
+                  Icons.request_page,
+                  color: Colors.white,
+                ),
+                title: const Text('Profile',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16)),
+                selected: _selectedIndex == 5,
+                onTap: () {
+                  _onItemTapped(5);
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const Profile(),
+                    ),
+                  );
+                },
+              ),
+              // Other ListTiles...
+            ],
+          ),
+        ),
+      ),
+
+
+
+
       body: Padding(
         padding: const EdgeInsets.all(15),
         child: Form(
@@ -72,7 +292,7 @@ class _RequestDonorState extends State<RequestDonor> {
                     height: 10,
                   ),
                   const Text(
-                    'Patient Details',
+                    'Donor Form',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
                   ),
                   const SizedBox(
@@ -89,6 +309,9 @@ class _RequestDonorState extends State<RequestDonor> {
                     height: 10,
                   ),
                   TextFormField(
+                    onChanged: (value){
+                      name = value;
+                    },
                     decoration: InputDecoration(
                       // label: const Text('Number of Bags'),
                       hintText: 'e.g Mohammad Aliar',
@@ -127,6 +350,11 @@ class _RequestDonorState extends State<RequestDonor> {
                     height: 10,
                   ),
                   IntlPhoneField(
+                    onChanged: (phone) {
+                      setState(() {
+                        contact=phone.completeNumber;
+                      });
+                    },
                     keyboardType: TextInputType.number,
                     decoration: InputDecoration(
                       hintText: '3221040476',
@@ -198,6 +426,9 @@ class _RequestDonorState extends State<RequestDonor> {
                     height: 10,
                   ),
                   TextFormField(
+                    onChanged: (value){
+                      residence=value;
+                    },
                     decoration: InputDecoration(
                       // label: const Text('Number of Bags'),
                       hintText: 'e.g House. 131, Street 2, Gulberg Sukh Chayn Gardens Lahore, District Kasur',
@@ -239,9 +470,11 @@ class _RequestDonorState extends State<RequestDonor> {
                     height: 10,
                   ),
                   TextFormField(
+                    onChanged: (value){
+                      noOfDonation = int.tryParse(value) ?? 0; // If parsing fails, it will default to 0
+                    },
                     keyboardType: TextInputType.number,
                     decoration: InputDecoration(
-                      // label: const Text('Number of Bags'),
                       hintText: 'e.g 5',
                       enabledBorder: OutlineInputBorder(
                         borderSide: BorderSide(
@@ -261,45 +494,6 @@ class _RequestDonorState extends State<RequestDonor> {
                         borderSide: BorderSide(
                           color: Colors.red[900]!,
                           width: 2,
-                        ),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 20,
-                  ),
-                  const Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'Bags',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  TextFormField(
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      // label: const Text('Number of Bags'),
-                      hintText: 'e.g 3',
-                      enabledBorder: OutlineInputBorder(
-                        borderSide:
-                        BorderSide(color: Colors.red[900]!, width: 3),
-                        borderRadius: BorderRadius.circular(5),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Colors.red[900]!,
-                          width: 3,
-                        ),
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      errorBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Colors.red[900]!,
-                          width: 3,
                         ),
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -426,10 +620,10 @@ class _RequestDonorState extends State<RequestDonor> {
                     alignment: Alignment.center,
                     child: ElevatedButton(
                       onPressed: ()async{
-                        // Respond to button press
-                        // await DBHandeler().insertData(bloodGroup, gender, bags, hospital, patient, residence, _case, contact);
-                        // final data = DBHandeler().readData();
-                        // print(data);
+                        _databaseService.addDonation(name, contact, hospital, residence, noOfDonation, bloodGroup, gender);
+                        setState(() {
+
+                        });
                       },
                       style: ElevatedButton.styleFrom(
                         foregroundColor: Colors.white,

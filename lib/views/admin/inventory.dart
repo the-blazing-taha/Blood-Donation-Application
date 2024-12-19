@@ -1,17 +1,22 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 
+import 'dashboard.dart';
+
 class Inventory extends StatefulWidget {
   const Inventory({super.key});
 
   @override
-  _InventoryState createState() => _InventoryState();
+  InventoryState createState() => InventoryState();
 }
 
-class _InventoryState extends State<Inventory> {
+class InventoryState extends State<Inventory> {
   late double progress; // Current progress value
   Timer? _timer;
-  final int durationInSeconds=19; // Total time for the timer
+  // final int durationInSeconds=3024000; // Total time for the timer
+  final int durationInSeconds=10; // Total time for the timer
+  final PageStorageKey _key = const PageStorageKey('progressKey');
+  int _selectedIndex = 0;
 
   @override
   void initState() {
@@ -19,6 +24,13 @@ class _InventoryState extends State<Inventory> {
     progress = 1.0; // Start with full progress
     startTimer();
   }
+
+  void onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
 
   void startTimer() {
     _timer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
@@ -42,30 +54,110 @@ class _InventoryState extends State<Inventory> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Linear Progress Timer'),
+        title: const Text(
+          'Inventory',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        actions: [
+          IconButton(
+            splashRadius: 10,
+            padding: const EdgeInsets.all(1.0),
+            onPressed: () {
+
+            },
+            icon: const Icon(
+              Icons.person,
+              color: Colors.white,
+            ),
+          )
+        ],
+        leading: Builder(
+          builder: (BuildContext context) {
+            return IconButton(
+              icon: const Icon(
+                Icons.menu,
+                color: Colors.white,
+              ),
+              onPressed: () {
+                Scaffold.of(context).openDrawer();  // This will now work correctly
+              },
+            );
+          },
+        ),
+        backgroundColor: Colors.red[900],
+        centerTitle: true,
       ),
+
+      drawer: Opacity(
+        opacity: 0.6,
+        child: Drawer(
+          backgroundColor: Colors.red[900],
+
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              DrawerHeader(
+                decoration: BoxDecoration(
+                  color: Colors.red[900],
+                ),
+                child: const Text('Drawer Header',style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 30),),
+              ),
+
+              ListTile(
+                leading: const Icon(Icons.home, color: Colors.white,),
+                title: const Text('Dashboard',style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold, fontSize: 16),),
+                selected: _selectedIndex == 0,
+                onTap: () {
+                  onItemTapped(0);
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const Dashboard(),
+                    ),
+                  );
+                },
+              ),
+
+              ListTile(
+                leading: const Icon(Icons.inventory_2_sharp, color: Colors.white,),
+                title: const Text('Inventory', style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold, fontSize: 16),),
+                selected: _selectedIndex == 1,
+                onTap: () {
+                  onItemTapped(1);
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const Inventory(),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+
+
+
       body: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            const Text(
-              'Time Remaining',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold,),
-            ),
-            const SizedBox(height: 20),
-            LinearProgressIndicator(
-              value: progress, // Bind progress to the LinearProgressIndicator
-              minHeight: 20, // Set the height of the progress bar
-              color: Colors.red, // Progress bar color
-              backgroundColor: Colors.grey[300], // Background color
-            ),
-            const SizedBox(height: 20),
-            Text(
-              '${(progress * durationInSeconds).toInt()} seconds remaining',
-              style: const TextStyle(fontSize: 16),
+            Card(
+              child: LinearProgressIndicator(
+                key: _key,
+                value: progress, // Bind progress to the LinearProgressIndicator
+                minHeight: 20, // Set the height of the progress bar
+                color: Colors.red, // Progress bar color
+                backgroundColor: Colors.grey[300], // Background color
+              ),
             ),
           ],
         ),
-
     );
   }
 }
