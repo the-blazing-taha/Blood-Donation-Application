@@ -1,6 +1,8 @@
 import 'package:blood/views/admin/inventory.dart';
 import 'package:flutter/material.dart';
 
+import '../../controllers/databaseController.dart';
+
 
 class Dashboard extends StatefulWidget {
 
@@ -22,7 +24,8 @@ class _DashboardState extends State<Dashboard> {
   @override
   Widget build(BuildContext context) {
 
-
+    final DatabaseService databaseService = DatabaseService.instance;
+print(databaseService.noOfRequests());
 
     return Scaffold(
       appBar: AppBar(
@@ -118,27 +121,73 @@ class _DashboardState extends State<Dashboard> {
         children: [
           Card(
             color: Colors.red[900],
-            child: const Column(
+            child: Column(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
-                ListTile(
-                  title: Text('4', style: TextStyle(fontSize: 50,color: Colors.white),),
-                  subtitle: Text('Total Donors',style: TextStyle(fontSize: 20,color: Colors.white),),
+                FutureBuilder<int?>(
+                  future: databaseService.noOfDonors(), // Call the async function
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      // While the future is resolving, show a loading indicator or placeholder text
+                      return const ListTile(
+                        title: Text("Loading...", style: TextStyle(fontSize: 50, color: Colors.white)),
+                        subtitle: Text('Total Donors', style: TextStyle(fontSize: 20, color: Colors.white)),
+                      );
+                    } else if (snapshot.hasError) {
+                      // Handle errors gracefully
+                      return const ListTile(
+                        title: Text("Error", style: TextStyle(fontSize: 50, color: Colors.white)),
+                        subtitle: Text('Could not fetch requests', style: TextStyle(fontSize: 20, color: Colors.white)),
+                      );
+                    } else {
+                      // Display the result when the future completes
+                      final count = snapshot.data ?? 0;
+                      return ListTile(
+                        title: Text(count.toString(), style: const TextStyle(fontSize: 50, color: Colors.white)),
+                        subtitle: const Text('Total Donors', style: TextStyle(fontSize: 20, color: Colors.white)),
+                      );
+                    }
+                  },
                 ),
-            ]),
+              ],
+            ),
           ),
-          Card(
-            color: Colors.blue[900],
-            child: const Column(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  ListTile(
-                    title: Text('40', style: TextStyle(fontSize: 50,color: Colors.white),),
-                    subtitle: Text('Total Blood Requests',style: TextStyle(fontSize: 20,color: Colors.white),),
-                  ),
-                ]),
-          ),
-          Card(
+      Card(
+        color: Colors.blue[900],
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            FutureBuilder<int?>(
+              future: databaseService.noOfRequests(), // Call the async function
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  // While the future is resolving, show a loading indicator or placeholder text
+                  return const ListTile(
+                    title: Text("Loading...", style: TextStyle(fontSize: 50, color: Colors.white)),
+                    subtitle: Text('Total Blood Requests', style: TextStyle(fontSize: 20, color: Colors.white)),
+                  );
+                } else if (snapshot.hasError) {
+                  // Handle errors gracefully
+                  return const ListTile(
+                    title: Text("Error", style: TextStyle(fontSize: 50, color: Colors.white)),
+                    subtitle: Text('Could not fetch requests', style: TextStyle(fontSize: 20, color: Colors.white)),
+                  );
+                } else {
+                  // Display the result when the future completes
+                  final count = snapshot.data ?? 0;
+                  return ListTile(
+                    title: Text(count.toString(), style: const TextStyle(fontSize: 50, color: Colors.white)),
+                    subtitle: const Text('Total Blood Requests', style: TextStyle(fontSize: 20, color: Colors.white)),
+                  );
+                }
+              },
+            ),
+          ],
+        ),
+      ),
+
+
+      Card(
             color: Colors.yellow[900],
             child: const Column(
                 mainAxisSize: MainAxisSize.min,

@@ -1,13 +1,13 @@
 import 'package:blood/views/admin/dashboard.dart';
 import 'package:blood/views/user/details.dart';
 import 'package:blood/views/user/donors_list.dart';
-import 'package:blood/views/user/my_donation_appeal.dart';
 import 'package:blood/views/user/profile.dart';
 import 'package:blood/views/user/registerdonor.dart';
 import 'package:blood/views/user/request_form.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../../controllers/auth_controller.dart';
 import '../../controllers/databaseController.dart';
 import '../../models/requests.dart';
 import 'my_requests.dart';
@@ -23,10 +23,9 @@ class _HomeState extends State<Home> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = "";
   int _selectedIndex = 0;
+  final AuthController _authController = AuthController();
 
-  signout()async{
-    await FirebaseAuth.instance.signOut();
-  }
+
 
   void _onItemTapped(int index) {
     setState(() {
@@ -246,7 +245,7 @@ class _HomeState extends State<Home> {
                 onTap: () {
                   _onItemTapped(6);
                   Navigator.pop(context);
-                  signout();
+                  _authController.signout();
                 },
               ),
 

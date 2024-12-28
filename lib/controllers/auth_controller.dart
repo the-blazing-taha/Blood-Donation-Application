@@ -1,7 +1,10 @@
 import 'dart:typed_data';
+import 'package:blood/views/user/wrapper.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 import 'package:image_picker/image_picker.dart';
 
 class AuthController{
@@ -24,8 +27,9 @@ class AuthController{
     String res = 'Error Occured!';
     try{
         UserCredential userCredential = await _auth.createUserWithEmailAndPassword(email: email, password: password);
+        Get.offAll(const Wrapper());
         String downloadUrl = await uploadImageToStorage(image);
-        await firestore.collection('bloodStore').doc(userCredential.user!.uid).set({
+        await firestore.collection('userdata').doc(userCredential.user!.uid).set({
           'fullName' : fullName,
           'profileImage': downloadUrl,
           'email' : email,
@@ -48,6 +52,7 @@ class AuthController{
       return downloadURL;
   }
 
+
   Future<String> loginUser(String email, String password) async{
       String res= 'some error occured!';
       try{
@@ -58,4 +63,17 @@ class AuthController{
       }
       return res;
   }
+
+  resetPassword(String email)async{
+    await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+  }
+
+  signout()async{
+    await FirebaseAuth.instance.signOut();
+  }
+
+  reset(String email)async{
+    await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+  }
+
 }

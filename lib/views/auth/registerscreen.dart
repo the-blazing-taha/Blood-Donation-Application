@@ -97,6 +97,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
+
+
+
   selectGalleryImage() async {
     Uint8List im = await _authController.pickProfileImage(ImageSource.gallery);
     setState(() {

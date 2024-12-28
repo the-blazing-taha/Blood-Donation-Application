@@ -17,11 +17,11 @@ void main() async {
   Platform.isAndroid
       ? await Firebase.initializeApp(
           options: const FirebaseOptions(
-              apiKey: 'AIzaSyA5deSHAnABXp7rZQtbCtk0aTO-A-XE9Ts',
-              appId: '1:265277944690:android:65dcc9005385a7293423eb',
-              messagingSenderId: '265277944690',
-              projectId: 'blood-donors-and-acceptors',
-              storageBucket: 'gs://blood-donors-and-acceptors.appspot.com'),
+              apiKey: 'AIzaSyCuAwg9Y9kilszavw-eY32cV8bB5eL5P4w',
+              appId: '1:873073858781:android:a0b01daed8a08310796334',
+              messagingSenderId: '873073858781',
+              projectId: 'blood-donation-applicati-30737',
+              storageBucket: 'blood-donation-applicati-30737.firebasestorage.app'),
         )
       : await Firebase.initializeApp();
   runApp(const MyApp());
@@ -41,7 +41,4 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
-
-
 

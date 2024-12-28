@@ -1,7 +1,7 @@
 import 'dart:ffi';
-
 import 'package:blood/models/donations.dart';
 import 'package:blood/models/requests.dart';
+import 'package:blood/models/inventory.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -31,7 +31,15 @@ class DatabaseService {
   final String _donationIdColumnName = "_id";
   final String _donationsNumberColumn = "donations";
 
-
+  final String _inventoryTableName = "inventory";
+  final String _inventoryIdColumnName = "_id";
+  final String _inventoryBloodTypeColumnName = "bloodtype";
+  final String _inventoryBloodConcentrationColumnName = "concentration";
+  final String _inventoryBloodRhFactorColumn = "rh";
+  final String _inventoryBloodHaemoglobinlevel = "haemoglobin";
+  final String _inventoryGenderColumnName = "gender";
+  final String _inventoryNameColumnName = "name";
+  final String _inventoryNumberColumnName = "number";
 
 
   Future<Database> getDatabase() async {
@@ -61,9 +69,19 @@ class DatabaseService {
             $_contactColumnName TEXT NOT NULL,
             $_hospitalNameColumn TEXT NOT NULL,
             $_residenceNameColumn TEXT NOT NULL,
-            $_donationsNumberColumn INTEGER,
+            $_donationsNumberColumn INTEGER NOT NULL,
             $_bloodGroupColumn TEXT NOT NULL,
             $_genderTypeColumn TEXT NOT NULL
+          )
+        ''');
+        await db.execute('''
+          CREATE TABLE $_inventoryTableName (
+            $_inventoryIdColumnName INTEGER PRIMARY KEY,
+            $_inventoryBloodTypeColumnName TEXT NOT NULL,
+            $_inventoryBloodConcentrationColumnName TEXT NOT NULL,
+            $_inventoryBloodHaemoglobinlevel INT NOT NULL,
+            $_inventoryGenderColumnName TEXT NOT NULL,
+            $_inventoryBloodRhFactorColumn TEXT NOT NULL
           )
         ''');
       },
@@ -164,10 +182,65 @@ class DatabaseService {
       ]);
     }
     catch(e){
-      print(e.toString());
+      print("ERROR IN DELETING REQUEST: $e");
     }
   }
 
+  Future<int?> noOfRequests() async {
+    final db = await database; // Ensure `database` is initialized
+    try {
+      final result = await db.rawQuery('SELECT COUNT(*) as count FROM $requestsTableName');
+      return Sqflite.firstIntValue(result) ?? 0; // Extract the count
+    } catch (e) {
+      print("Error in noOfRequests(): $e");
+      return null; // Return null if an exception occurs
+    }
+  }
+
+  Future<int?> noOfDonors() async {
+    final db = await database; // Ensure `database` is initialized
+    try {
+      final result = await db.rawQuery('SELECT COUNT(*) as count FROM $donationsTableName');
+      return Sqflite.firstIntValue(result) ?? 0; // Extract the count
+    } catch (e) {
+      print("Error in noOfRequests(): $e");
+      return null; // Return null if an exception occurs
+    }
+  }
+
+  Future<void> addInventory(String name,String bloodGroup, int hemoglobin, String concentration, String rh, String gender, int number) async {
+    final db = await database;
+    await db.insert(_inventoryTableName, {
+      _inventoryNameColumnName: name,
+      _inventoryNumberColumnName: number,
+      _inventoryBloodTypeColumnName: bloodGroup,
+      _inventoryBloodHaemoglobinlevel: hemoglobin,
+      _inventoryBloodConcentrationColumnName: concentration,
+      _inventoryBloodRhFactorColumn: rh,
+      _inventoryGenderColumnName: gender
+    });
+  }
+
+  Future<List<Inventory_>> getInventory() async {
+    final db = await database;
+    final data = await db.query(_inventoryTableName);
+    List<Inventory_> inventory = data
+        .map((e) => Inventory_(
+        id: e[_inventoryIdColumnName] as int,
+        name: e[_inventoryNameColumnName] as String,
+        hemoglobin: e[_inventoryBloodHaemoglobinlevel] as int,
+        concentration: e[_inventoryBloodConcentrationColumnName] as int,
+        bloodgroup: e[_inventoryBloodTypeColumnName] as String,
+        rh: e[_inventoryBloodRhFactorColumn] as String,
+        gender: e[_inventoryGenderColumnName] as String,
+        number: e[_inventoryNumberColumnName] as int,
+    ))
+        .toList();
+    return inventory;
+  }
 }
+
+
+
 
 

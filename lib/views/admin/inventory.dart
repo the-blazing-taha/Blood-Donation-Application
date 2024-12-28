@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-
+import 'package:blood/models/inventory.dart';
+import '../../controllers/databaseController.dart';
 import 'dashboard.dart';
 
 class Inventory extends StatefulWidget {
@@ -14,7 +15,7 @@ class InventoryState extends State<Inventory> {
   late double progress; // Current progress value
   Timer? _timer;
   // final int durationInSeconds=3024000; // Total time for the timer
-  final int durationInSeconds=10; // Total time for the timer
+  final int durationInSeconds=60; // Total time for the timer
   final PageStorageKey _key = const PageStorageKey('progressKey');
   int _selectedIndex = 0;
 
@@ -52,6 +53,8 @@ class InventoryState extends State<Inventory> {
 
   @override
   Widget build(BuildContext context) {
+    final DatabaseService databaseService = DatabaseService.instance;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -144,20 +147,41 @@ class InventoryState extends State<Inventory> {
 
 
 
-      body: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            Card(
-              child: LinearProgressIndicator(
-                key: _key,
-                value: progress, // Bind progress to the LinearProgressIndicator
-                minHeight: 20, // Set the height of the progress bar
-                color: Colors.red, // Progress bar color
-                backgroundColor: Colors.grey[300], // Background color
-              ),
-            ),
-          ],
-        ),
+      body: FutureBuilder(
+        future: databaseService.getInventory(),
+        builder:  (context,snapshot){
+          return ListView.builder(
+              itemCount: snapshot.data?.length ?? 0,
+              itemBuilder: (BuildContext context, int index) {
+                Inventory_ inventory = snapshot.data![index];
+                return Center(
+                  child: Card(
+                    color: Colors.grey[700],
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                         Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            Text(inventory.bloodgroup,style: const TextStyle(color: Colors.white),),
+                            const SizedBox(width: 120,),
+                            Text("${inventory.concentration}",style: const TextStyle(color: Colors.white),),
+                          ],
+                        ),
+                        LinearProgressIndicator(
+                          key: _key,
+                          value: progress, // Bind progress to the LinearProgressIndicator
+                          minHeight: 20, // Set the height of the progress bar
+                          color: Colors.red[900], // Progress bar color
+                          backgroundColor: Colors.grey[300], // Background color
+                        ),
+                        Text('${inventory.hemoglobin}',style: const TextStyle(color: Colors.white,fontWeight: FontWeight.bold, fontSize: 20),),
+                      ],
+                    ),
+                  ),
+                );
+              });},
+      ),
     );
   }
 }
