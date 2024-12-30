@@ -23,15 +23,15 @@ class _RequestFormState extends State<RequestForm> {
 
   final GlobalKey<FormState> formkey = GlobalKey<FormState>();
 
-  String bloodGroup = '';
-  String gender = '';
-  int bags=0;
-  String hospital='';
-  String patient="";
-  String residence="";
-  String _case="";
-  String contact="";
-  String details="";
+  late String bloodGroup;
+  late String gender ;
+  late int bags;
+  late String hospital;
+  late String patient;
+  late String residence;
+  late String donationCase;
+  late String contact;
+  late String details;
   final List<bool> _selectedGenders = <bool>[
     false,
     false,
@@ -68,21 +68,22 @@ class _RequestFormState extends State<RequestForm> {
     const Text('O-'),
   ];
 
-  static List<String> list = <String>['Anemia', 'Cancer', 'Hemophilia', 'Sickle cell disease'];
+  static List<String> list = <String>['None','Anemia', 'Cancer', 'Hemophilia', 'Sickle cell disease'];
 
   bool vertical = false;
   final DatabaseService _databaseService = DatabaseService.instance;
 
   @override
   Widget build(BuildContext context) {
-    String dropdownValue = list.first;
-    int _selectedIndex = 0;
+    int selectedIndex = 0;
 
-    void _onItemTapped(int index) {
+    void onItemTapped(int index) {
       setState(() {
-        _selectedIndex = index;
+        selectedIndex = index;
       });
     }
+
+
     signout(){
       FirebaseAuth.instance.signOut();
     }
@@ -155,9 +156,9 @@ class _RequestFormState extends State<RequestForm> {
                       fontWeight: FontWeight.bold,
                       fontSize: 16),
                 ),
-                selected: _selectedIndex == 0,
+                selected: selectedIndex == 0,
                 onTap: () {
-                  _onItemTapped(0);
+                  onItemTapped(0);
                   Navigator.pop(context);
                   Navigator.push(
                     context,
@@ -179,9 +180,9 @@ class _RequestFormState extends State<RequestForm> {
                       fontWeight: FontWeight.bold,
                       fontSize: 16),
                 ),
-                selected: _selectedIndex == 1,
+                selected: selectedIndex == 1,
                 onTap: () {
-                  _onItemTapped(1);
+                  onItemTapped(1);
                   Navigator.pop(context);
                   Navigator.push(
                     context,
@@ -203,9 +204,9 @@ class _RequestFormState extends State<RequestForm> {
                       fontWeight: FontWeight.bold,
                       fontSize: 16),
                 ),
-                selected: _selectedIndex == 2,
+                selected: selectedIndex == 2,
                 onTap: () {
-                  _onItemTapped(2);
+                  onItemTapped(2);
                   Navigator.pop(context);
                   Navigator.push(
                     context,
@@ -225,9 +226,9 @@ class _RequestFormState extends State<RequestForm> {
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 16)),
-                selected: _selectedIndex == 3,
+                selected: selectedIndex == 3,
                 onTap: () {
-                  _onItemTapped(3);
+                  onItemTapped(3);
                   Navigator.pop(context);
                   Navigator.push(
                     context,
@@ -247,9 +248,9 @@ class _RequestFormState extends State<RequestForm> {
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 16)),
-                selected: _selectedIndex == 4,
+                selected: selectedIndex == 4,
                 onTap: () {
-                  _onItemTapped(4);
+                  onItemTapped(4);
                   Navigator.pop(context);
                   Navigator.push(
                     context,
@@ -269,9 +270,9 @@ class _RequestFormState extends State<RequestForm> {
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 16)),
-                selected: _selectedIndex == 5,
+                selected: selectedIndex == 5,
                 onTap: () {
-                  _onItemTapped(5);
+                  onItemTapped(5);
                   Navigator.pop(context);
                   Navigator.push(
                     context,
@@ -292,9 +293,9 @@ class _RequestFormState extends State<RequestForm> {
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 16)),
-                selected: _selectedIndex == 6,
+                selected: selectedIndex == 6,
                 onTap: () {
-                  _onItemTapped(6);
+                  onItemTapped(6);
                   Navigator.pop(context);
                   signout();
                 },
@@ -425,7 +426,6 @@ class _RequestFormState extends State<RequestForm> {
                         hospital=value;
                       },
                       decoration: InputDecoration(
-                        // label: const Text('Number of Bags'),
                         hintText: 'e.g Lahore Children Hospital',
                         enabledBorder: OutlineInputBorder(
                           borderSide: BorderSide(
@@ -465,10 +465,11 @@ class _RequestFormState extends State<RequestForm> {
                     ),
                     TextFormField(
                       onChanged: (value){
-                        residence=value;
+                        setState(() {
+                          residence=value;
+                        });
                       },
                       decoration: InputDecoration(
-                        // label: const Text('Number of Bags'),
                         hintText: 'e.g House. 131, Street 2, Gulberg Sukh Chayn Gardens Lahore, District Kasur',
                         enabledBorder: OutlineInputBorder(
                           borderSide: BorderSide(
@@ -521,15 +522,18 @@ class _RequestFormState extends State<RequestForm> {
                       ),
                       width: 325,
                       initialSelection: list.first,
-                      onSelected: (String? value) {
+                      onSelected: (value) {
                         setState(() {
-                          _case = value!;
+                          donationCase = value!;
                         });
                       },
                       dropdownMenuEntries: list.map<DropdownMenuEntry<String>>((String value) {
                         return DropdownMenuEntry<String>(value: value, label: value);
                       }).toList(),
                     ),
+
+
+
                     const SizedBox(
                       height: 20,
                     ),
@@ -594,7 +598,6 @@ class _RequestFormState extends State<RequestForm> {
                         });
                       },
                       decoration: InputDecoration(
-                        // label: const Text('Number of Bags'),
                         hintText: 'e.g I have been suffering a lot so kindly give me the blood.',
                         enabledBorder: OutlineInputBorder(
                           borderSide:
@@ -713,10 +716,10 @@ class _RequestFormState extends State<RequestForm> {
                                 }
                                 _selectedGenders[index] = selected;
                                 if (index == 0) {
-                                  gender = 'male';
+                                  gender = 'Male';
 
                                 } else if (index == 1) {
-                                  gender = 'female';
+                                  gender = 'Female';
                                 }
                               }
                             });
@@ -737,7 +740,12 @@ class _RequestFormState extends State<RequestForm> {
                       alignment: Alignment.center,
                       child: ElevatedButton(
                         onPressed:()async{
-                          _databaseService.addRequest(patient, contact, hospital, residence, _case, bags, bloodGroup, gender);
+                          if(donationCase != "None") {
+                            _databaseService.addRequest(patient, contact, hospital, residence, donationCase, bags, bloodGroup, gender);
+                          }
+                          else{
+                            print("ERROR: Case of donation not selected!");
+                          }
                         },
                         style: ElevatedButton.styleFrom(
                           foregroundColor: Colors.white,

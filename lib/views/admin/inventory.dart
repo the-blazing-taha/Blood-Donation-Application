@@ -12,12 +12,32 @@ class Inventory extends StatefulWidget {
 }
 
 class InventoryState extends State<Inventory> {
+  final DatabaseService _databaseService = DatabaseService.instance;
   late double progress; // Current progress value
   Timer? _timer;
   // final int durationInSeconds=3024000; // Total time for the timer
   final int durationInSeconds=60; // Total time for the timer
   final PageStorageKey _key = const PageStorageKey('progressKey');
   int _selectedIndex = 0;
+  final TextEditingController _bloodGroupController = TextEditingController();
+  final TextEditingController _hemoglobinController = TextEditingController();
+  final TextEditingController _concentrationController = TextEditingController();
+  final TextEditingController _inventoryNameController = TextEditingController();
+  final TextEditingController _rhController = TextEditingController();
+  final TextEditingController _genderController = TextEditingController();
+
+  static List<String> bloodTypes = <String>['None','A+', 'B+', 'AB+', 'O+','A-', 'B-', 'AB-', 'O-'];
+  static List<String> rhFactors = <String>['None','+','-'];
+  static List<String> genders = <String>['None','Male','Female'];
+
+
+  late String bloodGroup;
+  late double hemoglobin;
+  late String inventoryName;
+  late double concentration;
+  late String gender;
+  late String rh;
+  static int inventoryNumber = 0;
 
   @override
   void initState() {
@@ -32,6 +52,14 @@ class InventoryState extends State<Inventory> {
     });
   }
 
+  void handleInventoryExpiration(BloodInventory inventory) {
+    Timer(const Duration(seconds: 20), () {
+      _databaseService.deleteInventory(inventory.id);
+      setState(() {
+
+      });
+    });
+  }
 
   void startTimer() {
     _timer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
@@ -44,6 +72,167 @@ class InventoryState extends State<Inventory> {
       });
     });
   }
+
+  void addButton() {
+    showDialog(
+      context: context,
+      builder: (context) => SizedBox(
+        height: MediaQuery.of(context).size.height,
+        width: MediaQuery.of(context).size.width,
+        child: SingleChildScrollView(
+          child: AlertDialog(
+            title: const Text('Add Request'),
+
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  onChanged: (value){
+                    setState(() {
+                      inventoryName = value;
+                    });
+                  },
+                  controller: _inventoryNameController,
+                  decoration: const InputDecoration(hintText: "Inventory Name"),
+                ),
+                const SizedBox(height: 4,),
+                TextField(
+                  keyboardType: TextInputType.number,
+                  onChanged: (value){
+                    setState(() {
+                      hemoglobin = double.tryParse(value) ?? 0; // If parsing fails, it will default to 0
+                    });
+                  },
+                  controller: _hemoglobinController,
+                  decoration: const InputDecoration(hintText: "Hemoglobin level (g/dL)"),
+                ),
+                const SizedBox(height: 4,),
+                TextField(
+                  keyboardType: TextInputType.number,
+
+                  onChanged: (value){
+                    setState(() {
+                      concentration = double.tryParse(value) ?? 0; // If parsing fails, it will default to 0
+                    });
+                  },
+                  controller: _concentrationController,
+                  decoration: const InputDecoration(hintText: "Concentration (mL)"),
+                ),
+                const SizedBox(height: 4,),
+                DropdownMenu<String>(
+                  hintText: "Blood Group",
+                  controller: _bloodGroupController,
+                  inputDecorationTheme: InputDecorationTheme(
+                    border: MaterialStateOutlineInputBorder.resolveWith(
+                          (states) => states.contains(WidgetState.focused)
+                          ?  const OutlineInputBorder(borderSide: BorderSide(color: Colors.red))
+                          :  const OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.red,width: 3,),
+                          borderRadius:BorderRadius.all(Radius.circular(10.0))
+                      ),
+
+                    ),
+                  ),
+                  width: 325,
+                  initialSelection: bloodTypes.first,
+                  onSelected: (String? value) {
+                    setState(() {
+                      bloodGroup = value!;
+                    });
+                  },
+                  dropdownMenuEntries: bloodTypes.map<DropdownMenuEntry<String>>((String value) {
+                    return DropdownMenuEntry<String>(value: value, label: value);
+                  }).toList(),
+                ),
+                const SizedBox(height: 4,),
+                DropdownMenu<String>(
+                  hintText: "Gender",
+                  controller: _genderController,
+                  inputDecorationTheme: InputDecorationTheme(
+                    border: MaterialStateOutlineInputBorder.resolveWith(
+                          (states) => states.contains(WidgetState.focused)
+                          ?  const OutlineInputBorder(borderSide: BorderSide(color: Colors.red))
+                          :  const OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.red,width: 3,),
+                          borderRadius:BorderRadius.all(Radius.circular(10.0))
+                      ),
+
+                    ),
+                  ),
+                  width: 325,
+                  initialSelection: genders.first,
+                  onSelected: (String? value) {
+                    setState(() {
+                      gender = value!;
+                    });
+                  },
+                  dropdownMenuEntries: genders.map<DropdownMenuEntry<String>>((String value) {
+                    return DropdownMenuEntry<String>(value: value, label: value);
+                  }).toList(),
+                ),
+                const SizedBox(height: 4,),
+
+                DropdownMenu<String>(
+                  hintText: "Rh Factor",
+                  controller: _rhController,
+                  inputDecorationTheme: InputDecorationTheme(
+                    border: MaterialStateOutlineInputBorder.resolveWith(
+                          (states) => states.contains(WidgetState.focused)
+                          ?  const OutlineInputBorder(borderSide: BorderSide(color: Colors.red))
+                          :  const OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.red,width: 3,),
+                          borderRadius:BorderRadius.all(Radius.circular(10.0))
+                      ),
+
+                    ),
+                  ),
+                  width: 325,
+                  initialSelection: rhFactors.first,
+                  onSelected: (String? value) {
+                    setState(() {
+                      rh = value!;
+                    });
+                  },
+                  dropdownMenuEntries: rhFactors.map<DropdownMenuEntry<String>>((String value) {
+                    return DropdownMenuEntry<String>(value: value, label: value);
+                  }).toList(),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  _bloodGroupController.clear();
+                  _genderController.clear();
+                  _concentrationController.clear();
+                  _hemoglobinController.clear();
+                  _inventoryNameController.clear();
+                  _rhController.clear();
+                  inventoryNumber++;
+                  _databaseService.addInventory(inventoryName,bloodGroup,hemoglobin,concentration,rh,gender,inventoryNumber);
+
+                  Navigator.of(context).pop();
+                  setState(() {
+
+                  });
+                },
+                child: const Text('Add Inventory'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Cancel'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+
+
 
   @override
   void dispose() {
@@ -153,14 +342,15 @@ class InventoryState extends State<Inventory> {
           return ListView.builder(
               itemCount: snapshot.data?.length ?? 0,
               itemBuilder: (BuildContext context, int index) {
-                Inventory_ inventory = snapshot.data![index];
+                BloodInventory inventory = snapshot.data![index];
+                handleInventoryExpiration(inventory);
                 return Center(
                   child: Card(
                     color: Colors.grey[700],
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                         Row(
+                        Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
                             Text(inventory.bloodgroup,style: const TextStyle(color: Colors.white),),
@@ -168,6 +358,11 @@ class InventoryState extends State<Inventory> {
                             Text("${inventory.concentration}",style: const TextStyle(color: Colors.white),),
                           ],
                         ),
+                        Text('Inventory Number: ${inventory.number} ',style: const TextStyle(color: Colors.white,fontWeight: FontWeight.bold, fontSize: 20),),
+                        Text('Haemoglobin: ${inventory.hemoglobin} g/dL',style: const TextStyle(color: Colors.white,fontWeight: FontWeight.bold, fontSize: 20),),
+                        Text('Concentration: ${inventory.concentration} mL',style: const TextStyle(color: Colors.white,fontWeight: FontWeight.bold, fontSize: 20),),
+                        Text('Blood Type: ${inventory.bloodgroup} ',style: const TextStyle(color: Colors.white,fontWeight: FontWeight.bold, fontSize: 20),),
+                        Text('Blood Rh: ${inventory.rh} ',style: const TextStyle(color: Colors.white,fontWeight: FontWeight.bold, fontSize: 20),),
                         LinearProgressIndicator(
                           key: _key,
                           value: progress, // Bind progress to the LinearProgressIndicator
@@ -175,18 +370,19 @@ class InventoryState extends State<Inventory> {
                           color: Colors.red[900], // Progress bar color
                           backgroundColor: Colors.grey[300], // Background color
                         ),
-                        Text('${inventory.hemoglobin}',style: const TextStyle(color: Colors.white,fontWeight: FontWeight.bold, fontSize: 20),),
                       ],
                     ),
                   ),
+
+
                 );
               });},
       ),
+      floatingActionButton: FloatingActionButton(onPressed: (){
+        setState(() {
+          addButton();
+        });
+      }),
     );
   }
 }
-
-
-
-
-

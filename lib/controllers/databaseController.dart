@@ -1,4 +1,3 @@
-import 'dart:ffi';
 import 'package:blood/models/donations.dart';
 import 'package:blood/models/requests.dart';
 import 'package:blood/models/inventory.dart';
@@ -77,11 +76,13 @@ class DatabaseService {
         await db.execute('''
           CREATE TABLE $_inventoryTableName (
             $_inventoryIdColumnName INTEGER PRIMARY KEY,
+            $_inventoryNameColumnName TEXT NOT NULL,
             $_inventoryBloodTypeColumnName TEXT NOT NULL,
-            $_inventoryBloodConcentrationColumnName TEXT NOT NULL,
-            $_inventoryBloodHaemoglobinlevel INT NOT NULL,
+            $_inventoryBloodConcentrationColumnName DOUBLE NOT NULL,
+            $_inventoryBloodHaemoglobinlevel DOUBLE NOT NULL,
             $_inventoryGenderColumnName TEXT NOT NULL,
-            $_inventoryBloodRhFactorColumn TEXT NOT NULL
+            $_inventoryBloodRhFactorColumn TEXT NOT NULL,
+            $_inventoryNumberColumnName INTEGER NOT NULL
           )
         ''');
       },
@@ -186,6 +187,34 @@ class DatabaseService {
     }
   }
 
+  Future<void> deleteDonation(int id) async {
+    final db = await database;
+    try {
+      await db
+          .delete(donationsTableName, where: '$_donationIdColumnName = ?', whereArgs: [
+        id,
+      ]);
+    }
+    catch(e){
+      print("ERROR IN DELETING DONATION APPEAL: $e");
+    }
+  }
+
+
+
+  Future<void> deleteInventory(int id) async {
+    final db = await database;
+    try {
+      await db
+          .delete(_inventoryTableName, where: '$_inventoryIdColumnName = ?', whereArgs: [
+        id,
+      ]);
+    }
+    catch(e){
+      print("ERROR IN DELETING INVENTORY: $e");
+    }
+  }
+
   Future<int?> noOfRequests() async {
     final db = await database; // Ensure `database` is initialized
     try {
@@ -208,7 +237,7 @@ class DatabaseService {
     }
   }
 
-  Future<void> addInventory(String name,String bloodGroup, int hemoglobin, String concentration, String rh, String gender, int number) async {
+  Future<void> addInventory(String name,String bloodGroup, double hemoglobin, double concentration, String rh, String gender, int number) async {
     final db = await database;
     await db.insert(_inventoryTableName, {
       _inventoryNameColumnName: name,
@@ -217,19 +246,19 @@ class DatabaseService {
       _inventoryBloodHaemoglobinlevel: hemoglobin,
       _inventoryBloodConcentrationColumnName: concentration,
       _inventoryBloodRhFactorColumn: rh,
-      _inventoryGenderColumnName: gender
+      _inventoryGenderColumnName: gender,
     });
   }
 
-  Future<List<Inventory_>> getInventory() async {
+  Future<List<BloodInventory>> getInventory() async {
     final db = await database;
     final data = await db.query(_inventoryTableName);
-    List<Inventory_> inventory = data
-        .map((e) => Inventory_(
+    List<BloodInventory> inventory = data
+        .map((e) => BloodInventory(
         id: e[_inventoryIdColumnName] as int,
         name: e[_inventoryNameColumnName] as String,
-        hemoglobin: e[_inventoryBloodHaemoglobinlevel] as int,
-        concentration: e[_inventoryBloodConcentrationColumnName] as int,
+        hemoglobin: e[_inventoryBloodHaemoglobinlevel] as double,
+        concentration: e[_inventoryBloodConcentrationColumnName] as double,
         bloodgroup: e[_inventoryBloodTypeColumnName] as String,
         rh: e[_inventoryBloodRhFactorColumn] as String,
         gender: e[_inventoryGenderColumnName] as String,

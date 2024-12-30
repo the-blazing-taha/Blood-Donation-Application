@@ -1,6 +1,7 @@
 import 'package:blood/views/admin/dashboard.dart';
 import 'package:blood/views/user/details.dart';
 import 'package:blood/views/user/donors_list.dart';
+import 'package:blood/views/user/my_donation_appeal.dart';
 import 'package:blood/views/user/profile.dart';
 import 'package:blood/views/user/registerdonor.dart';
 import 'package:blood/views/user/request_form.dart';
@@ -188,6 +189,28 @@ class _HomeState extends State<Home> {
               ),
               ListTile(
                 leading: const Icon(
+                  Icons.format_align_center,
+                  color: Colors.white,
+                ),
+                title: const Text('My Donation Appeal',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16)),
+                selected: _selectedIndex == 4,
+                onTap: () {
+                  _onItemTapped(3);
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const DonationAppeal(),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(
                   Icons.request_page,
                   color: Colors.white,
                 ),
@@ -196,9 +219,9 @@ class _HomeState extends State<Home> {
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 16)),
-                selected: _selectedIndex == 4,
+                selected: _selectedIndex == 5,
                 onTap: () {
-                  _onItemTapped(4);
+                  _onItemTapped(5);
                   Navigator.pop(context);
                   Navigator.push(
                     context,
@@ -218,9 +241,9 @@ class _HomeState extends State<Home> {
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 16)),
-                selected: _selectedIndex == 5,
+                selected: _selectedIndex == 6,
                 onTap: () {
-                  _onItemTapped(5);
+                  _onItemTapped(6);
                   Navigator.pop(context);
                   Navigator.push(
                     context,
@@ -241,9 +264,9 @@ class _HomeState extends State<Home> {
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 16)),
-                selected: _selectedIndex == 6,
+                selected: _selectedIndex == 7,
                 onTap: () {
-                  _onItemTapped(6);
+                  _onItemTapped(7);
                   Navigator.pop(context);
                   _authController.signout();
                 },
@@ -259,9 +282,9 @@ class _HomeState extends State<Home> {
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 16)),
-                selected: _selectedIndex == 6,
+                selected: _selectedIndex == 8,
                 onTap: () {
-                  _onItemTapped(6);
+                  _onItemTapped(8);
                   Navigator.pop(context);
                   Navigator.push(
                     context,

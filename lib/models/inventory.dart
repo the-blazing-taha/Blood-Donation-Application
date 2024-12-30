@@ -1,15 +1,14 @@
-class Inventory_ {
+class BloodInventory {
   final int id;
   final String name;
-  final int hemoglobin;
-  final int concentration;
+  final double hemoglobin;
+  final double concentration;
   final String bloodgroup;
   final String rh;
   final String gender;
   final int number;
 
-
-  Inventory_({
+  BloodInventory({
     required this.id,
     required this.name,
     required this.hemoglobin,

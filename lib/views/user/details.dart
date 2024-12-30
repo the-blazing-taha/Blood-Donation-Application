@@ -66,197 +66,231 @@ class DetailsState extends State<Details> {
         width: MediaQuery.of(context).size.width,
         child: Padding(
           padding: const EdgeInsets.all(8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(
-                height: 10,
-              ),
-              const Text("Blood needed before:"),
-              const SizedBox(
-                height: 5,
-              ),
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  '10 February, 2024',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(
+                  height: 10,
                 ),
-              ),
-              const SizedBox(
-                height: 20,
-              ),
-              const Text("Patient Name:"),
-              const SizedBox(
-                height: 5,
-              ),
-               Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  patientName,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
+                const Text("Blood needed before:"),
+                const SizedBox(
+                  height: 5,
                 ),
-              ),
-              const SizedBox(
-                height: 20,
-              ),
-              const Text("Location:"),
-              const SizedBox(
-                height: 5,
-              ),
-               Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  residence,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(
-                height: 20,
-              ),
-              const Text("Blood Group:"),
-              const SizedBox(
-                height: 5,
-              ),
-               Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  bloodGroup,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(
-                height: 20,
-              ),
-              const Text("Contact Number:"),
-              const SizedBox(
-                height: 5,
-              ),
-               Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  contact,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(
-                height: 20,
-              ),
-              const Text("Cause:"),
-              const SizedBox(
-                height: 5,
-              ),
-               Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  case_,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(
-                height: 20,
-              ),
-              const Text("Number of Bags:"),
-              const SizedBox(
-                height: 5,
-              ),
-               Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  bags.toString(),
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(
-                height: 20,
-              ),
-              const Text("Others:"),
-              const SizedBox(
-                height: 5,
-              ),
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Needed Urgently',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(
-                height: 15,
-              ),
-              Container(
-                alignment: Alignment.center,
-                child: ElevatedButton(
-                  onPressed: () {
-                    // Respond to button press
-                  },
-                  style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    backgroundColor: Colors.red[900], // Background color
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 120, vertical: 10), // Padding
-                    shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(10), // Rounded corners
-                    ),
-                    elevation: 5, // Shadow elevation
-                  ),
-                  child: const Text(
-                    'Call',
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    '10 February, 2024',
                     style: TextStyle(
-                      fontSize: 18, // Font size
-                      fontWeight: FontWeight.bold, // Font weight
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(
-                height: 10,
-              ),
-              Container(
-                alignment: Alignment.center,
-                child: ElevatedButton(
-                  onPressed: () {
-                    // Respond to button press
-                  },
-                  style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.red[900],
-                    // backgroundColor: , // Background color
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 100, vertical: 10), // Padding
-                    shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(10), // Rounded corners
+                const SizedBox(
+                  height: 20,
+                ),
+                const Text("Patient Name:"),
+                const SizedBox(
+                  height: 5,
+                ),
+                 Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    patientName,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
                     ),
-
-                    elevation: 5, // Shadow elevation
                   ),
-                  child: const Text(
-                    'Message',
+                ),
+                const SizedBox(
+                  height: 20,
+                ),
+                const Text("Gender:"),
+                const SizedBox(
+                  height: 5,
+                ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    gender,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(
+                  height: 20,
+                ),
+                const Text("Hospital:"),
+                const SizedBox(
+                  height: 5,
+                ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    hospital,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(
+                  height: 20,
+                ),
+                const Text("Location:"),
+                const SizedBox(
+                  height: 5,
+                ),
+                 Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    residence,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(
+                  height: 20,
+                ),
+                const Text("Blood Group:"),
+                const SizedBox(
+                  height: 5,
+                ),
+                 Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    bloodGroup,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(
+                  height: 20,
+                ),
+                const Text("Contact Number:"),
+                const SizedBox(
+                  height: 5,
+                ),
+                 Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    contact,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(
+                  height: 20,
+                ),
+                const Text("Case:"),
+                const SizedBox(
+                  height: 5,
+                ),
+                 Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    case_,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(
+                  height: 20,
+                ),
+                const Text("Number of Bags:"),
+                const SizedBox(
+                  height: 5,
+                ),
+                 Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    bags.toString(),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(
+                  height: 20,
+                ),
+                const Text("Others:"),
+                const SizedBox(
+                  height: 5,
+                ),
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Needed Urgently',
                     style: TextStyle(
-                      fontSize: 18, // Font size
-                      fontWeight: FontWeight.bold, // Font weight
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-              )
-            ],
+                const SizedBox(
+                  height: 15,
+                ),
+                Container(
+                  alignment: Alignment.center,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      // Respond to button press
+                    },
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor: Colors.red[900], // Background color
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 120, vertical: 10), // Padding
+                      shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(10), // Rounded corners
+                      ),
+                      elevation: 5, // Shadow elevation
+                    ),
+                    child: const Text(
+                      'Call',
+                      style: TextStyle(
+                        fontSize: 18, // Font size
+                        fontWeight: FontWeight.bold, // Font weight
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(
+                  height: 10,
+                ),
+                Container(
+                  alignment: Alignment.center,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      // Respond to button press
+                    },
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: Colors.red[900],
+                      // backgroundColor: , // Background color
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 100, vertical: 10), // Padding
+                      shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(10), // Rounded corners
+                      ),
+            
+                      elevation: 5, // Shadow elevation
+                    ),
+                    child: const Text(
+                      'Message',
+                      style: TextStyle(
+                        fontSize: 18, // Font size
+                        fontWeight: FontWeight.bold, // Font weight
+                      ),
+                    ),
+                  ),
+                )
+              ],
+            ),
           ),
         ),
       ),
