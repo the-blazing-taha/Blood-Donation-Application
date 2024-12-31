@@ -1,7 +1,6 @@
 import 'dart:core';
 import 'package:blood/controllers/auth_controller.dart';
 import 'package:blood/views/auth/loginscreen.dart';
-import 'package:email_auth/email_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -96,10 +95,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ));
     }
   }
-
-
-
-
   selectGalleryImage() async {
     Uint8List im = await _authController.pickProfileImage(ImageSource.gallery);
     setState(() {
@@ -112,33 +107,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() {
       _image = im;
     });
-    print('Image captured successfully');
   }
 
   final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _otpController = TextEditingController();
 
-  void sendOTP() async {
-    EmailAuth emailAuth = EmailAuth(sessionName: "Sample session");
-    var res = await emailAuth.sendOtp(recipientMail: _emailController.text);
-    if (res) {
-      print("OTP sent");
-    } else {
-      print("OTP could not be sent!");
-    }
-  }
 
-  void verifyOTP() async {
-    EmailAuth(sessionName: "Sample Session");
-    EmailAuth emailAuth = EmailAuth(sessionName: "Sample session");
-    var res = emailAuth.validateOtp(
-        recipientMail: _emailController.text, userOtp: _otpController.text);
-    if (res) {
-      print("OTP Verified");
-    } else {
-      print("OTP not verified!");
-    }
-  }
+
 
   @override
   Widget build(BuildContext context) {

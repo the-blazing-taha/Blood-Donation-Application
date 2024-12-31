@@ -202,6 +202,7 @@ class DatabaseService {
 
 
 
+
   Future<void> deleteInventory(int id) async {
     final db = await database;
     try {

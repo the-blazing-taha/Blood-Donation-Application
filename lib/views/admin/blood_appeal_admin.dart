@@ -1,13 +1,11 @@
 import 'package:blood/models/donations.dart';
 import 'package:blood/views/user/donor_details.dart';
-import 'package:blood/views/user/profile.dart';
-import 'package:blood/views/user/registerdonor.dart';
-import 'package:blood/views/user/request_form.dart';
 import 'package:flutter/material.dart';
 
 import '../../controllers/databaseController.dart';
-import 'home.dart';
-import 'my_requests.dart';
+import 'dashboard.dart';
+import 'inventory.dart';
+
 
 class DonorList extends StatefulWidget {
   const DonorList({super.key});
@@ -60,19 +58,18 @@ class _DonorListState extends State<DonorList> {
     );
 
 
-    int _selectedIndex = 0;
+    int selectedIndex = 0;
 
-    void _onItemTapped(int index) {
+    void onItemTapped(int index) {
       setState(() {
-        _selectedIndex = index;
+        selectedIndex = index;
       });
     }
 
     return Scaffold(
-
       appBar: AppBar(
         title: const Text(
-          "All Donors Available",
+          'Dashboard',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: Colors.white,
@@ -82,7 +79,9 @@ class _DonorListState extends State<DonorList> {
           IconButton(
             splashRadius: 10,
             padding: const EdgeInsets.all(1.0),
-            onPressed: () {},
+            onPressed: () {
+
+            },
             icon: const Icon(
               Icons.person,
               color: Colors.white,
@@ -97,7 +96,7 @@ class _DonorListState extends State<DonorList> {
                 color: Colors.white,
               ),
               onPressed: () {
-                Scaffold.of(context).openDrawer();
+                Scaffold.of(context).openDrawer();  // This will now work correctly
               },
             );
           },
@@ -105,10 +104,12 @@ class _DonorListState extends State<DonorList> {
         backgroundColor: Colors.red[900],
         centerTitle: true,
       ),
+
       drawer: Opacity(
         opacity: 0.6,
         child: Drawer(
           backgroundColor: Colors.red[900],
+
           child: ListView(
             padding: EdgeInsets.zero,
             children: [
@@ -116,157 +117,46 @@ class _DonorListState extends State<DonorList> {
                 decoration: BoxDecoration(
                   color: Colors.red[900],
                 ),
-                child: const Text(
-                  'Life Sync',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 30),
-                ),
+                child: const Text('Drawer Header',style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 30),),
               ),
+
               ListTile(
-                leading: const Icon(
-                  Icons.home,
-                  color: Colors.white,
-                ),
-                title: const Text(
-                  'Home',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16),
-                ),
-                selected: _selectedIndex == 0,
+                leading: const Icon(Icons.home, color: Colors.white,),
+                title: const Text('Dashboard',style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold, fontSize: 16),),
+                selected: selectedIndex == 0,
                 onTap: () {
-                  _onItemTapped(0);
+                  onItemTapped(0);
                   Navigator.pop(context);
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const Home(),
+                      builder: (context) => const Dashboard(),
                     ),
                   );
                 },
               ),
+
               ListTile(
-                leading: const Icon(
-                  Icons.bloodtype_sharp,
-                  color: Colors.white,
-                ),
-                title: const Text(
-                  'Your Requests',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16),
-                ),
-                selected: _selectedIndex == 1,
+                leading: const Icon(Icons.inventory_2_sharp, color: Colors.white,),
+                title: const Text('Inventory', style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold, fontSize: 16),),
+                selected: selectedIndex == 1,
                 onTap: () {
-                  _onItemTapped(1);
+                  onItemTapped(1);
                   Navigator.pop(context);
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const Requests(),
+                      builder: (context) => const Inventory(),
                     ),
                   );
                 },
               ),
-              ListTile(
-                leading: const Icon(
-                  Icons.people,
-                  color: Colors.white,
-                ),
-                title: const Text(
-                  'All Donors',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16),
-                ),
-                selected: _selectedIndex == 2,
-                onTap: () {
-                  _onItemTapped(2);
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const DonorList(),
-                    ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(
-                  Icons.person,
-                  color: Colors.white,
-                ),
-                title: const Text('Register as Donor',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16)),
-                selected: _selectedIndex == 3,
-                onTap: () {
-                  _onItemTapped(3);
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const RequestDonor(),
-                    ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(
-                  Icons.request_page,
-                  color: Colors.white,
-                ),
-                title: const Text('Add Blood Request',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16)),
-                selected: _selectedIndex == 4,
-                onTap: () {
-                  _onItemTapped(4);
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const RequestForm(),
-                    ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(
-                  Icons.request_page,
-                  color: Colors.white,
-                ),
-                title: const Text('Profile',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16)),
-                selected: _selectedIndex == 5,
-                onTap: () {
-                  _onItemTapped(5);
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const Profile(),
-                    ),
-                  );
-                },
-              ),
-              // Other ListTiles...
             ],
           ),
         ),
       ),
+
+
 
 
 
@@ -318,12 +208,22 @@ class _DonorListState extends State<DonorList> {
                                 const SizedBox(width: 4), // Space between the icon and the text
                                 Text(donation.residence), // Subtitle text
                               ],
-
                             ),
                           ),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: <Widget>[
+                              OutlinedButton(
+                                style: OutlinedButton.styleFrom(
+                                  disabledBackgroundColor:Colors.white,
+                                ),
+                                onPressed: () {
+                                  databaseService.deleteDonation(donation.id);
+                                  setState(() {});
+                                },
+                                child: Text('Delete', style: TextStyle(color: Colors.red[900])),
+                              ),
+                              const SizedBox(height: 5,),
                               ElevatedButton(
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.red[900],

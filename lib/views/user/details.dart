@@ -1,7 +1,5 @@
-import 'package:blood/models/requests.dart';
 import 'package:flutter/material.dart';
 
-import '../../controllers/databaseController.dart';
 
 class Details extends StatefulWidget {
   final dynamic patient;
@@ -39,6 +37,9 @@ class DetailsState extends State<Details> {
     final int bags = widget.bags; // Assuming bags is an int
     final String bloodGroup = widget.bloodGroup;
     final String gender = widget.gender;
+
+
+
 
     return Scaffold(
       appBar: AppBar(

@@ -1,7 +1,7 @@
-import 'package:blood/models/donations.dart';
 import 'package:blood/views/admin/dashboard.dart';
-import 'package:blood/views/user/donor_details.dart';
+import 'package:blood/views/user/details.dart';
 import 'package:blood/views/user/donors_list.dart';
+import 'package:blood/views/user/my_donation_appeal.dart';
 import 'package:blood/views/user/profile.dart';
 import 'package:blood/views/user/registerdonor.dart';
 import 'package:blood/views/user/request_form.dart';
@@ -9,16 +9,19 @@ import 'package:flutter/material.dart';
 
 import '../../controllers/auth_controller.dart';
 import '../../controllers/databaseController.dart';
-import 'my_requests.dart';
+import '../../models/requests.dart';
+import '../user/home.dart';
+import '../user/my_requests.dart';
 
-class DonationAppeal extends StatefulWidget {
-  const DonationAppeal({super.key});
+class BloodRequestsUser extends StatefulWidget {
+  const BloodRequestsUser({super.key});
+
 
   @override
-  State<DonationAppeal> createState() => _HomeState();
+  State<BloodRequestsUser> createState() => _BloodRequestsUserState();
 }
 
-class _HomeState extends State<DonationAppeal> {
+class _BloodRequestsUserState extends State<BloodRequestsUser> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = "";
   int _selectedIndex = 0;
@@ -39,7 +42,7 @@ class _HomeState extends State<DonationAppeal> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          "My Donation Appeal",
+          "All Blood Requests",
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: Colors.white,
@@ -110,7 +113,7 @@ class _HomeState extends State<DonationAppeal> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const DonationAppeal(),
+                      builder: (context) => const Home(),
                     ),
                   );
                 },
@@ -187,6 +190,28 @@ class _HomeState extends State<DonationAppeal> {
               ),
               ListTile(
                 leading: const Icon(
+                  Icons.format_align_center,
+                  color: Colors.white,
+                ),
+                title: const Text('My Donation Appeal',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16)),
+                selected: _selectedIndex == 4,
+                onTap: () {
+                  _onItemTapped(3);
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const DonationAppeal(),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(
                   Icons.request_page,
                   color: Colors.white,
                 ),
@@ -195,9 +220,9 @@ class _HomeState extends State<DonationAppeal> {
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 16)),
-                selected: _selectedIndex == 4,
+                selected: _selectedIndex == 5,
                 onTap: () {
-                  _onItemTapped(4);
+                  _onItemTapped(5);
                   Navigator.pop(context);
                   Navigator.push(
                     context,
@@ -217,9 +242,9 @@ class _HomeState extends State<DonationAppeal> {
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 16)),
-                selected: _selectedIndex == 5,
+                selected: _selectedIndex == 6,
                 onTap: () {
-                  _onItemTapped(5);
+                  _onItemTapped(6);
                   Navigator.pop(context);
                   Navigator.push(
                     context,
@@ -240,9 +265,9 @@ class _HomeState extends State<DonationAppeal> {
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 16)),
-                selected: _selectedIndex == 6,
+                selected: _selectedIndex == 7,
                 onTap: () {
-                  _onItemTapped(6);
+                  _onItemTapped(7);
                   Navigator.pop(context);
                   _authController.signout();
                 },
@@ -258,9 +283,9 @@ class _HomeState extends State<DonationAppeal> {
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 16)),
-                selected: _selectedIndex == 6,
+                selected: _selectedIndex == 8,
                 onTap: () {
-                  _onItemTapped(6);
+                  _onItemTapped(8);
                   Navigator.pop(context);
                   Navigator.push(
                     context,
@@ -302,12 +327,12 @@ class _HomeState extends State<DonationAppeal> {
             ),
           ),
           const Text(
-            'Your Donation Appeal',
+            'All Requests',
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
           ),
           Expanded(
-            child: FutureBuilder<List<Donation>>(
-              future: databaseService.getDonation(),
+            child: FutureBuilder<List<Request>>(
+              future: databaseService.getRequest(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
@@ -320,7 +345,7 @@ class _HomeState extends State<DonationAppeal> {
                 return ListView.builder(
                   itemCount: snapshot.data!.length,
                   itemBuilder: (BuildContext context, int index) {
-                    Donation donation = snapshot.data![index];
+                    Request request = snapshot.data![index];
                     return Center(
                       child: Card(
                         child: Column(
@@ -336,7 +361,7 @@ class _HomeState extends State<DonationAppeal> {
                                   ),
                                   padding: const EdgeInsets.all(5.0),
                                   child: Text(
-                                    donation.bloodGroup,
+                                    request.bloodGroup,
                                     style: const TextStyle(
                                       fontSize: 22,
                                       color: Colors.white,
@@ -347,7 +372,7 @@ class _HomeState extends State<DonationAppeal> {
                             ),
                             ListTile(
                               title: Text(
-                                donation.name,
+                                request.name,
                                 style: const TextStyle(
                                     fontWeight: FontWeight.bold),
                                 overflow: TextOverflow.ellipsis, // Use ellipsis for overflow
@@ -360,7 +385,7 @@ class _HomeState extends State<DonationAppeal> {
                                 ),
                               ),
                               trailing: Text(
-                                "${donation.donationsDone} Donations Done",
+                                "${request.bags} Bags | ${request.case_}",
                                 style: const TextStyle(
                                     color: Colors.grey, fontSize: 15),
                               ),
@@ -368,24 +393,13 @@ class _HomeState extends State<DonationAppeal> {
                                 children: [
                                   const Icon(Icons.location_on_rounded),
                                   const SizedBox(width: 4),
-                                  Text(donation.residence),
+                                  Text(request.residence),
                                 ],
                               ),
                             ),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: <Widget>[
-                                OutlinedButton(
-                                  style: OutlinedButton.styleFrom(
-                                    disabledBackgroundColor:Colors.white,
-                                  ),
-                                  onPressed: () {
-                                    databaseService.deleteDonation(donation.id);
-                                    setState(() {});
-                                  },
-                                  child: Text('Delete', style: TextStyle(color: Colors.red[900])),
-                                ),
-                                const SizedBox(height: 6,),
                                 ElevatedButton(
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.red[900],
@@ -394,14 +408,15 @@ class _HomeState extends State<DonationAppeal> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => DonorDetails(
-                                          patient: donation.name,
-                                          contact: donation.contact,
-                                          hospital: donation.hospital,
-                                          residence: donation.residence,
-                                          bloodGroup: donation.bloodGroup,
-                                          gender: donation.gender,
-                                          noOfDonations: donation.donationsDone,
+                                        builder: (context) => Details(
+                                          patient: request.name,
+                                          contact: request.contact,
+                                          hospital: request.hospital,
+                                          residence: request.residence,
+                                          case_: request.case_,
+                                          bags: request.bags,
+                                          bloodGroup: request.bloodGroup,
+                                          gender: request.gender,
                                         ),
                                       ),
                                     );

@@ -39,12 +39,6 @@ class InventoryState extends State<Inventory> {
   late String rh;
   static int inventoryNumber = 0;
 
-  @override
-  void initState() {
-    super.initState();
-    progress = 1.0; // Start with full progress
-    startTimer();
-  }
 
   void onItemTapped(int index) {
     setState(() {
@@ -61,20 +55,11 @@ class InventoryState extends State<Inventory> {
     });
   }
 
-  void startTimer() {
-    _timer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
-      setState(() {
-        progress -= 1 / (durationInSeconds * 10); // Decrease progress
-        if (progress <= 0) {
-          progress = 0;
-          _timer?.cancel(); // Stop the timer when progress reaches 0
-        }
-      });
-    });
-  }
+
 
   void addButton() {
     showDialog(
+
       context: context,
       builder: (context) => SizedBox(
         height: MediaQuery.of(context).size.height,
@@ -234,11 +219,6 @@ class InventoryState extends State<Inventory> {
 
 
 
-  @override
-  void dispose() {
-    _timer?.cancel(); // Cancel timer to avoid memory leaks
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -363,12 +343,16 @@ class InventoryState extends State<Inventory> {
                         Text('Concentration: ${inventory.concentration} mL',style: const TextStyle(color: Colors.white,fontWeight: FontWeight.bold, fontSize: 20),),
                         Text('Blood Type: ${inventory.bloodgroup} ',style: const TextStyle(color: Colors.white,fontWeight: FontWeight.bold, fontSize: 20),),
                         Text('Blood Rh: ${inventory.rh} ',style: const TextStyle(color: Colors.white,fontWeight: FontWeight.bold, fontSize: 20),),
-                        LinearProgressIndicator(
-                          key: _key,
-                          value: progress, // Bind progress to the LinearProgressIndicator
-                          minHeight: 20, // Set the height of the progress bar
-                          color: Colors.red[900], // Progress bar color
-                          backgroundColor: Colors.grey[300], // Background color
+                        const SizedBox(height: 5,),
+                        OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            disabledBackgroundColor:Colors.white,
+                          ),
+                          onPressed: () {
+                            databaseService.deleteInventory(inventory.id);
+                            setState(() {});
+                          },
+                          child: Text('Delete', style: TextStyle(color: Colors.red[900])),
                         ),
                       ],
                     ),
@@ -382,7 +366,7 @@ class InventoryState extends State<Inventory> {
         setState(() {
           addButton();
         });
-      }),
+      },child: const Icon(Icons.add),),
     );
   }
 }
