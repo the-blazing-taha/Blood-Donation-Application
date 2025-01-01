@@ -31,7 +31,209 @@ class _HomeState extends State<DonationAppeal> {
       _selectedIndex = index;
     });
   }
+  final DatabaseService _databaseService = DatabaseService.instance;
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _genderController = TextEditingController();
+  final TextEditingController _bloodGroupController = TextEditingController();
+  final TextEditingController _hospitalController = TextEditingController();
+  final TextEditingController _locationController = TextEditingController();
+  final TextEditingController _donationsNumberController = TextEditingController();
+  final TextEditingController _detailsController = TextEditingController();
+  static List<String> bloodTypes = <String>['None','A+', 'B+', 'AB+', 'O+','A-', 'B-', 'AB-', 'O-'];
+  static List<String> genders = <String>['None','Male','Female'];
+  String bloodGroup='';
+  String gender='' ;
 
+  String hospital='';
+  String patient='';
+  String residence='';
+  int numberOfDonations=-1;
+  String contact='';
+  String details='';
+
+  void updateButton(int id) {
+    showDialog(
+      context: context,
+      builder: (context) => SizedBox(
+        height: MediaQuery.of(context).size.height,
+        width: MediaQuery.of(context).size.width,
+        child: SingleChildScrollView(
+          child: AlertDialog(
+            title: const Text('Update Request'),
+
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  onChanged: (value){
+                    setState(() {
+                      patient=value;
+                    });
+                  },
+                  controller: _nameController,
+                  decoration: const InputDecoration(hintText: "Patient Name"),
+                ),
+                const SizedBox(height: 4,),
+                TextField(
+                  onChanged: (value){
+                    setState(() {
+                      residence=value;
+                    });
+                  },
+                  controller: _locationController,
+                  decoration: const InputDecoration(hintText: "Location"),
+                ),
+                const SizedBox(height: 4,),
+                TextField(
+                  keyboardType: TextInputType.number,
+                  onChanged: (value){
+                    setState(() {
+                      numberOfDonations = int.tryParse(value) ?? 0; // If parsing fails, it will default to 0
+                    });
+                  },
+                  controller: _donationsNumberController,
+                  decoration: const InputDecoration(hintText: "No of donations done:"),
+                ),
+
+                const SizedBox(height: 4,),
+                TextField(
+                  onChanged: (value){
+                    setState(() {
+                      hospital=value;
+                    });
+                  },
+                  controller: _hospitalController,
+                  decoration: const InputDecoration(hintText: "Hospital"),
+                ),
+                const SizedBox(height: 4,),
+                TextField(
+                  onChanged: (value){
+                    setState(() {
+                      details=value;
+                    });
+                  },
+                  controller: _detailsController,
+                  decoration: const InputDecoration(hintText: "Details"),
+                ),
+                const SizedBox(height: 4,),
+                DropdownMenu<String>(
+                  hintText: "Blood Group",
+                  controller: _bloodGroupController,
+                  inputDecorationTheme: InputDecorationTheme(
+                    border: MaterialStateOutlineInputBorder.resolveWith(
+                          (states) => states.contains(WidgetState.focused)
+                          ?  const OutlineInputBorder(borderSide: BorderSide(color: Colors.red))
+                          :  const OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.red,width: 3,),
+                          borderRadius:BorderRadius.all(Radius.circular(10.0))
+                      ),
+
+                    ),
+                  ),
+                  width: 325,
+                  initialSelection: bloodTypes.first,
+                  onSelected: (String? value) {
+                    setState(() {
+                      bloodGroup=value!;
+                    });
+                  },
+                  dropdownMenuEntries: bloodTypes.map<DropdownMenuEntry<String>>((String value) {
+                    return DropdownMenuEntry<String>(value: value, label: value);
+                  }).toList(),
+                ),
+                const SizedBox(height: 4,),
+                DropdownMenu<String>(
+                  hintText: "Gender",
+                  controller: _genderController,
+                  inputDecorationTheme: InputDecorationTheme(
+                    border: MaterialStateOutlineInputBorder.resolveWith(
+                          (states) => states.contains(WidgetState.focused)
+                          ?  const OutlineInputBorder(borderSide: BorderSide(color: Colors.red))
+                          :  const OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.red,width: 3,),
+                          borderRadius:BorderRadius.all(Radius.circular(10.0))
+                      ),
+
+                    ),
+                  ),
+                  width: 325,
+                  initialSelection: genders.first,
+                  onSelected: (String? value) {
+                    setState(() {
+
+                    });
+                  },
+                  dropdownMenuEntries: genders.map<DropdownMenuEntry<String>>((String value) {
+                    return DropdownMenuEntry<String>(value: value, label: value);
+                  }).toList(),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  if(patient!=''){
+                    _databaseService.updateDonationAppeal(id: id, name: patient);
+                    Navigator.of(context).pop();
+                  }
+                  if(bloodGroup!=''){
+                    _databaseService.updateDonationAppeal(id: id, bloodGroup: bloodGroup);
+                    Navigator.of(context).pop();
+                  }
+                  if(gender!=''){
+                    _databaseService.updateDonationAppeal(id: id, gender: gender);
+                    Navigator.of(context).pop();
+                  }
+                  if(residence!=''){
+                    _databaseService.updateDonationAppeal(id: id, residence: residence);
+                    Navigator.of(context).pop();
+                  }
+                  if(contact!=''){
+                    _databaseService.updateDonationAppeal(id: id, contact: contact);
+                    Navigator.of(context).pop();
+                  }
+                  if(numberOfDonations!=-1){
+                    _databaseService.updateDonationAppeal(id: id, donationsDone: numberOfDonations);
+                    Navigator.of(context).pop();
+                  }
+                  if(details!=''){
+                    _databaseService.updateDonationAppeal(id: id, details: details);
+                    Navigator.of(context).pop();
+                  }
+                  _genderController.clear();
+                  _nameController.clear();
+                  _bloodGroupController.clear();
+                  _locationController.clear();
+                  _detailsController.clear();
+                  _genderController.clear();
+                  _donationsNumberController.clear();
+                  _hospitalController.clear();
+                  setState(() {
+
+                  });
+                },
+                child: const Text('Update Donation Appeal'),
+              ),
+              TextButton(
+                onPressed: () {
+                  _genderController.clear();
+                  _nameController.clear();
+                  _bloodGroupController.clear();
+                  _locationController.clear();
+                  _detailsController.clear();
+                  _genderController.clear();
+                  _donationsNumberController.clear();
+                  _hospitalController.clear();
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Cancel'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
   @override
   Widget build(BuildContext context) {
     final DatabaseService databaseService = DatabaseService.instance;
@@ -380,6 +582,19 @@ class _HomeState extends State<DonationAppeal> {
                                     disabledBackgroundColor:Colors.white,
                                   ),
                                   onPressed: () {
+                                    updateButton(donation.id);
+                                    setState(() {
+
+                                    });
+                                  },
+                                  child: Text('Update', style: TextStyle(color: Colors.red[900])),
+                                ),
+                                const SizedBox(height: 4,),
+                                OutlinedButton(
+                                  style: OutlinedButton.styleFrom(
+                                    disabledBackgroundColor:Colors.white,
+                                  ),
+                                  onPressed: () {
                                     databaseService.deleteDonation(donation.id);
                                     setState(() {});
                                   },
@@ -402,6 +617,7 @@ class _HomeState extends State<DonationAppeal> {
                                           bloodGroup: donation.bloodGroup,
                                           gender: donation.gender,
                                           noOfDonations: donation.donationsDone,
+                                          details: donation.details,
                                         ),
                                       ),
                                     );

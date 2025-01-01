@@ -335,6 +335,94 @@ class DatabaseService {
     }
   }
 
+
+  Future<void> updateDonationAppeal(
+      {required int id,
+        String name = '',
+        String contact = '',
+        String hospital = '',
+        String residence = '',
+        int donationsDone = -1,
+        String bloodGroup = '',
+        String gender = '',
+        String details=''}) async {
+    final db = await database;
+    try {
+      if (name != '') {
+        String sql = '''
+    UPDATE $donationsTableName
+    SET 
+      $_patientNameColumnName = '$name' WHERE $_donationIdColumnName = $id
+  ''';
+        await db.rawUpdate(sql);
+      }
+      if (contact != '') {
+        String sql = '''
+    UPDATE $donationsTableName
+    SET 
+      $_contactColumnName = '$contact' WHERE $_donationIdColumnName = $id
+  ''';
+        await db.rawUpdate(sql);
+      }
+
+      if (donationsDone != -1) {
+        String sql = '''
+    UPDATE $donationsTableName
+    SET 
+      $_donationsNumberColumn = '$donationsDone' WHERE $_donationIdColumnName = $id
+  ''';
+        await db.rawUpdate(sql);
+      }
+
+      if (residence != '') {
+        String sql = '''
+    UPDATE $donationsTableName
+    SET 
+      $_residenceNameColumn = '$residence' WHERE $_donationIdColumnName = $id
+  ''';
+        await db.rawUpdate(sql);
+      }
+      if (bloodGroup != '') {
+        String sql = '''
+    UPDATE $donationsTableName
+    SET 
+      $_bloodGroupColumn = '$bloodGroup' WHERE $_donationIdColumnName = $id
+  ''';
+        await db.rawUpdate(sql);
+      }
+      if (gender != '') {
+        String sql = '''
+    UPDATE $donationsTableName
+    SET 
+      $_genderTypeColumn = '$gender' WHERE $_donationIdColumnName = $id
+  ''';
+        await db.rawUpdate(sql);
+      }
+
+      if (details != '') {
+        String sql = '''
+    UPDATE $donationsTableName
+    SET 
+      $_detailsColumnName = '$details' WHERE $_donationIdColumnName = $id
+  ''';
+        await db.rawUpdate(sql);
+      }
+      if (hospital != '') {
+        String sql = '''
+    UPDATE $donationsTableName
+    SET 
+      $_hospitalNameColumn = '$hospital' WHERE $_donationIdColumnName = $id
+  ''';
+        await db.rawUpdate(sql);
+      }
+    } catch (e) {
+      print("ERROR IN UPDATING DONATION APPEAL: $e");
+    }
+  }
+
+
+
+
   Future<void> deleteRequest(int id) async {
     final db = await database;
     try {

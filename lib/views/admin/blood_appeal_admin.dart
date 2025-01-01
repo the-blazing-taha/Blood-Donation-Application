@@ -240,6 +240,7 @@ class _DonorListState extends State<DonorList> {
                                         bloodGroup: donation.bloodGroup,
                                         gender: donation.gender,
                                         noOfDonations: donation.donationsDone,
+                                        details: donation.details,
                                       ),
                                     ),
                                   );

@@ -180,7 +180,7 @@ class _RequestsState extends State<Requests> {
                   initialSelection: genders.first,
                   onSelected: (String? value) {
                     setState(() {
-
+                        gender=value!;
                     });
                   },
                   dropdownMenuEntries: genders.map<DropdownMenuEntry<String>>((String value) {
@@ -188,31 +188,6 @@ class _RequestsState extends State<Requests> {
                   }).toList(),
                 ),
                 const SizedBox(height: 4,),
-
-                DropdownMenu<String>(
-                  hintText: "Gender",
-                  controller: _genderController,
-                  inputDecorationTheme: InputDecorationTheme(
-                    border: MaterialStateOutlineInputBorder.resolveWith(
-                          (states) => states.contains(WidgetState.focused)
-                          ?  const OutlineInputBorder(borderSide: BorderSide(color: Colors.red))
-                          :  const OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.red,width: 3,),
-                          borderRadius:BorderRadius.all(Radius.circular(10.0))
-                      ),
-
-                    ),
-                  ),
-                  width: 325,
-                  initialSelection: genders.first,
-                  onSelected: (String? value) {
-                    setState(() {
-                    });
-                  },
-                  dropdownMenuEntries: genders.map<DropdownMenuEntry<String>>((String value) {
-                    return DropdownMenuEntry<String>(value: value, label: value);
-                  }).toList(),
-                ),
               ],
             ),
             actions: [
@@ -248,12 +223,32 @@ class _RequestsState extends State<Requests> {
                   }
                   setState(() {
                     updateButton(id);
+                    _genderController.clear();
+                    _nameController.clear();
+                    _bloodGroupController.clear();
+                    _locationController.clear();
+                    _detailsController.clear();
+                    _bagsController.clear();
+                    _genderController.clear();
+                    _caseController.clear();
+                    _hospitalController.clear();
                   });
                 },
+
                 child: const Text('Update Request'),
               ),
               TextButton(
                 onPressed: () {
+                  _genderController.clear();
+                  _nameController.clear();
+                  _bloodGroupController.clear();
+                  _locationController.clear();
+                  _detailsController.clear();
+                  _bagsController.clear();
+                  _genderController.clear();
+                  _caseController.clear();
+                  _hospitalController.clear();
+
                   Navigator.of(context).pop();
                 },
                 child: const Text('Cancel'),
@@ -573,6 +568,7 @@ class _RequestsState extends State<Requests> {
                                 },
                                 child: Text('Update', style: TextStyle(color: Colors.red[900])),
                               ),
+                              const SizedBox(width: 4,),
                               OutlinedButton(
                                 style: OutlinedButton.styleFrom(
                                   disabledBackgroundColor:Colors.white,

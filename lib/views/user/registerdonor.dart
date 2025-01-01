@@ -1,5 +1,4 @@
 import 'dart:core';
-import 'package:blood/controllers/auth_controller.dart';
 import 'package:blood/views/user/profile.dart';
 import 'package:blood/views/user/request_form.dart';
 import 'package:flutter/material.dart';
@@ -8,7 +7,6 @@ import 'package:intl_phone_field/intl_phone_field.dart';
 import '../../controllers/databaseController.dart';
 import 'donors_list.dart';
 import 'home.dart';
-import 'my_donation_appeal.dart';
 import 'my_requests.dart';
 
 class RequestDonor extends StatefulWidget {
@@ -19,7 +17,6 @@ class RequestDonor extends StatefulWidget {
 }
 
 class _RequestDonorState extends State<RequestDonor> {
-  final AuthController _authController = AuthController();
 
   final GlobalKey<FormState> formkey = GlobalKey<FormState>();
 
@@ -27,7 +24,7 @@ class _RequestDonorState extends State<RequestDonor> {
   late String hospital ='';
   late String residence = '';
   late String contact = '';
-  late int noOfDonation;
+  late int noOfDonation=-1;
   late String bloodGroup = '';
   late String gender = '';
   late String details = '';
@@ -386,6 +383,9 @@ class _RequestDonorState extends State<RequestDonor> {
                     height: 10,
                   ),
                   TextFormField(
+                    onChanged: (value){
+                      hospital=value;
+                    },
                     decoration: InputDecoration(
                       // label: const Text('Number of Bags'),
                       hintText: 'e.g Lahore Children Hospital',
