@@ -30,6 +30,7 @@ class _RequestDonorState extends State<RequestDonor> {
   late int noOfDonation;
   late String bloodGroup = '';
   late String gender = '';
+  late String details = '';
 
   final List<bool> _selectedGenders = <bool>[
     false,
@@ -455,7 +456,39 @@ class _RequestDonorState extends State<RequestDonor> {
                       ),
                     ),
                   ),
-
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  TextFormField(
+                    onChanged: (value){
+                      details=value;
+                    },
+                    decoration: InputDecoration(
+                      // label: const Text('Number of Bags'),
+                      hintText: 'I really am a passionate donor',
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Colors.red[900]!,
+                          width: 3,
+                        ),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Colors.red[900]!,
+                          width: 3,
+                        ),
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      errorBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Colors.red[900]!,
+                          width: 2,
+                        ),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
                   const SizedBox(
                     height: 10,
                   ),
@@ -620,7 +653,7 @@ class _RequestDonorState extends State<RequestDonor> {
                     alignment: Alignment.center,
                     child: ElevatedButton(
                       onPressed: ()async{
-                        _databaseService.addDonation(name, contact, hospital, residence, noOfDonation, bloodGroup, gender);
+                        _databaseService.addDonation(name, contact, hospital, residence, noOfDonation, bloodGroup, gender,details);
                         setState(() {
 
                         });

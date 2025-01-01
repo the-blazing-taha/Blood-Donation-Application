@@ -14,17 +14,18 @@ class DatabaseService {
     _db = await getDatabase();
     return _db!;
   }
+
   final String requestsTableName = "requests";
   final String _requestIdColumnName = "_id";
   final String _patientNameColumnName = "name";
   final String _contactColumnName = "contact";
-  final String _hospitalNameColumn= "hospital";
+  final String _hospitalNameColumn = "hospital";
   final String _residenceNameColumn = "residence";
   final String _caseNameColumn = "case_";
   final String _bagsNumberColumn = "bags";
   final String _bloodGroupColumn = "bloodGroup";
   final String _genderTypeColumn = "gender";
-
+  final String _detailsColumnName= "details";
 
   final String donationsTableName = "donations";
   final String _donationIdColumnName = "_id";
@@ -39,7 +40,6 @@ class DatabaseService {
   final String _inventoryGenderColumnName = "gender";
   final String _inventoryNameColumnName = "name";
   final String _inventoryNumberColumnName = "number";
-
 
   Future<Database> getDatabase() async {
     final databaseDirPath = await getDatabasesPath();
@@ -58,7 +58,8 @@ class DatabaseService {
             $_caseNameColumn TEXT NOT NULL,
             $_bagsNumberColumn INTEGER NOT NULL,
             $_bloodGroupColumn TEXT NOT NULL,
-            $_genderTypeColumn TEXT NOT NULL
+            $_genderTypeColumn TEXT NOT NULL,
+            $_detailsColumnName TEXT
           )
         ''');
         await db.execute('''
@@ -70,7 +71,8 @@ class DatabaseService {
             $_residenceNameColumn TEXT NOT NULL,
             $_donationsNumberColumn INTEGER NOT NULL,
             $_bloodGroupColumn TEXT NOT NULL,
-            $_genderTypeColumn TEXT NOT NULL
+            $_genderTypeColumn TEXT NOT NULL,
+            $_detailsColumnName TEXT
           )
         ''');
         await db.execute('''
@@ -90,99 +92,258 @@ class DatabaseService {
     return database;
   }
 
-  Future<void> addRequest(String name, String contact, String hospital, String residence, String case_, int bags, String bloodGroup,String gender) async {
+  Future<void> addRequest(
+      String name,
+      String contact,
+      String hospital,
+      String residence,
+      String case_,
+      int bags,
+      String bloodGroup,
+      String gender,
+      String details) async {
     final db = await database;
-    await db.insert(requestsTableName, {
-      _patientNameColumnName: name,
-      _contactColumnName: contact,
-      _hospitalNameColumn: hospital,
-      _residenceNameColumn: residence,
-      _caseNameColumn: case_,
-      _bagsNumberColumn: bags,
-      _bloodGroupColumn: bloodGroup,
-      _genderTypeColumn: gender
-    });
+
+    String sql = '''
+    INSERT INTO $requestsTableName (
+      $_patientNameColumnName, 
+      $_contactColumnName, 
+      $_hospitalNameColumn, 
+      $_residenceNameColumn, 
+      $_caseNameColumn, 
+      $_bagsNumberColumn, 
+      $_bloodGroupColumn, 
+      $_genderTypeColumn,
+      $_detailsColumnName
+    ) VALUES (
+      '$name', 
+      '$contact', 
+      '$hospital', 
+      '$residence', 
+      '$case_', 
+       $bags, 
+      '$bloodGroup', 
+      '$gender',
+      '$details'
+    )
+  ''';
+
+    await db.rawInsert(sql);
   }
 
-  Future<void> addDonation(String name, String contact, String hospital, String residence, int donationNumber, String bloodGroup,String gender) async {
+  Future<void> addDonation(
+      String name,
+      String contact,
+      String hospital,
+      String residence,
+      int donationNumber,
+      String bloodGroup,
+      String gender,
+      String details) async {
     final db = await database;
-    await db.insert(donationsTableName, {
-      _patientNameColumnName: name,
-      _contactColumnName: contact,
-      _hospitalNameColumn: hospital,
-      _residenceNameColumn: residence,
-      _donationsNumberColumn: donationNumber,
-      _bloodGroupColumn: bloodGroup,
-      _genderTypeColumn: gender
-    });
+
+    String sql = '''
+    INSERT INTO $donationsTableName (
+      $_patientNameColumnName, 
+      $_contactColumnName, 
+      $_hospitalNameColumn, 
+      $_residenceNameColumn, 
+      $_donationsNumberColumn, 
+      $_bloodGroupColumn, 
+      $_genderTypeColumn,
+      $_detailsColumnName
+    ) VALUES (
+      '$name', 
+      '$contact', 
+      '$hospital', 
+      '$residence', 
+      $donationNumber, 
+      '$bloodGroup', 
+      '$gender',
+      '$details'
+    )
+  ''';
+
+    await db.rawInsert(sql);
   }
-
-
 
   Future<List<Request>> getRequest() async {
     final db = await database;
-    final data = await db.query(requestsTableName);
-    List<Request> requests = data
+
+    String sql = '''
+    SELECT 
+      $_requestIdColumnName AS id, 
+      $_patientNameColumnName AS name, 
+      $_contactColumnName AS contact, 
+      $_hospitalNameColumn AS hospital, 
+      $_residenceNameColumn AS residence, 
+      $_caseNameColumn AS case_, 
+      $_bagsNumberColumn AS bags, 
+      $_bloodGroupColumn AS bloodGroup, 
+      $_genderTypeColumn AS gender,
+      $_detailsColumnName AS details
+    FROM $requestsTableName
+  ''';
+
+    List<Map<String, dynamic>> results = await db.rawQuery(sql);
+
+    List<Request> requests = results
         .map((e) => Request(
-      id: e[_requestIdColumnName] as int,
-      name: e[_patientNameColumnName] as String,
-      contact: e[_contactColumnName] as String,
-      hospital: e[_hospitalNameColumn] as String,
-      residence: e[_residenceNameColumn] as String,
-      case_: e[_residenceNameColumn] as String,
-      bags: e[_bagsNumberColumn] as int,
-      bloodGroup: e[_bloodGroupColumn] as String,
-        gender: e[_genderTypeColumn] as String
-    ))
+              id: e['id'] as int,
+              name: e['name'] as String,
+              contact: e['contact'] as String,
+              hospital: e['hospital'] as String,
+              residence: e['residence'] as String,
+              case_: e['case_'] as String,
+              bags: e['bags'] as int,
+              bloodGroup: e['bloodGroup'] as String,
+              gender: e['gender'] as String,
+              details: e['details'] as String
+            ))
         .toList();
+
     return requests;
   }
 
   Future<List<Donation>> getDonation() async {
     final db = await database;
-    final data = await db.query(donationsTableName);
-    List<Donation> donations = data
+
+    String sql = '''
+    SELECT 
+      $_requestIdColumnName AS id, 
+      $_patientNameColumnName AS name, 
+      $_contactColumnName AS contact, 
+      $_hospitalNameColumn AS hospital, 
+      $_residenceNameColumn AS residence, 
+      $_bloodGroupColumn AS bloodGroup, 
+      $_genderTypeColumn AS gender, 
+      $_donationsNumberColumn AS donationsDone,
+      $_detailsColumnName AS details
+    FROM $donationsTableName
+  ''';
+
+    List<Map<String, dynamic>> results = await db.rawQuery(sql);
+
+    List<Donation> donations = results
         .map((e) => Donation(
-        id: e[_requestIdColumnName] as int,
-        name: e[_patientNameColumnName] as String,
-        contact: e[_contactColumnName] as String,
-        hospital: e[_hospitalNameColumn] as String,
-        residence: e[_residenceNameColumn] as String,
-        bloodGroup: e[_bloodGroupColumn] as String,
-        gender: e[_genderTypeColumn] as String,
-        donationsDone: e[_donationsNumberColumn] as int,
-    ))
+              id: e['id'] as int,
+              name: e['name'] as String,
+              contact: e['contact'] as String,
+              hospital: e['hospital'] as String,
+              residence: e['residence'] as String,
+              bloodGroup: e['bloodGroup'] as String,
+              gender: e['gender'] as String,
+              donationsDone: e['donationsDone'] as int,
+              details: e['details'] as String
+            ))
         .toList();
+
     return donations;
   }
 
-  // Future<void> updateRequest(int id, String name, String contact, String hospital, String residence, String case_, int bags, String bloodGroup,String gender) async {
-  //   final db = await database;
-  //   await db.update(
-  //     requestsTableName,
-  //     {
-  //       _patientNameColumnName: name,
-  //       _contactColumnName: contact,
-  //       _hospitalNameColumn: hospital,
-  //       _residenceNameColumn: residence,
-  //       _bagsNumberColumn:bags,
-  //       _bloodGroupColumn:bloodGroup,
-  //       _genderTypeColumn: gender,
-  //     },
-  //     where: '$_requestIdColumnName = ?', // Use the correct column name
-  //     whereArgs: [id,],
-  //   );
-  // }
+  Future<void> updateRequest(
+      {required int id,
+      String name = '',
+      String contact = '',
+      String hospital = '',
+      String residence = '',
+      String case_ = '',
+      int bags = -1,
+      String bloodGroup = '',
+      String gender = '',
+      String details=''}) async {
+    final db = await database;
+
+    try {
+      if (name != '') {
+        String sql = '''
+    UPDATE $requestsTableName
+    SET 
+      $_patientNameColumnName = '$name' WHERE $_requestIdColumnName = $id
+  ''';
+        await db.rawUpdate(sql);
+      }
+      if (contact != '') {
+        String sql = '''
+    UPDATE $requestsTableName
+    SET 
+      $_contactColumnName = '$contact' WHERE $_requestIdColumnName = $id
+  ''';
+        await db.rawUpdate(sql);
+      }
+
+      if (case_ != '') {
+        String sql = '''
+    UPDATE $requestsTableName
+    SET 
+      $_caseNameColumn = '$case_' WHERE $_requestIdColumnName = $id
+  ''';
+        await db.rawUpdate(sql);
+      }
+
+      if (residence != '') {
+        String sql = '''
+    UPDATE $requestsTableName
+    SET 
+      $_residenceNameColumn = '$residence' WHERE $_requestIdColumnName = $id
+  ''';
+        await db.rawUpdate(sql);
+      }
+      if (bags != -1) {
+        String sql = '''
+    UPDATE $requestsTableName
+    SET 
+      $_bagsNumberColumn = '$bags' WHERE $_requestIdColumnName = $id
+  ''';
+        await db.rawUpdate(sql);
+      }
+      if (bloodGroup != '') {
+        String sql = '''
+    UPDATE $requestsTableName
+    SET 
+      $_bloodGroupColumn = '$bloodGroup' WHERE $_requestIdColumnName = $id
+  ''';
+        await db.rawUpdate(sql);
+      }
+      if (gender != '') {
+        String sql = '''
+    UPDATE $requestsTableName
+    SET 
+      $_genderTypeColumn = '$gender' WHERE $_requestIdColumnName = $id
+  ''';
+        await db.rawUpdate(sql);
+      }
+
+      if (details != '') {
+        String sql = '''
+    UPDATE $requestsTableName
+    SET 
+      $_detailsColumnName = '$details' WHERE $_requestIdColumnName = $id
+  ''';
+        await db.rawUpdate(sql);
+      }
+      if (hospital != '') {
+        String sql = '''
+    UPDATE $requestsTableName
+    SET 
+      $_hospitalNameColumn = '$hospital' WHERE $_requestIdColumnName = $id
+  ''';
+        await db.rawUpdate(sql);
+      }
+    } catch (e) {
+      print("ERROR IN UPDATING REQUEST: $e");
+    }
+  }
 
   Future<void> deleteRequest(int id) async {
     final db = await database;
     try {
-      await db
-          .delete(requestsTableName, where: '$_requestIdColumnName = ?', whereArgs: [
-        id,
-      ]);
-    }
-    catch(e){
+      await db.delete(requestsTableName,
+          where: '$_requestIdColumnName = ?',
+          whereArgs: [
+            id,
+          ]);
+    } catch (e) {
       print("ERROR IN DELETING REQUEST: $e");
     }
   }
@@ -190,28 +351,25 @@ class DatabaseService {
   Future<void> deleteDonation(int id) async {
     final db = await database;
     try {
-      await db
-          .delete(donationsTableName, where: '$_donationIdColumnName = ?', whereArgs: [
-        id,
-      ]);
-    }
-    catch(e){
+      await db.delete(donationsTableName,
+          where: '$_donationIdColumnName = ?',
+          whereArgs: [
+            id,
+          ]);
+    } catch (e) {
       print("ERROR IN DELETING DONATION APPEAL: $e");
     }
   }
 
-
-
-
   Future<void> deleteInventory(int id) async {
     final db = await database;
     try {
-      await db
-          .delete(_inventoryTableName, where: '$_inventoryIdColumnName = ?', whereArgs: [
-        id,
-      ]);
-    }
-    catch(e){
+      await db.delete(_inventoryTableName,
+          where: '$_inventoryIdColumnName = ?',
+          whereArgs: [
+            id,
+          ]);
+    } catch (e) {
       print("ERROR IN DELETING INVENTORY: $e");
     }
   }
@@ -219,7 +377,8 @@ class DatabaseService {
   Future<int?> noOfRequests() async {
     final db = await database; // Ensure `database` is initialized
     try {
-      final result = await db.rawQuery('SELECT COUNT(*) as count FROM $requestsTableName');
+      final result =
+          await db.rawQuery('SELECT COUNT(*) as count FROM $requestsTableName');
       return Sqflite.firstIntValue(result) ?? 0; // Extract the count
     } catch (e) {
       print("Error in noOfRequests(): $e");
@@ -230,7 +389,8 @@ class DatabaseService {
   Future<int?> noOfDonors() async {
     final db = await database; // Ensure `database` is initialized
     try {
-      final result = await db.rawQuery('SELECT COUNT(*) as count FROM $donationsTableName');
+      final result = await db
+          .rawQuery('SELECT COUNT(*) as count FROM $donationsTableName');
       return Sqflite.firstIntValue(result) ?? 0; // Extract the count
     } catch (e) {
       print("Error in noOfRequests(): $e");
@@ -238,39 +398,64 @@ class DatabaseService {
     }
   }
 
-  Future<void> addInventory(String name,String bloodGroup, double hemoglobin, double concentration, String rh, String gender, int number) async {
+  Future<void> addInventory(String name, String bloodGroup, double hemoglobin,
+      double concentration, String rh, String gender, int number) async {
     final db = await database;
-    await db.insert(_inventoryTableName, {
-      _inventoryNameColumnName: name,
-      _inventoryNumberColumnName: number,
-      _inventoryBloodTypeColumnName: bloodGroup,
-      _inventoryBloodHaemoglobinlevel: hemoglobin,
-      _inventoryBloodConcentrationColumnName: concentration,
-      _inventoryBloodRhFactorColumn: rh,
-      _inventoryGenderColumnName: gender,
-    });
+
+    String sql = '''
+    INSERT INTO $_inventoryTableName (
+      $_inventoryNameColumnName, 
+      $_inventoryNumberColumnName, 
+      $_inventoryBloodTypeColumnName, 
+      $_inventoryBloodHaemoglobinlevel, 
+      $_inventoryBloodConcentrationColumnName, 
+      $_inventoryBloodRhFactorColumn, 
+      $_inventoryGenderColumnName
+    ) VALUES (
+      '$name', 
+      $number, 
+      '$bloodGroup', 
+      $hemoglobin, 
+      $concentration, 
+      '$rh', 
+      '$gender'
+    )
+  ''';
+
+    await db.rawInsert(sql);
   }
 
   Future<List<BloodInventory>> getInventory() async {
     final db = await database;
-    final data = await db.query(_inventoryTableName);
-    List<BloodInventory> inventory = data
+
+    String sql = '''
+    SELECT 
+      $_inventoryIdColumnName AS id, 
+      $_inventoryNameColumnName AS name, 
+      $_inventoryBloodHaemoglobinlevel AS hemoglobin, 
+      $_inventoryBloodConcentrationColumnName AS concentration, 
+      $_inventoryBloodTypeColumnName AS bloodgroup, 
+      $_inventoryBloodRhFactorColumn AS rh, 
+      $_inventoryGenderColumnName AS gender, 
+      $_inventoryNumberColumnName AS number
+    FROM $_inventoryTableName
+  ''';
+
+    List<Map<String, dynamic>> results = await db.rawQuery(sql);
+
+    List<BloodInventory> inventory = results
         .map((e) => BloodInventory(
-        id: e[_inventoryIdColumnName] as int,
-        name: e[_inventoryNameColumnName] as String,
-        hemoglobin: e[_inventoryBloodHaemoglobinlevel] as double,
-        concentration: e[_inventoryBloodConcentrationColumnName] as double,
-        bloodgroup: e[_inventoryBloodTypeColumnName] as String,
-        rh: e[_inventoryBloodRhFactorColumn] as String,
-        gender: e[_inventoryGenderColumnName] as String,
-        number: e[_inventoryNumberColumnName] as int,
-    ))
+              id: e['id'] as int,
+              name: e['name'] as String,
+              hemoglobin: e['hemoglobin'] as double,
+              concentration: e['concentration'] as double,
+              bloodgroup: e['bloodgroup'] as String,
+              rh: e['rh'] as String,
+              gender: e['gender'] as String,
+              number: e['number'] as int,
+            ))
         .toList();
+
     return inventory;
   }
 }
-
-
-
-
-

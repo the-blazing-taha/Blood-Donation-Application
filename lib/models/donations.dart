@@ -7,7 +7,7 @@ class Donation{
   final int donationsDone;
   final String bloodGroup;
   final String gender;
-
+  final String details;
   Donation({
     required this.id,
     required this.name,
@@ -17,5 +17,6 @@ class Donation{
     required this.donationsDone,
     required this.bloodGroup,
     required this.gender,
+    required this.details
   });
 }

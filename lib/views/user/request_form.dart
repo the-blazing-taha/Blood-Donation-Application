@@ -741,7 +741,7 @@ class _RequestFormState extends State<RequestForm> {
                       child: ElevatedButton(
                         onPressed:()async{
                           if(donationCase != "None") {
-                            _databaseService.addRequest(patient, contact, hospital, residence, donationCase, bags, bloodGroup, gender);
+                            _databaseService.addRequest(patient, contact, hospital, residence, donationCase, bags, bloodGroup, gender,details);
                           }
                           else{
                             print("ERROR: Case of donation not selected!");

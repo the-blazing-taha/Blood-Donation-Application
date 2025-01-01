@@ -14,9 +14,6 @@ class Inventory extends StatefulWidget {
 class InventoryState extends State<Inventory> {
   final DatabaseService _databaseService = DatabaseService.instance;
   late double progress; // Current progress value
-  Timer? _timer;
-  // final int durationInSeconds=3024000; // Total time for the timer
-  final int durationInSeconds=60; // Total time for the timer
   final PageStorageKey _key = const PageStorageKey('progressKey');
   int _selectedIndex = 0;
   final TextEditingController _bloodGroupController = TextEditingController();

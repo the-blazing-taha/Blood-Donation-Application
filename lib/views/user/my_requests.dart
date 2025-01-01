@@ -20,11 +20,250 @@ class Requests extends StatefulWidget {
 
 class _RequestsState extends State<Requests> {
 
-
+  final DatabaseService _databaseService = DatabaseService.instance;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = "";
 
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _genderController = TextEditingController();
+  final TextEditingController _bloodGroupController = TextEditingController();
+  final TextEditingController _hospitalController = TextEditingController();
+  final TextEditingController _locationController = TextEditingController();
+  final TextEditingController _bagsController = TextEditingController();
+  final TextEditingController _caseController = TextEditingController();
+  final TextEditingController _detailsController = TextEditingController();
+  static List<String> bloodTypes = <String>['None','A+', 'B+', 'AB+', 'O+','A-', 'B-', 'AB-', 'O-'];
+  static List<String> donationCases = <String>['None','Anemia','Hemophilia','Thalassemia','Operation','Accident'];
+  static List<String> genders = <String>['None','Male','Female'];
+   String bloodGroup='';
+   String gender='' ;
+   int bags=-1;
+   String hospital='';
+   String patient='';
+   String residence='';
+   String donationCase='';
+   String contact='';
+   String details='';
 
+  void updateButton(int id) {
+    showDialog(
+      context: context,
+      builder: (context) => SizedBox(
+        height: MediaQuery.of(context).size.height,
+        width: MediaQuery.of(context).size.width,
+        child: SingleChildScrollView(
+          child: AlertDialog(
+            title: const Text('Update Request'),
+
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  onChanged: (value){
+                    setState(() {
+                      patient=value;
+                    });
+                  },
+                  controller: _nameController,
+                  decoration: const InputDecoration(hintText: "Patient Name"),
+                ),
+                const SizedBox(height: 4,),
+                TextField(
+                  onChanged: (value){
+                    setState(() {
+                      residence=value;
+                    });
+                  },
+                  controller: _locationController,
+                  decoration: const InputDecoration(hintText: "Location"),
+                ),
+                const SizedBox(height: 4,),
+                TextField(
+                  keyboardType: TextInputType.number,
+                  onChanged: (value){
+                    setState(() {
+                      bags = int.tryParse(value) ?? 0; // If parsing fails, it will default to 0
+                    });
+                  },
+                  controller: _bagsController,
+                  decoration: const InputDecoration(hintText: "Bags"),
+                ),
+
+                const SizedBox(height: 4,),
+                TextField(
+                  onChanged: (value){
+                    setState(() {
+                      hospital=value;
+                    });
+                  },
+                  controller: _hospitalController,
+                  decoration: const InputDecoration(hintText: "Hospital"),
+                ),
+                const SizedBox(height: 4,),
+                TextField(
+                  onChanged: (value){
+                    setState(() {
+                      details=value;
+                    });
+                  },
+                  controller: _detailsController,
+                  decoration: const InputDecoration(hintText: "Details"),
+                ),
+                const SizedBox(height: 4,),
+                DropdownMenu<String>(
+                  hintText: "Blood Group",
+                  controller: _bloodGroupController,
+                  inputDecorationTheme: InputDecorationTheme(
+                    border: MaterialStateOutlineInputBorder.resolveWith(
+                          (states) => states.contains(WidgetState.focused)
+                          ?  const OutlineInputBorder(borderSide: BorderSide(color: Colors.red))
+                          :  const OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.red,width: 3,),
+                          borderRadius:BorderRadius.all(Radius.circular(10.0))
+                      ),
+
+                    ),
+                  ),
+                  width: 325,
+                  initialSelection: bloodTypes.first,
+                  onSelected: (String? value) {
+                    setState(() {
+                      bloodGroup=value!;
+                    });
+                  },
+                  dropdownMenuEntries: bloodTypes.map<DropdownMenuEntry<String>>((String value) {
+                    return DropdownMenuEntry<String>(value: value, label: value);
+                  }).toList(),
+                ),
+                const SizedBox(height: 4,),
+                DropdownMenu<String>(
+                  hintText: "Donation Case",
+                  controller: _caseController,
+                  inputDecorationTheme: InputDecorationTheme(
+                    border: MaterialStateOutlineInputBorder.resolveWith(
+                          (states) => states.contains(WidgetState.focused)
+                          ?  const OutlineInputBorder(borderSide: BorderSide(color: Colors.red))
+                          :  const OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.red,width: 3,),
+                          borderRadius:BorderRadius.all(Radius.circular(10.0))
+                      ),
+
+                    ),
+                  ),
+                  width: 325,
+                  initialSelection: donationCases.first,
+                  onSelected: (String? value) {
+                    setState(() {
+                      donationCase=value!;
+                    });
+                  },
+                  dropdownMenuEntries: donationCases.map<DropdownMenuEntry<String>>((String value) {
+                    return DropdownMenuEntry<String>(value: value, label: value);
+                  }).toList(),
+                ),
+                const SizedBox(height: 4,),
+                DropdownMenu<String>(
+                  hintText: "Gender",
+                  controller: _genderController,
+                  inputDecorationTheme: InputDecorationTheme(
+                    border: MaterialStateOutlineInputBorder.resolveWith(
+                          (states) => states.contains(WidgetState.focused)
+                          ?  const OutlineInputBorder(borderSide: BorderSide(color: Colors.red))
+                          :  const OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.red,width: 3,),
+                          borderRadius:BorderRadius.all(Radius.circular(10.0))
+                      ),
+
+                    ),
+                  ),
+                  width: 325,
+                  initialSelection: genders.first,
+                  onSelected: (String? value) {
+                    setState(() {
+
+                    });
+                  },
+                  dropdownMenuEntries: genders.map<DropdownMenuEntry<String>>((String value) {
+                    return DropdownMenuEntry<String>(value: value, label: value);
+                  }).toList(),
+                ),
+                const SizedBox(height: 4,),
+
+                DropdownMenu<String>(
+                  hintText: "Gender",
+                  controller: _genderController,
+                  inputDecorationTheme: InputDecorationTheme(
+                    border: MaterialStateOutlineInputBorder.resolveWith(
+                          (states) => states.contains(WidgetState.focused)
+                          ?  const OutlineInputBorder(borderSide: BorderSide(color: Colors.red))
+                          :  const OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.red,width: 3,),
+                          borderRadius:BorderRadius.all(Radius.circular(10.0))
+                      ),
+
+                    ),
+                  ),
+                  width: 325,
+                  initialSelection: genders.first,
+                  onSelected: (String? value) {
+                    setState(() {
+                    });
+                  },
+                  dropdownMenuEntries: genders.map<DropdownMenuEntry<String>>((String value) {
+                    return DropdownMenuEntry<String>(value: value, label: value);
+                  }).toList(),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  if(patient!=''){
+                    _databaseService.updateRequest(id: id, name: patient);
+                    Navigator.of(context).pop();
+                  }
+                  if(bloodGroup!=''){
+                    _databaseService.updateRequest(id: id, bloodGroup: bloodGroup);
+                    Navigator.of(context).pop();
+                  }
+                  if(gender!=''){
+                    _databaseService.updateRequest(id: id, gender: gender);
+                    Navigator.of(context).pop();
+                  }
+                  if(residence!=''){
+                    _databaseService.updateRequest(id: id, residence: residence);
+                    Navigator.of(context).pop();
+                  }
+                  if(contact!=''){
+                    _databaseService.updateRequest(id: id, contact: contact);
+                    Navigator.of(context).pop();
+                  }
+                  if(donationCase!=''){
+                    _databaseService.updateRequest(id: id, case_: donationCase);
+                    Navigator.of(context).pop();
+                  }
+                  if(details!=''){
+                    _databaseService.updateRequest(id: id, details: details);
+                    Navigator.of(context).pop();
+                  }
+                  setState(() {
+                    updateButton(id);
+                  });
+                },
+                child: const Text('Update Request'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Cancel'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
   @override
   Widget build(BuildContext context) {
     final DatabaseService databaseService = DatabaseService.instance;
@@ -60,11 +299,11 @@ class _RequestsState extends State<Requests> {
       ),
     );
 
-    int _selectedIndex = 0;
+    int selectedIndex = 0;
 
-    void _onItemTapped(int index) {
+    void onItemTapped(int index) {
       setState(() {
-        _selectedIndex = index;
+        selectedIndex = index;
       });
     }
 
@@ -135,9 +374,9 @@ class _RequestsState extends State<Requests> {
                       fontWeight: FontWeight.bold,
                       fontSize: 16),
                 ),
-                selected: _selectedIndex == 0,
+                selected: selectedIndex == 0,
                 onTap: () {
-                  _onItemTapped(0);
+                  onItemTapped(0);
                   Navigator.pop(context);
                   Navigator.push(
                     context,
@@ -159,9 +398,9 @@ class _RequestsState extends State<Requests> {
                       fontWeight: FontWeight.bold,
                       fontSize: 16),
                 ),
-                selected: _selectedIndex == 1,
+                selected: selectedIndex == 1,
                 onTap: () {
-                  _onItemTapped(1);
+                  onItemTapped(1);
                   Navigator.pop(context);
                   Navigator.push(
                     context,
@@ -183,9 +422,9 @@ class _RequestsState extends State<Requests> {
                       fontWeight: FontWeight.bold,
                       fontSize: 16),
                 ),
-                selected: _selectedIndex == 2,
+                selected: selectedIndex == 2,
                 onTap: () {
-                  _onItemTapped(2);
+                  onItemTapped(2);
                   Navigator.pop(context);
                   Navigator.push(
                     context,
@@ -205,9 +444,9 @@ class _RequestsState extends State<Requests> {
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 16)),
-                selected: _selectedIndex == 3,
+                selected: selectedIndex == 3,
                 onTap: () {
-                  _onItemTapped(3);
+                  onItemTapped(3);
                   Navigator.pop(context);
                   Navigator.push(
                     context,
@@ -227,9 +466,9 @@ class _RequestsState extends State<Requests> {
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 16)),
-                selected: _selectedIndex == 4,
+                selected: selectedIndex == 4,
                 onTap: () {
-                  _onItemTapped(4);
+                  onItemTapped(4);
                   Navigator.pop(context);
                   Navigator.push(
                     context,
@@ -249,9 +488,9 @@ class _RequestsState extends State<Requests> {
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 16)),
-                selected: _selectedIndex == 5,
+                selected: selectedIndex == 5,
                 onTap: () {
-                  _onItemTapped(5);
+                  onItemTapped(5);
                   Navigator.pop(context);
                   Navigator.push(
                     context,
@@ -311,7 +550,7 @@ class _RequestsState extends State<Requests> {
                                 size: 20,
                               ),
                             ),
-                            trailing: Text("${request.bags} Bags | ${request.case_}" ,style:  const TextStyle(color: Colors.grey,fontSize: 15),),
+                            trailing: Text("${request.bags} Bags}" ,style:  const TextStyle(color: Colors.grey,fontSize: 15),),
                             subtitle: Row(
                               children: [
                                 const Icon(Icons.location_on_rounded), // Location icon
@@ -324,6 +563,16 @@ class _RequestsState extends State<Requests> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: <Widget>[
+                              OutlinedButton(
+                                style: OutlinedButton.styleFrom(
+                                  disabledBackgroundColor:Colors.white,
+                                ),
+                                onPressed: () {
+                                  updateButton(request.id);
+                                  setState(() {});
+                                },
+                                child: Text('Update', style: TextStyle(color: Colors.red[900])),
+                              ),
                               OutlinedButton(
                                 style: OutlinedButton.styleFrom(
                                   disabledBackgroundColor:Colors.white,

@@ -8,6 +8,7 @@ class Request {
   final int bags;
   final String bloodGroup;
   final String gender;
+  final String details;
 
   Request({
     required this.id,
@@ -19,5 +20,6 @@ class Request {
     required this.bags,
     required this.bloodGroup,
     required this.gender,
+    required this.details
   });
 }
