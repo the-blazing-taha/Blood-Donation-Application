@@ -9,7 +9,7 @@ import 'package:image_picker/image_picker.dart';
 class AuthController{
   final FirebaseStorage _storage = FirebaseStorage.instance;
   final FirebaseAuth _auth= FirebaseAuth.instance;
-  final FirebaseFirestore firestore = FirebaseFirestore.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final ImagePicker _imagePicker = ImagePicker();
 
   Future<Uint8List> pickProfileImage(ImageSource source)async{
@@ -28,7 +28,7 @@ class AuthController{
         UserCredential userCredential = await _auth.createUserWithEmailAndPassword(email: email, password: password);
         Get.offAll(const Wrapper());
         String downloadUrl = await uploadImageToStorage(image);
-        await firestore.collection('userdata').doc(userCredential.user!.uid).set({
+        await _firestore.collection('users').doc(userCredential.user!.uid).set({
           'fullName' : fullName,
           'profileImage': downloadUrl,
           'email' : email,
