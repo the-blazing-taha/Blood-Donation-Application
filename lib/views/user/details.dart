@@ -62,6 +62,9 @@ class DetailsState extends State<Details> {
         backgroundColor: Colors.red[900],
         centerTitle: true,
       ),
+
+
+
       body: SizedBox(
         height: MediaQuery.of(context).size.height,
         width: MediaQuery.of(context).size.width,
