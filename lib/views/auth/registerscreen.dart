@@ -1,6 +1,7 @@
 import 'dart:core';
 import 'package:blood/controllers/auth_controller.dart';
 import 'package:blood/views/auth/loginscreen.dart';
+import 'package:blood/views/user/verifyemail.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -33,19 +34,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void registerUser() async {
     if (_image != null) {
       if (formkey.currentState!.validate()) {
-        setState(() {
-          isLoading = true;
-        });
-        String res = await _authController.createNewUser(
-            email, fullName, password, _image);
-        setState(() {
-          isLoading = false;
-        });
-        if (res == 'success') {
+        if(mounted) {
           setState(() {
             isLoading = true;
           });
-          Get.to(const LoginScreen());
+        }
+        String res = await _authController.createNewUser(
+            email, fullName, password, _image);
+        if (mounted) {
+          setState(() {
+            isLoading = false;
+          });
+        }
+        if (res == 'success') {
+          if(mounted) {
+            setState(() {
+              isLoading = true;
+            });
+          }
+          Get.to(const VerifyEmail());
           Get.snackbar('Success', 'Account has been created for you',
               backgroundColor: Colors.red,
               colorText: Colors.white,
@@ -95,25 +102,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ));
     }
   }
+
+
   selectGalleryImage() async {
     Uint8List im = await _authController.pickProfileImage(ImageSource.gallery);
-    setState(() {
-      _image = im;
-    });
+    if(mounted) {
+      setState(() {
+        _image = im;
+      });
+    }
   }
 
   captureImage() async {
     Uint8List im = await _authController.pickProfileImage(ImageSource.camera);
-    setState(() {
-      _image = im;
-    });
+    if(mounted) {
+      setState(() {
+        _image = im;
+      });
+    }
   }
 
   final TextEditingController _emailController = TextEditingController();
-
-
-
-
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(

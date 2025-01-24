@@ -235,7 +235,7 @@ class _ProfileState extends State<Profile> {
 
 
 
-       body: Text('${user?.email}')
+       body: Text('${user?.email} ${user?.uid}')
     );
   }
 }

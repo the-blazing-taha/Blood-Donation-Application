@@ -29,7 +29,7 @@ class _LoginScreenState extends State<LoginScreen> {
         isLoading = false;
       });
       if (res == 'success') {
-        Get.to(const Home());
+        Navigator.push(context, MaterialPageRoute(builder: (context)=>const Home()));
         setState(() {
           isLoading = false;
         });

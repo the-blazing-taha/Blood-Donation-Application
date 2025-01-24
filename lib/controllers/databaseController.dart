@@ -1,6 +1,7 @@
 import 'package:blood/models/donations.dart';
 import 'package:blood/models/requests.dart';
 import 'package:blood/models/inventory.dart';
+import 'package:flutter/rendering.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -331,7 +332,7 @@ class DatabaseService {
         await db.rawUpdate(sql);
       }
     } catch (e) {
-      print("ERROR IN UPDATING REQUEST: $e");
+      debugPrint("ERROR IN UPDATING REQUEST: $e");
     }
   }
 
@@ -416,7 +417,7 @@ class DatabaseService {
         await db.rawUpdate(sql);
       }
     } catch (e) {
-      print("ERROR IN UPDATING DONATION APPEAL: $e");
+      debugPrint("ERROR IN UPDATING DONATION APPEAL: $e");
     }
   }
 
@@ -432,7 +433,7 @@ class DatabaseService {
             id,
           ]);
     } catch (e) {
-      print("ERROR IN DELETING REQUEST: $e");
+      debugPrint("ERROR IN DELETING REQUEST: $e");
     }
   }
 
@@ -445,7 +446,7 @@ class DatabaseService {
             id,
           ]);
     } catch (e) {
-      print("ERROR IN DELETING DONATION APPEAL: $e");
+      debugPrint("ERROR IN DELETING DONATION APPEAL: $e");
     }
   }
 
@@ -458,7 +459,7 @@ class DatabaseService {
             id,
           ]);
     } catch (e) {
-      print("ERROR IN DELETING INVENTORY: $e");
+      debugPrint("ERROR IN DELETING INVENTORY: $e");
     }
   }
 
@@ -469,7 +470,7 @@ class DatabaseService {
           await db.rawQuery('SELECT COUNT(*) as count FROM $requestsTableName');
       return Sqflite.firstIntValue(result) ?? 0; // Extract the count
     } catch (e) {
-      print("Error in noOfRequests(): $e");
+      debugPrint("Error in noOfRequests(): $e");
       return null; // Return null if an exception occurs
     }
   }
@@ -481,7 +482,7 @@ class DatabaseService {
           .rawQuery('SELECT COUNT(*) as count FROM $donationsTableName');
       return Sqflite.firstIntValue(result) ?? 0; // Extract the count
     } catch (e) {
-      print("Error in noOfRequests(): $e");
+      debugPrint("Error in noOfRequests(): $e");
       return null; // Return null if an exception occurs
     }
   }
@@ -547,3 +548,7 @@ class DatabaseService {
     return inventory;
   }
 }
+
+
+
+

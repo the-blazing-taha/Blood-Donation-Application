@@ -26,13 +26,13 @@ class AuthController{
     String res = 'Error Occured!';
     try{
         UserCredential userCredential = await _auth.createUserWithEmailAndPassword(email: email, password: password);
-        Get.offAll(const Wrapper());
-        String downloadUrl = await uploadImageToStorage(image);
+        Get.offAll(() => const Wrapper());
+        // String downloadUrl = await uploadImageToStorage(image);
         await _firestore.collection('users').doc(userCredential.user!.uid).set({
           'fullName' : fullName,
-          'profileImage': downloadUrl,
           'email' : email,
-          'buyerId' : userCredential.user!.uid,
+          // 'downloadURL': downloadUrl,
+          'userId' : userCredential.user!.uid,
         });
         res = 'success';
     }
