@@ -10,6 +10,15 @@ class DonorDetails extends StatefulWidget {
   final dynamic bloodGroup;
   final dynamic gender;
   final dynamic details;
+  final dynamic weight;
+  final dynamic  age;
+  final dynamic lastDonated;
+  final dynamic  donationFrequency;
+  final dynamic  highestEducation;
+  final dynamic  currentOccupation;
+  final dynamic  currentLivingArrg;
+  final dynamic eligibilityTest;
+  final dynamic  futureDonationWillingness;
   const DonorDetails(
       {super.key,
         required this.patient,
@@ -19,7 +28,18 @@ class DonorDetails extends StatefulWidget {
         required this.noOfDonations,
         required this.bloodGroup,
         required this.gender,
-        required this.details});
+        required this.details,
+        required this.weight,
+        required this.age,
+        required this.lastDonated,
+        required this.donationFrequency,
+        required this.highestEducation,
+        required this.currentOccupation,
+        required this.currentLivingArrg,
+        required this.eligibilityTest,
+        required this.futureDonationWillingness
+
+      });
 
   @override
   DonorDetailsState createState() => DonorDetailsState();
@@ -28,14 +48,23 @@ class DonorDetails extends StatefulWidget {
 class DonorDetailsState extends State<DonorDetails> {
   @override
   Widget build(BuildContext context) {
-    final String patientName = widget.patient; // Assuming patient is a String
+    final String patientName = widget.patient;
     final String contact = widget.contact;
     final String hospital = widget.hospital;
     final String residence = widget.residence;
-    final int noOfdonations = widget.noOfDonations; // Assuming bags is an int
+    final int noOfdonations = widget.noOfDonations;
     final String bloodGroup = widget.bloodGroup;
     final String gender = widget.gender;
     final String details = widget.details;
+    final int weight = widget.weight;
+    final int age = widget.age;
+    final String lastDonated = widget.lastDonated;
+    final String donationFrequency = widget.donationFrequency;
+    final String highestEducation = widget.highestEducation;
+    final String currentOccupation = widget.currentOccupation;
+    final String currentLivingArrg = widget.currentLivingArrg;
+    final String eligibilityTest = widget.eligibilityTest;
+    final String futureDonationWillingness = widget.futureDonationWillingness;
 
     return Scaffold(
       appBar: AppBar(
@@ -67,22 +96,6 @@ class DonorDetailsState extends State<DonorDetails> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(
-                  height: 10,
-                ),
-                const Text("Blood needed before:"),
-                const SizedBox(
-                  height: 5,
-                ),
-                const Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    '10 February, 2024',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
                 const SizedBox(
                   height: 20,
                 ),
@@ -179,6 +192,9 @@ class DonorDetailsState extends State<DonorDetails> {
                     ),
                   ),
                 ),
+                const SizedBox(
+                  height: 20,
+                ),
                 const Text("Contact Number:"),
                 const SizedBox(
                   height: 5,
@@ -192,6 +208,162 @@ class DonorDetailsState extends State<DonorDetails> {
                     ),
                   ),
                 ),
+
+                const SizedBox(
+                  height: 20,
+                ),
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                const Text("Weight (Kg):"),
+                const SizedBox(
+                  height: 5,
+                ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    weight.toString(),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+
+
+                const SizedBox(
+                  height: 20,
+                ),
+                const Text("Age:"),
+                const SizedBox(
+                  height: 5,
+                ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    age.toString(),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+
+
+                const SizedBox(
+                  height: 20,
+                ),
+                const Text("Last Donated blood:"),
+                const SizedBox(
+                  height: 5,
+                ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    lastDonated,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+
+
+                const SizedBox(
+                  height: 20,
+                ),
+                const Text("Donation Frequency:"),
+                const SizedBox(
+                  height: 5,
+                ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    donationFrequency,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+
+
+                const SizedBox(
+                  height: 20,
+                ),
+                const Text("Highest Education achieved:"),
+                const SizedBox(
+                  height: 5,
+                ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    highestEducation,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+
+                const SizedBox(
+                  height: 20,
+                ),
+                const Text("Current Occupation:"),
+                const SizedBox(
+                  height: 5,
+                ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    currentOccupation,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(
+                  height: 20,
+                ),
+                const Text("Current Living Arrangement:"),
+                const SizedBox(
+                  height: 5,
+                ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    currentLivingArrg,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(
+                  height: 20,
+                ),
+                const Text("Tested for eligibility in last 6 months:"),
+                const SizedBox(
+                  height: 5,
+                ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    eligibilityTest,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+
+
+
                 const SizedBox(
                   height: 20,
                 ),
@@ -211,14 +383,14 @@ class DonorDetailsState extends State<DonorDetails> {
                 const SizedBox(
                   height: 20,
                 ),
-                const Text("Others:"),
+                const Text("Would Donate in future? :"),
                 const SizedBox(
                   height: 5,
                 ),
-                const Align(
+                Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    'Needed Urgently',
+                    futureDonationWillingness,
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                     ),
@@ -227,6 +399,14 @@ class DonorDetailsState extends State<DonorDetails> {
                 const SizedBox(
                   height: 15,
                 ),
+
+
+
+
+
+
+
+
                 Container(
                   alignment: Alignment.center,
                   child: ElevatedButton(

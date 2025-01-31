@@ -6,21 +6,16 @@ import '../../controllers/databaseController.dart';
 import 'dashboard.dart';
 import 'inventory.dart';
 
-
 class DonorList extends StatefulWidget {
   const DonorList({super.key});
-
 
   @override
   State<DonorList> createState() => _DonorListState();
 }
 
 class _DonorListState extends State<DonorList> {
-
-
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = "";
-
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +52,6 @@ class _DonorListState extends State<DonorList> {
       ),
     );
 
-
     int selectedIndex = 0;
 
     void onItemTapped(int index) {
@@ -79,9 +73,7 @@ class _DonorListState extends State<DonorList> {
           IconButton(
             splashRadius: 10,
             padding: const EdgeInsets.all(1.0),
-            onPressed: () {
-
-            },
+            onPressed: () {},
             icon: const Icon(
               Icons.person,
               color: Colors.white,
@@ -96,7 +88,8 @@ class _DonorListState extends State<DonorList> {
                 color: Colors.white,
               ),
               onPressed: () {
-                Scaffold.of(context).openDrawer();  // This will now work correctly
+                Scaffold.of(context)
+                    .openDrawer(); // This will now work correctly
               },
             );
           },
@@ -104,12 +97,10 @@ class _DonorListState extends State<DonorList> {
         backgroundColor: Colors.red[900],
         centerTitle: true,
       ),
-
       drawer: Opacity(
         opacity: 0.6,
         child: Drawer(
           backgroundColor: Colors.red[900],
-
           child: ListView(
             padding: EdgeInsets.zero,
             children: [
@@ -117,12 +108,26 @@ class _DonorListState extends State<DonorList> {
                 decoration: BoxDecoration(
                   color: Colors.red[900],
                 ),
-                child: const Text('Drawer Header',style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 30),),
+                child: const Text(
+                  'Drawer Header',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 30),
+                ),
               ),
-
               ListTile(
-                leading: const Icon(Icons.home, color: Colors.white,),
-                title: const Text('Dashboard',style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold, fontSize: 16),),
+                leading: const Icon(
+                  Icons.home,
+                  color: Colors.white,
+                ),
+                title: const Text(
+                  'Dashboard',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16),
+                ),
                 selected: selectedIndex == 0,
                 onTap: () {
                   onItemTapped(0);
@@ -135,10 +140,18 @@ class _DonorListState extends State<DonorList> {
                   );
                 },
               ),
-
               ListTile(
-                leading: const Icon(Icons.inventory_2_sharp, color: Colors.white,),
-                title: const Text('Inventory', style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold, fontSize: 16),),
+                leading: const Icon(
+                  Icons.inventory_2_sharp,
+                  color: Colors.white,
+                ),
+                title: const Text(
+                  'Inventory',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16),
+                ),
                 selected: selectedIndex == 1,
                 onTap: () {
                   onItemTapped(1);
@@ -155,106 +168,126 @@ class _DonorListState extends State<DonorList> {
           ),
         ),
       ),
-
-
-
-
-
       body: FutureBuilder(
         future: databaseService.getDonation(),
-        builder:  (context,snapshot){
+        builder: (context, snapshot) {
           return ListView.builder(
               itemCount: snapshot.data?.length ?? 0,
               itemBuilder: (BuildContext context, int index) {
                 Donation donation = snapshot.data![index];
                 return Center(
                     child: Card(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min, // Keep this to minimize height
+                  child: Column(
+                    mainAxisSize:
+                        MainAxisSize.min, // Keep this to minimize height
+                    children: <Widget>[
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
                         children: <Widget>[
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: <Widget>[
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.red[900],
-                                  shape: BoxShape.circle,
-                                ),
-                                padding: const EdgeInsets.all(5.0), // Keep this padding small
-                                child: Text(
-                                  donation.bloodGroup,
-                                  style: const TextStyle(
-                                    fontSize: 22,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-
-                          ListTile(
-                            title: Text(donation.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                            leading: const CircleAvatar(
-                              radius: 20,
-                              child: Icon(
-                                Icons.person,
-                                size: 20,
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.red[900],
+                              shape: BoxShape.circle,
+                            ),
+                            padding: const EdgeInsets.all(
+                                5.0), // Keep this padding small
+                            child: Text(
+                              donation.bloodGroup,
+                              style: const TextStyle(
+                                fontSize: 22,
+                                color: Colors.white,
                               ),
                             ),
-                            trailing: Text("${donation.donationsDone} Donations done" ,style:  const TextStyle(color: Colors.grey,fontSize: 15),),
-                            subtitle: Row(
-                              children: [
-                                const Icon(Icons.location_on_rounded), // Location icon
-                                const SizedBox(width: 4), // Space between the icon and the text
-                                Text(donation.residence), // Subtitle text
-                              ],
-                            ),
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: <Widget>[
-                              OutlinedButton(
-                                style: OutlinedButton.styleFrom(
-                                  disabledBackgroundColor:Colors.white,
-                                ),
-                                onPressed: () {
-                                  databaseService.deleteDonation(donation.id);
-                                  setState(() {});
-                                },
-                                child: Text('Delete', style: TextStyle(color: Colors.red[900])),
-                              ),
-                              const SizedBox(height: 5,),
-                              ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red[900],
-                                ),
-                                onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => DonorDetails(
-                                        patient: donation.name,
-                                        contact: donation.contact,
-                                        hospital: donation.hospital,
-                                        residence: donation.residence,
-                                        bloodGroup: donation.bloodGroup,
-                                        gender: donation.gender,
-                                        noOfDonations: donation.donationsDone,
-                                        details: donation.details,
-                                      ),
-                                    ),
-                                  );
-                                },
-                                child: const Text('Details', style: TextStyle(color: Colors.white)),
-                              ),
-                              const SizedBox(width: 8), // Keep this small or remove if not needed
-                            ],
                           ),
                         ],
                       ),
-                    )
-                );
-              });},
+                      ListTile(
+                        title: Text(donation.name,
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold)),
+                        leading: const CircleAvatar(
+                          radius: 20,
+                          child: Icon(
+                            Icons.person,
+                            size: 20,
+                          ),
+                        ),
+                        trailing: Text(
+                          "${donation.donationsDone} Donations done",
+                          style:
+                              const TextStyle(color: Colors.grey, fontSize: 15),
+                        ),
+                        subtitle: Row(
+                          children: [
+                            const Icon(
+                                Icons.location_on_rounded), // Location icon
+                            const SizedBox(
+                                width:
+                                    4), // Space between the icon and the text
+                            Text(donation.residence), // Subtitle text
+                          ],
+                        ),
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: <Widget>[
+                          OutlinedButton(
+                            style: OutlinedButton.styleFrom(
+                              disabledBackgroundColor: Colors.white,
+                            ),
+                            onPressed: () {
+                              databaseService.deleteDonation(donation.id);
+                              setState(() {});
+                            },
+                            child: Text('Delete',
+                                style: TextStyle(color: Colors.red[900])),
+                          ),
+                          const SizedBox(
+                            height: 5,
+                          ),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red[900],
+                            ),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => DonorDetails(
+                                    patient: donation.name,
+                                    contact: donation.contact,
+                                    hospital: donation.hospital,
+                                    residence: donation.residence,
+                                    bloodGroup: donation.bloodGroup,
+                                    gender: donation.gender,
+                                    noOfDonations: donation.donationsDone,
+                                    details: donation.details,
+                                    weight: null,
+                                    age: null,
+                                    lastDonated: null,
+                                    donationFrequency: null,
+                                    highestEducation: null,
+                                    currentOccupation: null,
+                                    currentLivingArrg: null,
+                                    eligibilityTest: null,
+                                    futureDonationWillingness: null,
+                                  ),
+                                ),
+                              );
+                            },
+                            child: const Text('Details',
+                                style: TextStyle(color: Colors.white)),
+                          ),
+                          const SizedBox(
+                              width:
+                                  8), // Keep this small or remove if not needed
+                        ],
+                      ),
+                    ],
+                  ),
+                ));
+              });
+        },
       ),
     );
   }

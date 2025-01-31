@@ -1,12 +1,16 @@
 import 'package:blood/views/user/profile.dart';
 import 'package:blood/views/user/registerdonor.dart';
 import 'package:blood/views/user/request_form.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import '../../controllers/auth_controller.dart';
 import '../../controllers/databaseController.dart';
-import '../../models/requests.dart';
+import '../../controllers/fireStoreDatabaseController.dart';
 import 'details.dart';
-import 'donors_list.dart';
 import 'home.dart';
+import 'my_donation_appeal.dart';
 
 
 
@@ -19,11 +23,8 @@ class Requests extends StatefulWidget {
 }
 
 class _RequestsState extends State<Requests> {
-
+  final AuthController authController = AuthController();
   final DatabaseService _databaseService = DatabaseService.instance;
-  final TextEditingController _searchController = TextEditingController();
-  String _searchQuery = "";
-
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _genderController = TextEditingController();
   final TextEditingController _bloodGroupController = TextEditingController();
@@ -45,7 +46,7 @@ class _RequestsState extends State<Requests> {
    String contact='';
    String details='';
 
-  void updateButton(int id) {
+  void updateButton(String id) {
     showDialog(
       context: context,
       builder: (context) => SizedBox(
@@ -259,42 +260,20 @@ class _RequestsState extends State<Requests> {
       ),
     );
   }
+
+
+
+
   @override
   Widget build(BuildContext context) {
-    final DatabaseService databaseService = DatabaseService.instance;
 
-    // Filter the list based on search query
-
-    SizedBox(
-      height: MediaQuery.of(context).size.height,
-      width: MediaQuery.of(context).size.width,
-      child: Column(
-        children: [
-          // Search bar
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              controller: _searchController,
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value;
-                });
-              },
-              decoration: InputDecoration(
-                hintText: "Search by name or location",
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
-          ),
-          // List of donors
-        ],
-      ),
-    );
-
+    final FirebaseAuth auth = FirebaseAuth.instance;
+    final Stream<QuerySnapshot> requestsCollection = FirebaseFirestore.instance
+        .collection('requests')
+        .where('userId', isEqualTo: auth.currentUser!.uid)
+        .snapshots();
     int selectedIndex = 0;
+    final fireStoreDatabaseController firebaseDatabase = fireStoreDatabaseController();
 
     void onItemTapped(int index) {
       setState(() {
@@ -305,7 +284,7 @@ class _RequestsState extends State<Requests> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          "Request for Blood",
+          "Your Requests",
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: Colors.white,
@@ -407,30 +386,6 @@ class _RequestsState extends State<Requests> {
               ),
               ListTile(
                 leading: const Icon(
-                  Icons.people,
-                  color: Colors.white,
-                ),
-                title: const Text(
-                  'All Donors',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16),
-                ),
-                selected: selectedIndex == 2,
-                onTap: () {
-                  onItemTapped(2);
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const DonorList(),
-                    ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(
                   Icons.person,
                   color: Colors.white,
                 ),
@@ -453,6 +408,28 @@ class _RequestsState extends State<Requests> {
               ),
               ListTile(
                 leading: const Icon(
+                  Icons.format_align_center,
+                  color: Colors.white,
+                ),
+                title: const Text('My Donation Appeal',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16)),
+                selected: selectedIndex == 4,
+                onTap: () {
+                  onItemTapped(3);
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const DonationAppeal(),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(
                   Icons.request_page,
                   color: Colors.white,
                 ),
@@ -461,9 +438,9 @@ class _RequestsState extends State<Requests> {
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 16)),
-                selected: selectedIndex == 4,
+                selected: selectedIndex == 5,
                 onTap: () {
-                  onItemTapped(4);
+                  onItemTapped(5);
                   Navigator.pop(context);
                   Navigator.push(
                     context,
@@ -483,9 +460,9 @@ class _RequestsState extends State<Requests> {
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 16)),
-                selected: selectedIndex == 5,
+                selected: selectedIndex == 6,
                 onTap: () {
-                  onItemTapped(5);
+                  onItemTapped(6);
                   Navigator.pop(context);
                   Navigator.push(
                     context,
@@ -493,6 +470,24 @@ class _RequestsState extends State<Requests> {
                       builder: (context) => const Profile(),
                     ),
                   );
+                },
+              ),
+
+              ListTile(
+                leading: const Icon(
+                  Icons.logout,
+                  color: Colors.white,
+                ),
+                title: const Text('Log Out',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16)),
+                selected: selectedIndex == 7,
+                onTap: () {
+                  onItemTapped(7);
+                  Navigator.pop(context);
+                  authController.signout();
                 },
               ),
               // Other ListTiles...
@@ -503,114 +498,199 @@ class _RequestsState extends State<Requests> {
 
 
 
+      body: Expanded(
+        child: StreamBuilder<QuerySnapshot>(
+          stream: requestsCollection,
+          builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasError) {
+              return Center(child: Text('Error: ${snapshot.error}'));
+            } else if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+              return const Center(child: Text('No requests found.'));
+            }
+            final requests = snapshot.data!.docs;
+            return ListView.builder(
+              itemCount: requests.length,
+              itemBuilder: (context, index) {
+                final request = requests[index];
+                final data = request.data() as Map<String, dynamic>;
 
-      body: FutureBuilder(
-        future: databaseService.getRequest(),
-        builder:  (context,snapshot){
-          return ListView.builder(
-              itemCount: snapshot.data?.length ?? 0,
-              itemBuilder: (BuildContext context, int index) {
-                Request request = snapshot.data![index];
                 return Center(
-                    child: Card(
+                  child: Card(
+                    margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0),
                       child: Column(
-                        mainAxisSize: MainAxisSize.min, // Keep this to minimize height
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: <Widget>[
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.red[900],
-                                  shape: BoxShape.circle,
-                                ),
-                                padding: const EdgeInsets.all(5.0), // Keep this padding small
-                                child: Text(
-                                  request.bloodGroup,
-                                  style: const TextStyle(
-                                    fontSize: 22,
-                                    color: Colors.white,
-                                  ),
+                          // Blood Group Badge
+                          Align(
+                            alignment: Alignment.topRight,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.red[900],
+                                shape: BoxShape.circle,
+                              ),
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text(
+                                data['bloodGroup'] ?? 'N/A',
+                                style: const TextStyle(
+                                  fontSize: 18, // Adjusted for better fit
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
                                 ),
                               ),
-                            ],
+                            ),
                           ),
 
+                          const SizedBox(height: 5), // Spacing
+
+                          // Main ListTile
                           ListTile(
-                            title: Text(request.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                            contentPadding: EdgeInsets.zero, // Removes default padding
                             leading: const CircleAvatar(
-                              radius: 20,
-                              child: Icon(
-                                Icons.person,
-                                size: 20,
-                              ),
+                              radius: 25, // Bigger size for better visuals
+                              child: Icon(Icons.person, size: 24),
                             ),
-                            trailing: Text("${request.bags} Bags}" ,style:  const TextStyle(color: Colors.grey,fontSize: 15),),
-                            subtitle: Row(
+                            title: Text(
+                              data['name'] ?? 'Unknown',
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Icon(Icons.location_on_rounded), // Location icon
-                                const SizedBox(width: 4), // Space between the icon and the text
-                                Text(request.residence), // Subtitle text
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    const Icon(Icons.location_on_rounded, size: 16),
+                                    const SizedBox(width: 4),
+                                    Expanded(
+                                      child: Text(
+                                        data['residence'] ?? 'Unknown',
+                                        style: const TextStyle(fontSize: 14),
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 1,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  "${data['bags'] ?? 'N/A'} Bags | ${data['case'] ?? 'N/A'}",
+                                  style: const TextStyle(color: Colors.grey, fontSize: 14),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                ),
                               ],
-
                             ),
                           ),
+
+                          const SizedBox(height: 10),
+
+                          // Buttons Row
                           Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: <Widget>[
                               OutlinedButton(
                                 style: OutlinedButton.styleFrom(
-                                  disabledBackgroundColor:Colors.white,
+                                  foregroundColor: Colors.red[900],
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
                                 ),
                                 onPressed: () {
                                   updateButton(request.id);
                                   setState(() {});
                                 },
-                                child: Text('Update', style: TextStyle(color: Colors.red[900])),
+                                child: const Text('Update'),
                               ),
-                              const SizedBox(width: 4,),
+                              const SizedBox(width: 6),
                               OutlinedButton(
                                 style: OutlinedButton.styleFrom(
-                                  disabledBackgroundColor:Colors.white,
+                                  foregroundColor: Colors.red[900],
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
                                 ),
                                 onPressed: () {
-                                  databaseService.deleteRequest(request.id);
-                                  setState(() {});
+                                  // databaseService.deleteRequest(request.id);
+                                  try {
+                                    firebaseDatabase.deleteRequest(
+                                        data['docId']);
+                                    setState(() {});
+                                    Get.snackbar("Success: ","Request deleted successfully!",
+                                        backgroundColor: Colors.red,
+                                        colorText: Colors.white,
+                                        margin: const EdgeInsets.all(
+                                          15,
+                                        ),
+                                        snackPosition: SnackPosition.BOTTOM,
+                                        icon: const Icon(
+                                          Icons.message,
+                                          color: Colors.white,
+                                        ));
+                                  }
+                                  catch(e){
+                                    Get.snackbar("Error: ", e.toString(),
+                                        backgroundColor: Colors.red,
+                                        colorText: Colors.white,
+                                        margin: const EdgeInsets.all(
+                                          15,
+                                        ),
+                                        snackPosition: SnackPosition.BOTTOM,
+                                        icon: const Icon(
+                                          Icons.message,
+                                          color: Colors.white,
+                                        ));
+                                  }
                                 },
-                                child: Text('Delete', style: TextStyle(color: Colors.red[900])),
+                                child: const Text('Delete'),
                               ),
-                              const SizedBox(width: 4,),
+                              const SizedBox(width: 6),
                               ElevatedButton(
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.red[900],
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
                                 ),
                                 onPressed: () {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
                                       builder: (context) => Details(
-                                        patient: request.name,
-                                        contact: request.contact,
-                                        hospital: request.hospital,
-                                        residence: request.residence,
-                                        case_: request.case_,
-                                        bags: request.bags,
-                                        bloodGroup: request.bloodGroup,
-                                        gender: request.gender,
+                                        patient: data['name'],
+                                        contact: data['contact'],
+                                        hospital: data['hospital'],
+                                        residence: data['residence'],
+                                        case_: data['case'],
+                                        bags: data['bags'],
+                                        bloodGroup: data['bloodGroup'],
+                                        gender: data['gender'],
                                       ),
                                     ),
                                   );
                                 },
                                 child: const Text('Details', style: TextStyle(color: Colors.white)),
                               ),
-                              const SizedBox(width: 8), // Keep this small or remove if not needed
                             ],
                           ),
                         ],
                       ),
-                    )
+                    ),
+                  ),
+
                 );
-              });},
+              },
+            );
+          },
+        ),
       ),
     );
   }

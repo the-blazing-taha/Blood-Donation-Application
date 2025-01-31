@@ -21,7 +21,7 @@ void main() async {
               appId: '1:873073858781:android:a0b01daed8a08310796334',
               messagingSenderId: '873073858781',
               projectId: 'blood-donation-applicati-30737',
-              storageBucket: 'blood-donation-applicati-30737.firebasestorage.app'),
+              storageBucket: 'gs://blood-donation-applicati-30737.firebasestorage.app'),
         )
       : await Firebase.initializeApp();
   runApp(const MyApp());

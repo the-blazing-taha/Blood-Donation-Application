@@ -1,4 +1,5 @@
 import 'dart:core';
+import 'package:blood/controllers/fireStoreDatabaseController.dart';
 import 'package:blood/views/user/profile.dart';
 import 'package:blood/views/user/registerdonor.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -8,7 +9,7 @@ import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import '../../controllers/databaseController.dart';
-import 'donors_list.dart';
+import '../admin/blood_appeal_admin.dart';
 import 'home.dart';
 import 'my_requests.dart';
 
@@ -76,8 +77,9 @@ class _RequestFormState extends State<RequestForm> {
   bool vertical = false;
   final DatabaseService _databaseService = DatabaseService.instance;
   final TextEditingController _locationController = TextEditingController();
+  final fireStoreDatabaseController _firebaseDatabase = fireStoreDatabaseController();
 
-  String? _currentAddress;
+  late String _currentAddress;
   Position? _currentPosition;
   Future<bool> _handleLocationPermission() async {
     bool serviceEnabled;
@@ -560,7 +562,8 @@ class _RequestFormState extends State<RequestForm> {
                           icon: Icon(Icons.my_location, color: Colors.red[900]),
                           onPressed: () {
                             _getCurrentPosition();
-                            _locationController.text = _currentAddress!;
+                            _locationController.text = _currentAddress;
+                            residence=_locationController.text;
                           },
                         ),
                       ),
@@ -568,6 +571,12 @@ class _RequestFormState extends State<RequestForm> {
                     const SizedBox(
                       height: 10,
                     ),
+
+
+
+
+
+
                     const Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
@@ -606,6 +615,12 @@ class _RequestFormState extends State<RequestForm> {
                             value: value, label: value);
                       }).toList(),
                     ),
+
+
+
+
+
+
                     const SizedBox(
                       height: 20,
                     ),
@@ -831,6 +846,7 @@ class _RequestFormState extends State<RequestForm> {
                                 bloodGroup,
                                 gender,
                                 details);
+                            _firebaseDatabase.addRequest(patient, contact, hospital, residence, donationCase, bags, bloodGroup, gender, details);
                           } else {
                             print("ERROR: Case of donation not selected!");
                           }

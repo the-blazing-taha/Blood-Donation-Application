@@ -28,9 +28,22 @@ class DatabaseService {
   final String _genderTypeColumn = "gender";
   final String _detailsColumnName= "details";
 
+
+
+
   final String donationsTableName = "donations";
   final String _donationIdColumnName = "_id";
   final String _donationsNumberColumn = "donations";
+  final String _donationsWeightColumn = "weight";
+  final String _donationsAgeColumn = "age";
+  final String _donationsFrequencyColumn = "frequency";
+  final String _donationsLastDonationColumn = "last_don";
+  final String _donationsEducationColumn = "education";
+  final String _donationsOccupationColumn = "occupation";
+  final String _donationsLivingColumn = "living";
+  final String _donationsEligibilityColumn = "eligibility";
+  final String _donationsFutureWillingnessColumn = "future_will";
+
 
   final String _inventoryTableName = "inventory";
   final String _inventoryIdColumnName = "_id";
@@ -51,7 +64,7 @@ class DatabaseService {
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE $requestsTableName (
-            $_requestIdColumnName INTEGER PRIMARY KEY,
+            $_requestIdColumnName TEXT PRIMARY KEY,
             $_patientNameColumnName TEXT NOT NULL,
             $_contactColumnName TEXT NOT NULL,
             $_hospitalNameColumn TEXT NOT NULL,
@@ -65,7 +78,7 @@ class DatabaseService {
         ''');
         await db.execute('''
           CREATE TABLE $donationsTableName (
-            $_donationIdColumnName INTEGER PRIMARY KEY,
+            $_donationIdColumnName TEXT PRIMARY KEY,
             $_patientNameColumnName TEXT NOT NULL,
             $_contactColumnName TEXT NOT NULL,
             $_hospitalNameColumn TEXT NOT NULL,
@@ -73,7 +86,16 @@ class DatabaseService {
             $_donationsNumberColumn INTEGER NOT NULL,
             $_bloodGroupColumn TEXT NOT NULL,
             $_genderTypeColumn TEXT NOT NULL,
-            $_detailsColumnName TEXT
+            $_detailsColumnName TEXT,
+            $_donationsWeightColumn NUMBER NOT NULL,
+            $_donationsAgeColumn INTEGER NOT NULL,
+            $_donationsFrequencyColumn TEXT NOT NULL,
+            $_donationsLastDonationColumn TEXT NOT NULL,
+            $_donationsEducationColumn TEXT NOT NULL,
+            $_donationsOccupationColumn TEXT NOT NULL,
+            $_donationsLivingColumn TEXT NOT NULL,
+            $_donationsEligibilityColumn TEXT NOT NULL,
+            $_donationsFutureWillingnessColumn TEXT NOT NULL
           )
         ''');
         await db.execute('''
@@ -140,7 +162,16 @@ class DatabaseService {
       int donationNumber,
       String bloodGroup,
       String gender,
-      String details) async {
+      String details,
+      int weight,
+      int age,
+      String lastDonated,
+      String donationFrequency,
+      String highestEducation,
+      String currentOccupation,
+      String currentLivingArrg,
+      String eligibilityTest,
+      String futureDonationWillingness) async {
     final db = await database;
 
     String sql = '''
@@ -152,7 +183,16 @@ class DatabaseService {
       $_donationsNumberColumn, 
       $_bloodGroupColumn, 
       $_genderTypeColumn,
-      $_detailsColumnName
+      $_detailsColumnName,
+      $_donationsWeightColumn,
+      $_donationsAgeColumn,
+      $_donationsFrequencyColumn,
+      $_donationsLastDonationColumn,
+      $_donationsEducationColumn,
+      $_donationsOccupationColumn,
+      $_donationsLivingColumn,
+      $_donationsEligibilityColumn,
+      $_donationsFutureWillingnessColumn
     ) VALUES (
       '$name', 
       '$contact', 
@@ -161,7 +201,17 @@ class DatabaseService {
       $donationNumber, 
       '$bloodGroup', 
       '$gender',
-      '$details'
+      '$details',
+       '$weight',
+       '$age',
+       '$lastDonated',
+       '$donationFrequency',
+       '$highestEducation',
+       '$currentOccupation',
+       '$currentLivingArrg',
+       '$eligibilityTest',
+       '$futureDonationWillingness')
+      
     )
   ''';
 
@@ -190,7 +240,7 @@ class DatabaseService {
 
     List<Request> requests = results
         .map((e) => Request(
-              id: e['id'] as int,
+              id: e['id'] as String,
               name: e['name'] as String,
               contact: e['contact'] as String,
               hospital: e['hospital'] as String,
@@ -199,7 +249,8 @@ class DatabaseService {
               bags: e['bags'] as int,
               bloodGroup: e['bloodGroup'] as String,
               gender: e['gender'] as String,
-              details: e['details'] as String
+              details: e['details'] as String,
+              userId: e['userId'] as String
             ))
         .toList();
 
@@ -219,7 +270,16 @@ class DatabaseService {
       $_bloodGroupColumn AS bloodGroup, 
       $_genderTypeColumn AS gender, 
       $_donationsNumberColumn AS donationsDone,
-      $_detailsColumnName AS details
+      $_detailsColumnName AS details,
+      $_donationsWeightColumn AS weight,
+      $_donationsAgeColumn AS age,
+      $_donationsFrequencyColumn AS frequency,
+      $_donationsLastDonationColumn AS last_donation,
+      $_donationsEducationColumn AS education,
+      $_donationsOccupationColumn AS occupation,
+      $_donationsLivingColumn AS living,
+      $_donationsEligibilityColumn AS eligibility,
+      $_donationsFutureWillingnessColumn AS future_will
     FROM $donationsTableName
   ''';
 
@@ -227,7 +287,7 @@ class DatabaseService {
 
     List<Donation> donations = results
         .map((e) => Donation(
-              id: e['id'] as int,
+              id: e['id'] as String,
               name: e['name'] as String,
               contact: e['contact'] as String,
               hospital: e['hospital'] as String,
@@ -235,15 +295,25 @@ class DatabaseService {
               bloodGroup: e['bloodGroup'] as String,
               gender: e['gender'] as String,
               donationsDone: e['donationsDone'] as int,
-              details: e['details'] as String
-            ))
+              details: e['details'] as String,
+              userId: e['userId'] as String,
+              weight: e['weight'] as int,
+              age: e['age'] as int,
+              lastDonated: e['last_donated'] as String,
+              donationFrequency: e['donation_frequency'] as String,
+              highestEducation: e['education'] as String,
+              currentOccupation: e['occupation'] as String,
+              currentLivingArrg: e['living'] as String,
+              eligibilityTest: e['eligible'] as String,
+              futureDonationWillingness: e['future_will'] as String
+    ))
         .toList();
 
     return donations;
   }
 
   Future<void> updateRequest(
-      {required int id,
+      {required String id,
       String name = '',
       String contact = '',
       String hospital = '',
@@ -252,7 +322,8 @@ class DatabaseService {
       int bags = -1,
       String bloodGroup = '',
       String gender = '',
-      String details=''}) async {
+      String details=''
+      }) async {
     final db = await database;
 
     try {
@@ -338,7 +409,7 @@ class DatabaseService {
 
 
   Future<void> updateDonationAppeal(
-      {required int id,
+      {required String id,
         String name = '',
         String contact = '',
         String hospital = '',
@@ -346,7 +417,16 @@ class DatabaseService {
         int donationsDone = -1,
         String bloodGroup = '',
         String gender = '',
-        String details=''}) async {
+        String details='',
+        int weight=-1,
+        int age=-1,
+        String lastDonated='',
+        String donationFrequency='',
+        String highestEducation='',
+        String currentOccupation='',
+        String currentLivingArrg='',
+        String eligibilityTest='',
+        String futureDonationWillingness=''}) async {
     final db = await database;
     try {
       if (name != '') {
@@ -416,6 +496,85 @@ class DatabaseService {
   ''';
         await db.rawUpdate(sql);
       }
+
+      if (lastDonated != '') {
+        String sql = '''
+    UPDATE $donationsTableName
+    SET 
+      $_donationsLastDonationColumn = '$hospital' WHERE $_donationIdColumnName = $id
+  ''';
+        await db.rawUpdate(sql);
+      }
+
+      if (age != -1) {
+        String sql = '''
+    UPDATE $donationsTableName
+    SET 
+      $_donationsAgeColumn = '$hospital' WHERE $_donationIdColumnName = $id
+  ''';
+        await db.rawUpdate(sql);
+      }
+
+      if (weight != -1) {
+        String sql = '''
+    UPDATE $donationsTableName
+    SET 
+      $_donationsWeightColumn = '$hospital' WHERE $_donationIdColumnName = $id
+  ''';
+        await db.rawUpdate(sql);
+      }
+
+      if (donationFrequency != '') {
+        String sql = '''
+    UPDATE $donationsTableName
+    SET 
+      $_donationsFrequencyColumn = '$hospital' WHERE $_donationIdColumnName = $id
+  ''';
+        await db.rawUpdate(sql);
+      }
+      if (highestEducation != '') {
+        String sql = '''
+    UPDATE $donationsTableName
+    SET 
+      $_donationsEducationColumn = '$hospital' WHERE $_donationIdColumnName = $id
+  ''';
+        await db.rawUpdate(sql);
+      }
+      if (currentOccupation != '') {
+        String sql = '''
+    UPDATE $donationsTableName
+    SET 
+      $_donationsOccupationColumn = '$hospital' WHERE $_donationIdColumnName = $id
+  ''';
+        await db.rawUpdate(sql);
+      }
+      if (currentLivingArrg != '') {
+        String sql = '''
+    UPDATE $donationsTableName
+    SET 
+      $_donationsLivingColumn = '$hospital' WHERE $_donationIdColumnName = $id
+  ''';
+        await db.rawUpdate(sql);
+      }
+
+      if (eligibilityTest != '') {
+        String sql = '''
+    UPDATE $donationsTableName
+    SET 
+      $_donationsEligibilityColumn = '$hospital' WHERE $_donationIdColumnName = $id
+  ''';
+        await db.rawUpdate(sql);
+      }
+      if (futureDonationWillingness != '') {
+        String sql = '''
+    UPDATE $donationsTableName
+    SET 
+      $_donationsFutureWillingnessColumn = '$hospital' WHERE $_donationIdColumnName = $id
+  ''';
+        await db.rawUpdate(sql);
+      }
+
+
     } catch (e) {
       debugPrint("ERROR IN UPDATING DONATION APPEAL: $e");
     }
@@ -424,7 +583,7 @@ class DatabaseService {
 
 
 
-  Future<void> deleteRequest(int id) async {
+  Future<void> deleteRequest(String id) async {
     final db = await database;
     try {
       await db.delete(requestsTableName,
@@ -437,7 +596,7 @@ class DatabaseService {
     }
   }
 
-  Future<void> deleteDonation(int id) async {
+  Future<void> deleteDonation(String id) async {
     final db = await database;
     try {
       await db.delete(donationsTableName,

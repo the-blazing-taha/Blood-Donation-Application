@@ -1,10 +1,7 @@
 import 'package:blood/views/admin/blood_requests_admin.dart';
 import 'package:blood/views/admin/inventory.dart';
-import 'package:blood/views/user/donors_list.dart';
-import 'package:blood/views/user/home.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 
 import '../../controllers/databaseController.dart';
 
@@ -132,7 +129,7 @@ class _DashboardState extends State<Dashboard> {
             child: InkWell(
               onTap: () {
                 // Handle card tap event (e.g., navigate to a donors list screen)
-                Get.to(const DonorList());
+                // Get.to(const DonorList());
               },
               child: Column(
                 mainAxisSize: MainAxisSize.min,

@@ -1,14 +1,15 @@
-import 'package:blood/models/donations.dart';
-import 'package:blood/views/admin/dashboard.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:blood/views/user/donor_details.dart';
-import 'package:blood/views/user/donors_list.dart';
 import 'package:blood/views/user/profile.dart';
 import 'package:blood/views/user/registerdonor.dart';
 import 'package:blood/views/user/request_form.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 import '../../controllers/auth_controller.dart';
-import '../../controllers/databaseController.dart';
+import '../../controllers/fireStoreDatabaseController.dart';
+import 'home.dart';
 import 'my_requests.dart';
 
 class DonationAppeal extends StatefulWidget {
@@ -19,8 +20,6 @@ class DonationAppeal extends StatefulWidget {
 }
 
 class _HomeState extends State<DonationAppeal> {
-  final TextEditingController _searchController = TextEditingController();
-  String _searchQuery = "";
   int _selectedIndex = 0;
   final AuthController _authController = AuthController();
 
@@ -31,7 +30,6 @@ class _HomeState extends State<DonationAppeal> {
       _selectedIndex = index;
     });
   }
-  final DatabaseService _databaseService = DatabaseService.instance;
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _genderController = TextEditingController();
   final TextEditingController _bloodGroupController = TextEditingController();
@@ -39,6 +37,8 @@ class _HomeState extends State<DonationAppeal> {
   final TextEditingController _locationController = TextEditingController();
   final TextEditingController _donationsNumberController = TextEditingController();
   final TextEditingController _detailsController = TextEditingController();
+  final fireStoreDatabaseController _firebaseDatabase = fireStoreDatabaseController();
+
   static List<String> bloodTypes = <String>['None','A+', 'B+', 'AB+', 'O+','A-', 'B-', 'AB-', 'O-'];
   static List<String> genders = <String>['None','Male','Female'];
   String bloodGroup='';
@@ -51,7 +51,7 @@ class _HomeState extends State<DonationAppeal> {
   String contact='';
   String details='';
 
-  void updateButton(int id) {
+  void updateButton(String id) {
     showDialog(
       context: context,
       builder: (context) => SizedBox(
@@ -59,7 +59,7 @@ class _HomeState extends State<DonationAppeal> {
         width: MediaQuery.of(context).size.width,
         child: SingleChildScrollView(
           child: AlertDialog(
-            title: const Text('Update Request'),
+            title: const Text('Update Donation'),
 
             content: Column(
               mainAxisSize: MainAxisSize.min,
@@ -173,31 +173,31 @@ class _HomeState extends State<DonationAppeal> {
               TextButton(
                 onPressed: () {
                   if(patient!=''){
-                    _databaseService.updateDonationAppeal(id: id, name: patient);
+                    _firebaseDatabase.updateDonationAppeal(docId: id, name: patient);
                     Navigator.of(context).pop();
                   }
                   if(bloodGroup!=''){
-                    _databaseService.updateDonationAppeal(id: id, bloodGroup: bloodGroup);
+                    _firebaseDatabase.updateDonationAppeal(docId: id, bloodGroup: bloodGroup);
                     Navigator.of(context).pop();
                   }
                   if(gender!=''){
-                    _databaseService.updateDonationAppeal(id: id, gender: gender);
+                    _firebaseDatabase.updateDonationAppeal(docId: id, gender: gender);
                     Navigator.of(context).pop();
                   }
                   if(residence!=''){
-                    _databaseService.updateDonationAppeal(id: id, residence: residence);
+                    _firebaseDatabase.updateDonationAppeal(docId: id, residence: residence);
                     Navigator.of(context).pop();
                   }
                   if(contact!=''){
-                    _databaseService.updateDonationAppeal(id: id, contact: contact);
+                    _firebaseDatabase.updateDonationAppeal(docId: id, contact: contact);
                     Navigator.of(context).pop();
                   }
                   if(numberOfDonations!=-1){
-                    _databaseService.updateDonationAppeal(id: id, donationsDone: numberOfDonations);
+                    _firebaseDatabase.updateDonationAppeal(docId: id, donationsDone: numberOfDonations);
                     Navigator.of(context).pop();
                   }
                   if(details!=''){
-                    _databaseService.updateDonationAppeal(id: id, details: details);
+                    _firebaseDatabase.updateDonationAppeal(docId: id, details: details);
                     Navigator.of(context).pop();
                   }
                   _genderController.clear();
@@ -236,7 +236,12 @@ class _HomeState extends State<DonationAppeal> {
   }
   @override
   Widget build(BuildContext context) {
-    final DatabaseService databaseService = DatabaseService.instance;
+    final FirebaseAuth auth = FirebaseAuth.instance;
+    final Stream<QuerySnapshot> donorsCollection = FirebaseFirestore.instance
+        .collection('donors')
+        .where('userId', isEqualTo: auth.currentUser!.uid)
+        .snapshots();
+    final fireStoreDatabaseController firebaseDatabase = fireStoreDatabaseController();
 
     return Scaffold(
       appBar: AppBar(
@@ -312,7 +317,7 @@ class _HomeState extends State<DonationAppeal> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const DonationAppeal(),
+                      builder: (context) => const Home(),
                     ),
                   );
                 },
@@ -343,30 +348,6 @@ class _HomeState extends State<DonationAppeal> {
               ),
               ListTile(
                 leading: const Icon(
-                  Icons.people,
-                  color: Colors.white,
-                ),
-                title: const Text(
-                  'All Donors',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16),
-                ),
-                selected: _selectedIndex == 2,
-                onTap: () {
-                  _onItemTapped(2);
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const DonorList(),
-                    ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(
                   Icons.person,
                   color: Colors.white,
                 ),
@@ -389,6 +370,28 @@ class _HomeState extends State<DonationAppeal> {
               ),
               ListTile(
                 leading: const Icon(
+                  Icons.format_align_center,
+                  color: Colors.white,
+                ),
+                title: const Text('My Donation Appeal',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16)),
+                selected: _selectedIndex == 4,
+                onTap: () {
+                  _onItemTapped(3);
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const DonationAppeal(),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(
                   Icons.request_page,
                   color: Colors.white,
                 ),
@@ -397,9 +400,9 @@ class _HomeState extends State<DonationAppeal> {
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 16)),
-                selected: _selectedIndex == 4,
+                selected: _selectedIndex == 5,
                 onTap: () {
-                  _onItemTapped(4);
+                  _onItemTapped(5);
                   Navigator.pop(context);
                   Navigator.push(
                     context,
@@ -419,9 +422,9 @@ class _HomeState extends State<DonationAppeal> {
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 16)),
-                selected: _selectedIndex == 5,
+                selected: _selectedIndex == 6,
                 onTap: () {
-                  _onItemTapped(5);
+                  _onItemTapped(6);
                   Navigator.pop(context);
                   Navigator.push(
                     context,
@@ -442,38 +445,13 @@ class _HomeState extends State<DonationAppeal> {
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 16)),
-                selected: _selectedIndex == 6,
+                selected: _selectedIndex == 7,
                 onTap: () {
-                  _onItemTapped(6);
+                  _onItemTapped(7);
                   Navigator.pop(context);
                   _authController.signout();
                 },
               ),
-
-              ListTile(
-                leading: const Icon(
-                  Icons.admin_panel_settings_sharp,
-                  color: Colors.white,
-                ),
-                title: const Text('Admin',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16)),
-                selected: _selectedIndex == 6,
-                onTap: () {
-                  _onItemTapped(6);
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const Dashboard(),
-                    ),
-                  );
-                },
-              ),
-
-
               // Other ListTiles...
             ],
           ),
@@ -481,156 +459,235 @@ class _HomeState extends State<DonationAppeal> {
       ),
 
 
-
       body: Column(
         children: [
-          // Search bar
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              controller: _searchController,
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value;
-                });
-              },
-              decoration: InputDecoration(
-                hintText: "Search by name or location",
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
-          ),
           const Text(
             'Your Donation Appeal',
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
           ),
           Expanded(
-            child: FutureBuilder<List<Donation>>(
-              future: databaseService.getDonation(),
+            child: StreamBuilder<QuerySnapshot>(
+              stream: donorsCollection,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const Center(child: Text('No requests found.'));
                 }
-
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return const Center(child: Text('No donations found.'));
+                }
+                final donors = snapshot.data!.docs;
                 return ListView.builder(
-                  itemCount: snapshot.data!.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    Donation donation = snapshot.data![index];
+                  // scrollDirection: Axis.horizontal,
+                  itemCount: donors.length,
+                  itemBuilder: (context, index) {
+                    final donor = donors[index];
+                    final data = donor.data() as Map<String, dynamic>;
+
                     return Center(
                       child: Card(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: <Widget>[
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: <Widget>[
-                                Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5), // Add margin
+                        elevation: 4, // Add shadow for better appearance
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        child: Padding(
+                          padding: const EdgeInsets.all(10.0), // Add padding for spacing
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start, // Align text properly
+                            children: <Widget>[
+                              // Blood Group Tag
+                              Align(
+                                alignment: Alignment.topRight,
+                                child: Container(
                                   decoration: BoxDecoration(
                                     color: Colors.red[900],
                                     shape: BoxShape.circle,
                                   ),
-                                  padding: const EdgeInsets.all(5.0),
+                                  padding: const EdgeInsets.all(8.0),
                                   child: Text(
-                                    donation.bloodGroup,
+                                    data['bloodGroup'] ?? 'N/A',
                                     style: const TextStyle(
-                                      fontSize: 22,
+                                      fontSize: 18, // Slightly smaller for better fit
+                                      fontWeight: FontWeight.bold,
                                       color: Colors.white,
                                     ),
                                   ),
                                 ),
-                              ],
-                            ),
-                            ListTile(
-                              title: Text(
-                                donation.name,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold),
-                                overflow: TextOverflow.ellipsis, // Use ellipsis for overflow
                               ),
-                              leading: const CircleAvatar(
-                                radius: 20,
-                                child: Icon(
-                                  Icons.person,
-                                  size: 20,
+
+                              const SizedBox(height: 5),
+
+                              // Main ListTile
+                              ListTile(
+                                contentPadding: EdgeInsets.zero, // Remove default padding
+                                leading: const CircleAvatar(
+                                  radius: 25, // Increased size for better visuals
+                                  child: Icon(Icons.person, size: 24),
+                                ),
+                                title: Text(
+                                  data['name'] ?? 'Unknown',
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                                  overflow: TextOverflow.ellipsis, // Prevents text overflow
+                                  maxLines: 1,
+                                  softWrap: false,
+                                ),
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const SizedBox(height: 4),
+                                    Row(
+                                      children: [
+                                        const Icon(Icons.location_on_rounded, size: 16),
+                                        const SizedBox(width: 4),
+                                        Expanded(
+                                          child: Text(
+                                            data['residence'] ?? 'Unknown',
+                                            style: const TextStyle(fontSize: 14),
+                                            overflow: TextOverflow.ellipsis,
+                                            maxLines: 1,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      "${data['gender'] ?? 'N/A'} | ${data['donations_done'] ?? '0'} donations done",
+                                      style: const TextStyle(color: Colors.grey, fontSize: 14),
+                                    ),
+                                  ],
                                 ),
                               ),
-                              trailing: Text(
-                                "${donation.donationsDone} Donations Done",
-                                style: const TextStyle(
-                                    color: Colors.grey, fontSize: 15),
-                              ),
-                              subtitle: Row(
+
+                              const SizedBox(height: 10),
+
+                              // Button Row
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
-                                  const Icon(Icons.location_on_rounded),
-                                  const SizedBox(width: 4),
-                                  Text(donation.residence),
+                                  OutlinedButton(
+                                    style: OutlinedButton.styleFrom(
+                                      foregroundColor: Colors.red[900],
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                    ),
+                                    onPressed: () {
+                                      try {
+                                        updateButton(data['docId']);
+                                        setState(() {});
+                                        Get.snackbar("Success: ", 'Donation appeal updated successfully',
+                                            backgroundColor: Colors.red,
+                                            colorText: Colors.white,
+                                            margin: const EdgeInsets.all(
+                                              15,
+                                            ),
+                                            snackPosition: SnackPosition.BOTTOM,
+                                            icon: const Icon(
+                                              Icons.message,
+                                              color: Colors.white,
+                                            ));
+                                      }
+                                      catch(e){
+                                        Get.snackbar("Error: ", e.toString(),
+                                            backgroundColor: Colors.red,
+                                            colorText: Colors.white,
+                                            margin: const EdgeInsets.all(
+                                              15,
+                                            ),
+                                            snackPosition: SnackPosition.BOTTOM,
+                                            icon: const Icon(
+                                              Icons.message,
+                                              color: Colors.white,
+                                            ));
+                                      }
+                                    },
+                                    child: const Text('Update'),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  OutlinedButton(
+                                    style: OutlinedButton.styleFrom(
+                                      foregroundColor: Colors.red[900],
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                    ),
+                                    onPressed: () {
+                                      try {
+                                        firebaseDatabase.deleteDonation(data['docId']);
+                                        setState(() {});
+                                        Get.snackbar("Success: ","Donation deleted successfully!",
+                                            backgroundColor: Colors.red,
+                                            colorText: Colors.white,
+                                            margin: const EdgeInsets.all(
+                                              15,
+                                            ),
+                                            snackPosition: SnackPosition.BOTTOM,
+                                            icon: const Icon(
+                                              Icons.message,
+                                              color: Colors.white,
+                                            ));
+                                      }
+                                      catch(e){
+                                        Get.snackbar("Error: ", e.toString(),
+                                            backgroundColor: Colors.red,
+                                            colorText: Colors.white,
+                                            margin: const EdgeInsets.all(
+                                              15,
+                                            ),
+                                            snackPosition: SnackPosition.BOTTOM,
+                                            icon: const Icon(
+                                              Icons.message,
+                                              color: Colors.white,
+                                            ));
+                                      }
+                                    },
+                                    child: const Text('Delete'),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.red[900],
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                    ),
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => DonorDetails(
+                                            patient: data['name'],
+                                            contact: data['contact'],
+                                            hospital: data['hospital'],
+                                            residence: data['residence'],
+                                            bloodGroup: data['bloodGroup'],
+                                            gender: data['gender'],
+                                            noOfDonations: data['donations_done'],
+                                            details: data['details'],
+                                            weight: data['weight'],
+                                            age: data['age'],
+                                            lastDonated: data['lastDonated'],
+                                            donationFrequency: data['donationFrequency'],
+                                            highestEducation: data['highestEducation'],
+                                            currentOccupation: data['currentOccupation'],
+                                            currentLivingArrg: data['currentLivingArrg'],
+                                            eligibilityTest: data['eligibilityTest'],
+                                            futureDonationWillingness: data['futureDonationWillingness'],
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    child: const Text('Details', style: TextStyle(color: Colors.white)),
+                                  ),
                                 ],
                               ),
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: <Widget>[
-                                OutlinedButton(
-                                  style: OutlinedButton.styleFrom(
-                                    disabledBackgroundColor:Colors.white,
-                                  ),
-                                  onPressed: () {
-                                    updateButton(donation.id);
-                                    setState(() {
-
-                                    });
-                                  },
-                                  child: Text('Update', style: TextStyle(color: Colors.red[900])),
-                                ),
-                                const SizedBox(height: 4,),
-                                OutlinedButton(
-                                  style: OutlinedButton.styleFrom(
-                                    disabledBackgroundColor:Colors.white,
-                                  ),
-                                  onPressed: () {
-                                    databaseService.deleteDonation(donation.id);
-                                    setState(() {});
-                                  },
-                                  child: Text('Delete', style: TextStyle(color: Colors.red[900])),
-                                ),
-                                const SizedBox(height: 6,),
-                                ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.red[900],
-                                  ),
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => DonorDetails(
-                                          patient: donation.name,
-                                          contact: donation.contact,
-                                          hospital: donation.hospital,
-                                          residence: donation.residence,
-                                          bloodGroup: donation.bloodGroup,
-                                          gender: donation.gender,
-                                          noOfDonations: donation.donationsDone,
-                                          details: donation.details,
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                  child: const Text('Details',
-                                      style: TextStyle(color: Colors.white)),
-                                ),
-                                const SizedBox(width: 8),
-                              ],
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
+
                     );
                   },
                 );

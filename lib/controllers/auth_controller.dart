@@ -6,6 +6,8 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../views/user/wrapper.dart';
+
 class AuthController{
   final FirebaseStorage _storage = FirebaseStorage.instance;
   final FirebaseAuth _auth= FirebaseAuth.instance;
@@ -25,13 +27,13 @@ class AuthController{
   Future<String> createNewUser(String email, String fullName, String password, Uint8List? image) async{
     String res = 'Error Occured!';
     try{
-        UserCredential userCredential = await _auth.createUserWithEmailAndPassword(email: email, password: password);
-        Get.offAll(() => const Wrapper());
-        // String downloadUrl = await uploadImageToStorage(image);
+      Get.offAll(() => const Wrapper());
+      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(email: email, password: password);
+      String downloadUrl = await uploadImageToStorage(image);
         await _firestore.collection('users').doc(userCredential.user!.uid).set({
           'fullName' : fullName,
           'email' : email,
-          // 'downloadURL': downloadUrl,
+          'downloadURL': downloadUrl,
           'userId' : userCredential.user!.uid,
         });
         res = 'success';
@@ -44,7 +46,7 @@ class AuthController{
 
 
   uploadImageToStorage(Uint8List? image)async{
-      Reference ref = _storage.ref().child('profileImage').child(_auth.currentUser!.uid);
+      Reference ref = _storage.ref().child('profileImages').child(_auth.currentUser!.uid);
       UploadTask uploadTask = ref.putData(image!);
       TaskSnapshot snapshot = await uploadTask;
       String downloadURL = await snapshot.ref.getDownloadURL();
