@@ -6,7 +6,7 @@ import 'package:get/get.dart';
 
 class fireStoreDatabaseController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
   Future<String> addRequest(
       String name,
@@ -26,7 +26,7 @@ class fireStoreDatabaseController {
       );
       Position position = await Geolocator.getCurrentPosition(locationSettings: locationSettings);
 
-      DocumentReference requestRef = _firestore.collection('requests').doc();
+      DocumentReference requestRef = firestore.collection('requests').doc();
       await requestRef.set({
         'docId': requestRef.id,
         'userId': _auth.currentUser?.uid,
@@ -48,7 +48,42 @@ class fireStoreDatabaseController {
     }
     return res;
   }
+  Future<Position> _determinePosition() async {
+    bool serviceEnabled;
+    LocationPermission permission;
 
+    // Test if location services are enabled.
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      // Location services are not enabled don't continue
+      // accessing the position and request users of the
+      // App to enable the location services.
+      return Future.error('Location services are disabled.');
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        // Permissions are denied, next time you could try
+        // requesting permissions again (this is also where
+        // Android's shouldShowRequestPermissionRationale
+        // returned true. According to Android guidelines
+        // your App should show an explanatory UI now.
+        return Future.error('Location permissions are denied');
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      // Permissions are denied forever, handle appropriately.
+      return Future.error(
+          'Location permissions are permanently denied, we cannot request permissions.');
+    }
+
+    // When we reach here, permissions are granted and we can
+    // continue accessing the position of the device.
+    return await Geolocator.getCurrentPosition();
+  }
   Future<String> addDonor(
       String name,
       String contact,
@@ -69,13 +104,9 @@ class fireStoreDatabaseController {
       String futureDonationWillingness) async {
     String res = "Something went wrong while uploading the donation !";
     try {
-      final LocationSettings locationSettings = LocationSettings(
-        accuracy: LocationAccuracy.high,
-        distanceFilter: 100,
-      );
-      Position position = await Geolocator.getCurrentPosition(locationSettings: locationSettings);
 
-      DocumentReference donorRef = _firestore.collection('donors').doc(_auth.currentUser?.uid);
+      Position position = await _determinePosition();
+      DocumentReference donorRef = firestore.collection('donors').doc(_auth.currentUser?.uid);
       await donorRef.set({
         'docId': donorRef.id,
         'userId': _auth.currentUser?.uid,
@@ -120,8 +151,8 @@ class fireStoreDatabaseController {
 
   Future<void> deleteDonation(String docId)async {
     try {
-      _firestore
-          .collection('donations')
+      firestore
+          .collection('donors')
           .where(
           'docId', isEqualTo: docId) // Query documents where docId matches
           .get()
@@ -138,7 +169,7 @@ class fireStoreDatabaseController {
 
   Future<void> deleteRequest(String docId)async {
     try {
-      _firestore
+      firestore
           .collection('requests')
           .where(
           'docId', isEqualTo: docId) // Query documents where docId matches
@@ -154,8 +185,8 @@ class fireStoreDatabaseController {
     }
   }
 
-  Future<void> updateDonorPosition(double longitude, latitude)async{
-    _firestore.collection('donors')
+  Future<void> updateDonorPosition(double longitude,double latitude)async{
+   await firestore.collection('donors')
         .doc(_auth.currentUser?.uid)
         .update({
       'latitude': latitude,
@@ -178,14 +209,14 @@ class fireStoreDatabaseController {
 
     try {
       if (name != '') {
-        _firestore.collection('requests')
+        firestore.collection('requests')
             .doc(docId)
             .update({
           'name': name,
         });
       }
       if (contact != '') {
-        _firestore.collection('requests')
+        firestore.collection('requests')
             .doc(docId)
             .update({
           'contact': contact,
@@ -193,7 +224,7 @@ class fireStoreDatabaseController {
       }
 
       if (case_ != '') {
-        _firestore.collection('requests')
+        firestore.collection('requests')
             .doc(docId)
             .update({
           'case': case_,
@@ -201,28 +232,28 @@ class fireStoreDatabaseController {
       }
 
       if (residence != '') {
-        _firestore.collection('requests')
+        firestore.collection('requests')
             .doc(docId)
             .update({
           'residence': residence,
         });
       }
       if (bags != -1) {
-        _firestore.collection('requests')
+        firestore.collection('requests')
             .doc(docId)
             .update({
           'bags': bags,
         });
       }
       if (bloodGroup != '') {
-        _firestore.collection('requests')
+        firestore.collection('requests')
             .doc(docId)
             .update({
           'bloodGroup': bloodGroup,
         });
       }
       if (gender != '') {
-        _firestore.collection('requests')
+        firestore.collection('requests')
             .doc(docId)
             .update({
           'gender': gender,
@@ -230,14 +261,14 @@ class fireStoreDatabaseController {
       }
 
       if (details != '') {
-        _firestore.collection('requests')
+        firestore.collection('requests')
             .doc(docId)
             .update({
           'details': details,
         });
       }
       if (hospital != '') {
-        _firestore.collection('requests')
+        firestore.collection('requests')
             .doc(docId)
             .update({
           'hospital': hospital,
@@ -269,14 +300,14 @@ class fireStoreDatabaseController {
         String futureDonationWillingness=''}) async {
     try {
       if (name != '') {
-        _firestore.collection('donors')
+        firestore.collection('donors')
             .doc(docId)
             .update({
           'name': name,
         });
       }
       if (contact != '') {
-        _firestore.collection('donors')
+        firestore.collection('donors')
             .doc(docId)
             .update({
           'contact': contact,
@@ -284,7 +315,7 @@ class fireStoreDatabaseController {
       }
 
       if (donationsDone != -1) {
-        _firestore.collection('donors')
+        firestore.collection('donors')
             .doc(docId)
             .update({
           'donations_done': donationsDone,
@@ -292,21 +323,21 @@ class fireStoreDatabaseController {
       }
 
       if (residence != '') {
-        _firestore.collection('donors')
+        firestore.collection('donors')
             .doc(docId)
             .update({
           'residence': residence,
         });
       }
       if (bloodGroup != '') {
-        _firestore.collection('donors')
+        firestore.collection('donors')
             .doc(docId)
             .update({
           'residence': residence,
         });
       }
       if (gender != '') {
-        _firestore.collection('donors')
+        firestore.collection('donors')
             .doc(docId)
             .update({
           'gender': gender,
@@ -314,14 +345,14 @@ class fireStoreDatabaseController {
       }
 
       if (details != '') {
-        _firestore.collection('donors')
+        firestore.collection('donors')
             .doc(docId)
             .update({
           'details': details,
         });
       }
       if (hospital != '') {
-        _firestore.collection('donors')
+        firestore.collection('donors')
             .doc(docId)
             .update({
           'hospital': hospital,
@@ -329,7 +360,7 @@ class fireStoreDatabaseController {
       }
 
       if (lastDonated != '') {
-        _firestore.collection('donors')
+        firestore.collection('donors')
             .doc(docId)
             .update({
           'lastDonated': lastDonated,
@@ -337,7 +368,7 @@ class fireStoreDatabaseController {
       }
 
       if (age != -1) {
-        _firestore.collection('donors')
+        firestore.collection('donors')
             .doc(docId)
             .update({
           'age': age,
@@ -345,7 +376,7 @@ class fireStoreDatabaseController {
       }
 
       if (weight != -1) {
-        _firestore.collection('donors')
+        firestore.collection('donors')
             .doc(docId)
             .update({
           'weight': weight,
@@ -353,28 +384,28 @@ class fireStoreDatabaseController {
       }
 
       if (donationFrequency != '') {
-        _firestore.collection('donors')
+        firestore.collection('donors')
             .doc(docId)
             .update({
           'donationFrequency': donationFrequency,
         });
       }
       if (highestEducation != '') {
-        _firestore.collection('donors')
+        firestore.collection('donors')
             .doc(docId)
             .update({
           'highestEducation': highestEducation,
         });
       }
       if (currentOccupation != '') {
-        _firestore.collection('donors')
+        firestore.collection('donors')
             .doc(docId)
             .update({
           'currentOccupation': currentOccupation,
         });
       }
       if (currentLivingArrg != '') {
-        _firestore.collection('donors')
+        firestore.collection('donors')
             .doc(docId)
             .update({
           'currentLivingArrg': currentLivingArrg,
@@ -382,14 +413,14 @@ class fireStoreDatabaseController {
       }
 
       if (eligibilityTest != '') {
-        _firestore.collection('donors')
+        firestore.collection('donors')
             .doc(docId)
             .update({
           'eligibilityTest': eligibilityTest,
         });
       }
       if (futureDonationWillingness != '') {
-        _firestore.collection('donors')
+        firestore.collection('donors')
             .doc(docId)
             .update({
           'futureDonationWillingness': futureDonationWillingness,
@@ -399,7 +430,6 @@ class fireStoreDatabaseController {
       debugPrint("ERROR IN UPDATING DONATION APPEAL: $e");
     }
   }
-
-
-
 }
+
+

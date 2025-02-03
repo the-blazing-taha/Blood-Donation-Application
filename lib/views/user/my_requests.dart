@@ -23,8 +23,8 @@ class Requests extends StatefulWidget {
 }
 
 class _RequestsState extends State<Requests> {
+  final fireStoreDatabaseController firebaseDatabase = fireStoreDatabaseController();
   final AuthController authController = AuthController();
-  final DatabaseService _databaseService = DatabaseService.instance;
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _genderController = TextEditingController();
   final TextEditingController _bloodGroupController = TextEditingController();
@@ -61,9 +61,7 @@ class _RequestsState extends State<Requests> {
               children: [
                 TextField(
                   onChanged: (value){
-                    setState(() {
                       patient=value;
-                    });
                   },
                   controller: _nameController,
                   decoration: const InputDecoration(hintText: "Patient Name"),
@@ -71,9 +69,7 @@ class _RequestsState extends State<Requests> {
                 const SizedBox(height: 4,),
                 TextField(
                   onChanged: (value){
-                    setState(() {
                       residence=value;
-                    });
                   },
                   controller: _locationController,
                   decoration: const InputDecoration(hintText: "Location"),
@@ -82,9 +78,7 @@ class _RequestsState extends State<Requests> {
                 TextField(
                   keyboardType: TextInputType.number,
                   onChanged: (value){
-                    setState(() {
                       bags = int.tryParse(value) ?? 0; // If parsing fails, it will default to 0
-                    });
                   },
                   controller: _bagsController,
                   decoration: const InputDecoration(hintText: "Bags"),
@@ -93,9 +87,7 @@ class _RequestsState extends State<Requests> {
                 const SizedBox(height: 4,),
                 TextField(
                   onChanged: (value){
-                    setState(() {
                       hospital=value;
-                    });
                   },
                   controller: _hospitalController,
                   decoration: const InputDecoration(hintText: "Hospital"),
@@ -103,9 +95,7 @@ class _RequestsState extends State<Requests> {
                 const SizedBox(height: 4,),
                 TextField(
                   onChanged: (value){
-                    setState(() {
                       details=value;
-                    });
                   },
                   controller: _detailsController,
                   decoration: const InputDecoration(hintText: "Details"),
@@ -128,9 +118,7 @@ class _RequestsState extends State<Requests> {
                   width: 325,
                   initialSelection: bloodTypes.first,
                   onSelected: (String? value) {
-                    setState(() {
                       bloodGroup=value!;
-                    });
                   },
                   dropdownMenuEntries: bloodTypes.map<DropdownMenuEntry<String>>((String value) {
                     return DropdownMenuEntry<String>(value: value, label: value);
@@ -154,9 +142,7 @@ class _RequestsState extends State<Requests> {
                   width: 325,
                   initialSelection: donationCases.first,
                   onSelected: (String? value) {
-                    setState(() {
                       donationCase=value!;
-                    });
                   },
                   dropdownMenuEntries: donationCases.map<DropdownMenuEntry<String>>((String value) {
                     return DropdownMenuEntry<String>(value: value, label: value);
@@ -180,9 +166,7 @@ class _RequestsState extends State<Requests> {
                   width: 325,
                   initialSelection: genders.first,
                   onSelected: (String? value) {
-                    setState(() {
                         gender=value!;
-                    });
                   },
                   dropdownMenuEntries: genders.map<DropdownMenuEntry<String>>((String value) {
                     return DropdownMenuEntry<String>(value: value, label: value);
@@ -194,46 +178,76 @@ class _RequestsState extends State<Requests> {
             actions: [
               TextButton(
                 onPressed: () {
-                  if(patient!=''){
-                    _databaseService.updateRequest(id: id, name: patient);
-                    Navigator.of(context).pop();
+                  try {
+                    if (patient != '') {
+                      firebaseDatabase.updateRequest(docId: id, name: patient);
+                      Navigator.of(context).pop();
+                    }
+                    if (bloodGroup != '') {
+                      firebaseDatabase.updateRequest(
+                          docId: id, bloodGroup: bloodGroup);
+                      Navigator.of(context).pop();
+                    }
+                    if (gender != '') {
+                      firebaseDatabase.updateRequest(docId: id, gender: gender);
+                      Navigator.of(context).pop();
+                    }
+                    if (residence != '') {
+                      firebaseDatabase.updateRequest(
+                          docId: id, residence: residence);
+                      Navigator.of(context).pop();
+                    }
+                    if (contact != '') {
+                      firebaseDatabase.updateRequest(
+                          docId: id, contact: contact);
+                      Navigator.of(context).pop();
+                    }
+                    if (donationCase != '') {
+                      firebaseDatabase.updateRequest(
+                          docId: id, case_: donationCase);
+                      Navigator.of(context).pop();
+                    }
+                    if (details != '') {
+                      firebaseDatabase.updateRequest(
+                          docId: id, details: details);
+                      Navigator.of(context).pop();
+                    }
+                    setState(() {
+                      // updateButton(id);
+                      _genderController.clear();
+                      _nameController.clear();
+                      _bloodGroupController.clear();
+                      _locationController.clear();
+                      _detailsController.clear();
+                      _bagsController.clear();
+                      _genderController.clear();
+                      _caseController.clear();
+                      _hospitalController.clear();
+                    });
+                    Get.snackbar("Success: ","Request updated successfully!",
+                        backgroundColor: Colors.red,
+                        colorText: Colors.white,
+                        margin: const EdgeInsets.all(
+                          15,
+                        ),
+                        snackPosition: SnackPosition.BOTTOM,
+                        icon: const Icon(
+                          Icons.message,
+                          color: Colors.white,
+                        ));
+                  }catch(e){
+                    Get.snackbar("Failed: ",e.toString(),
+                        backgroundColor: Colors.red,
+                        colorText: Colors.white,
+                        margin: const EdgeInsets.all(
+                          15,
+                        ),
+                        snackPosition: SnackPosition.BOTTOM,
+                        icon: const Icon(
+                          Icons.message,
+                          color: Colors.white,
+                        ));
                   }
-                  if(bloodGroup!=''){
-                    _databaseService.updateRequest(id: id, bloodGroup: bloodGroup);
-                    Navigator.of(context).pop();
-                  }
-                  if(gender!=''){
-                    _databaseService.updateRequest(id: id, gender: gender);
-                    Navigator.of(context).pop();
-                  }
-                  if(residence!=''){
-                    _databaseService.updateRequest(id: id, residence: residence);
-                    Navigator.of(context).pop();
-                  }
-                  if(contact!=''){
-                    _databaseService.updateRequest(id: id, contact: contact);
-                    Navigator.of(context).pop();
-                  }
-                  if(donationCase!=''){
-                    _databaseService.updateRequest(id: id, case_: donationCase);
-                    Navigator.of(context).pop();
-                  }
-                  if(details!=''){
-                    _databaseService.updateRequest(id: id, details: details);
-                    Navigator.of(context).pop();
-                  }
-                  setState(() {
-                    updateButton(id);
-                    _genderController.clear();
-                    _nameController.clear();
-                    _bloodGroupController.clear();
-                    _locationController.clear();
-                    _detailsController.clear();
-                    _bagsController.clear();
-                    _genderController.clear();
-                    _caseController.clear();
-                    _hospitalController.clear();
-                  });
                 },
 
                 child: const Text('Update Request'),
@@ -273,7 +287,6 @@ class _RequestsState extends State<Requests> {
         .where('userId', isEqualTo: auth.currentUser!.uid)
         .snapshots();
     int selectedIndex = 0;
-    final fireStoreDatabaseController firebaseDatabase = fireStoreDatabaseController();
 
     void onItemTapped(int index) {
       setState(() {
@@ -605,7 +618,7 @@ class _RequestsState extends State<Requests> {
                                   ),
                                 ),
                                 onPressed: () {
-                                  updateButton(request.id);
+                                  updateButton(data['docId']);
                                   setState(() {});
                                 },
                                 child: const Text('Update'),

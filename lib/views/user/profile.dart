@@ -1,4 +1,3 @@
-import 'package:blood/views/user/details.dart';
 import 'package:blood/views/user/registerdonor.dart';
 import 'package:blood/views/user/request_form.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -21,7 +20,6 @@ class _ProfileState extends State<Profile> {
 
 
   final TextEditingController _searchController = TextEditingController();
-  String _searchQuery = "";
 
   final user = FirebaseAuth.instance.currentUser;
   int _selectedIndex = 0;
@@ -34,11 +32,11 @@ class _ProfileState extends State<Profile> {
   }
   @override
   Widget build(BuildContext context) {
-    // Filter the list based on search query
+    var isDark = MediaQuery.of(context).platformBrightness == Brightness.dark;
     return Scaffold(
         appBar: AppBar(
           title: const Text(
-            "Home",
+            "Profile",
             style: TextStyle(
               fontWeight: FontWeight.bold,
               color: Colors.white,
@@ -253,7 +251,16 @@ class _ProfileState extends State<Profile> {
 
 
 
-        body: Text('${user?.email} ${user?.uid}')
+        body: SingleChildScrollView(
+          child: Container(
+            padding:  EdgeInsets.all(kDefaultFontSize),
+            child: Column(
+              children: [
+                
+              ],
+            ),
+          ),
+        )
     );
   }
 }

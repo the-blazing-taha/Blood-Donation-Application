@@ -1,5 +1,6 @@
 import 'package:blood/views/user/details.dart';
 import 'package:blood/views/user/my_donation_appeal.dart';
+import 'package:blood/views/user/nearby_donors.dart';
 import 'package:blood/views/user/profile.dart';
 import 'package:blood/views/user/registerdonor.dart';
 import 'package:blood/views/user/request_form.dart';
@@ -226,6 +227,30 @@ class _HomeState extends State<Home> {
 
               ListTile(
                 leading: const Icon(
+                  Icons.near_me,
+                  color: Colors.white,
+                ),
+                title: const Text('Nearby donors',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16)),
+                selected: _selectedIndex == 7,
+                onTap: () {
+                  _onItemTapped(7);
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const NearbyDonors(),
+                    ),
+                  );
+                },
+              ),
+
+
+              ListTile(
+                leading: const Icon(
                   Icons.logout,
                   color: Colors.white,
                 ),
@@ -234,9 +259,9 @@ class _HomeState extends State<Home> {
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 16)),
-                selected: _selectedIndex == 7,
+                selected: _selectedIndex == 8,
                 onTap: () {
-                  _onItemTapped(7);
+                  _onItemTapped(8);
                   Navigator.pop(context);
                   _authController.signout();
                 },

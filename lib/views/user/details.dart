@@ -77,22 +77,6 @@ class DetailsState extends State<Details> {
                 const SizedBox(
                   height: 10,
                 ),
-                const Text("Blood needed before:"),
-                const SizedBox(
-                  height: 5,
-                ),
-                const Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    '10 February, 2024',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const SizedBox(
-                  height: 20,
-                ),
                 const Text("Patient Name:"),
                 const SizedBox(
                   height: 5,
