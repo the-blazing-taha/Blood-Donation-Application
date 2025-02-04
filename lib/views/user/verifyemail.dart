@@ -80,8 +80,8 @@ class _VerifyEmailState extends State<VerifyEmail> {
             tooltip: "Send Link Again", // Disable when sending
             child: isSending
                 ? const CircularProgressIndicator(
-              color: Colors.white,
-            )
+                    color: Colors.white,
+                  )
                 : const Icon(Icons.email),
           ),
         ],

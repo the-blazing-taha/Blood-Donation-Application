@@ -27,8 +27,8 @@ class AuthController{
   Future<String> createNewUser(String email, String fullName, String password, Uint8List? image) async{
     String res = 'Error Occured!';
     try{
-      Get.offAll(() => const Wrapper());
       UserCredential userCredential = await _auth.createUserWithEmailAndPassword(email: email, password: password);
+      Get.offAll(() => const Wrapper());
       String downloadUrl = await uploadImageToStorage(image);
         await _firestore.collection('users').doc(userCredential.user!.uid).set({
           'fullName' : fullName,

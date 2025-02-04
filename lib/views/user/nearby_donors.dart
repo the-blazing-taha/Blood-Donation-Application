@@ -10,9 +10,11 @@ import 'package:geolocator/geolocator.dart';
 
 import '../../controllers/auth_controller.dart';
 import '../../controllers/fireStoreDatabaseController.dart';
+import 'donor_details.dart';
 import 'home.dart';
 import 'my_donation_appeal.dart';
 import 'my_requests.dart';
+
 
 class NearbyDonors extends StatefulWidget {
   const NearbyDonors({super.key});
@@ -27,114 +29,62 @@ class _NearbyDonorsState extends State<NearbyDonors> {
   final FirebaseAuth auth = FirebaseAuth.instance;
   final fireStoreDatabaseController firebaseDatabase = fireStoreDatabaseController();
   Position? currentPosition;
+  List<Map<String, dynamic>> nearbyDonors = [];
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
   }
-  @override
-  void initState() {
-    super.initState();
-    startLocationTracking();
-  }
-  void startLocationTracking() {
-    Geolocator.getPositionStream(
-      locationSettings: LocationSettings(
-        accuracy: LocationAccuracy.high,
-        distanceFilter: 2,
-      ),
-    ).listen((Position position) async {
-      setState(() {
-        currentPosition = position;
-      });
 
-      // Update location in Firestore
-      await firebaseDatabase.updateDonorPosition(position.longitude, position.latitude);
+  void startLocationTracking() async {
+    Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+    setState(() {
+      currentPosition = position;
     });
+
+    await firebaseDatabase.updateDonorPosition(position.longitude, position.latitude);
+    findNearbyDonors();
   }
 
   double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
-    const R = 6371; // Earth radius in km
+    const double R = 6371; // Earth radius in km
     double dLat = (lat2 - lat1) * pi / 180;
     double dLon = (lon2 - lon1) * pi / 180;
-
-    double a = sin(dLat / 2) * sin(dLat / 2) +
-        cos(lat1 * pi / 180) * cos(lat2 * pi / 180) *
-            sin(dLon / 2) * sin(dLon / 2);
-
+    double a = sin(dLat / 2) * sin(dLat / 2) + cos(lat1 * pi / 180) * cos(lat2 * pi / 180) * sin(dLon / 2) * sin(dLon / 2);
     double c = 2 * atan2(sqrt(a), sqrt(1 - a));
     return R * c; // Distance in km
   }
 
-  Future<List<Map<String, dynamic>>> getNearbyUsers() async {
+  void findNearbyDonors() async {
+    if (currentPosition == null) return;
     FirebaseFirestore firestore = FirebaseFirestore.instance;
+    double lat = currentPosition!.latitude;
+    double lon = currentPosition!.longitude;
 
-    double? lat = currentPosition?.latitude;
-    double? lon = currentPosition?.longitude;
-    double latRange = 0.001; // Approx 100m
-    double lonRange = 0.001; // Approx 100m
-
-    QuerySnapshot snapshot = await firestore
-        .collection('donors')
-        .where('latitude', isGreaterThanOrEqualTo: lat! - latRange)
-        .where('latitude', isLessThanOrEqualTo: lat + latRange)
-        .get();
-
+    QuerySnapshot snapshot = await firestore.collection('donors').get();
     List<Map<String, dynamic>> usersNearby = [];
 
     for (var doc in snapshot.docs) {
       var data = doc.data() as Map<String, dynamic>;
       double userLat = data['latitude'];
       double userLon = data['longitude'];
-
-      // Apply precise distance check
-      double distance = calculateDistance(lat, lon!, userLat, userLon);
+      double distance = calculateDistance(lat, lon, userLat, userLon);
       if (distance <= 0.1) { // 100 meters
         usersNearby.add(data);
       }
     }
 
-    return usersNearby;
+    setState(() {
+      nearbyDonors = usersNearby;
+    });
   }
-
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          "Nearby Donors",
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        actions: [
-          IconButton(
-            splashRadius: 10,
-            padding: const EdgeInsets.all(1.0),
-            onPressed: () {},
-            icon: const Icon(
-              Icons.person,
-              color: Colors.white,
-            ),
-          )
-        ],
-        leading: Builder(
-          builder: (BuildContext context) {
-            return IconButton(
-              icon: const Icon(
-                Icons.menu,
-                color: Colors.white,
-              ),
-              onPressed: () {
-                Scaffold.of(context).openDrawer();
-              },
-            );
-          },
-        ),
+        title: const Text("Nearby Donors", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
         backgroundColor: Colors.red[900],
         centerTitle: true,
       ),
@@ -296,6 +246,30 @@ class _NearbyDonorsState extends State<NearbyDonors> {
 
               ListTile(
                 leading: const Icon(
+                  Icons.near_me,
+                  color: Colors.white,
+                ),
+                title: const Text('Nearby donors',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16)),
+                selected: _selectedIndex == 7,
+                onTap: () {
+                  _onItemTapped(7);
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const NearbyDonors(),
+                    ),
+                  );
+                },
+              ),
+
+
+              ListTile(
+                leading: const Icon(
                   Icons.logout,
                   color: Colors.white,
                 ),
@@ -304,9 +278,9 @@ class _NearbyDonorsState extends State<NearbyDonors> {
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 16)),
-                selected: _selectedIndex == 7,
+                selected: _selectedIndex == 8,
                 onTap: () {
-                  _onItemTapped(7);
+                  _onItemTapped(8);
                   Navigator.pop(context);
                   _authController.signout();
                 },
@@ -317,55 +291,151 @@ class _NearbyDonorsState extends State<NearbyDonors> {
         ),
       ),
 
-
-      body:
-      Column(
+      body: Column(
         children: [
           Center(
             child: currentPosition == null
-                ? CircularProgressIndicator()
+                ? const Text("Press the button to find nearby donors")
                 : Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  "Latitude: ${currentPosition?.latitude}",
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  "Longitude: ${currentPosition?.longitude}",
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
+                Text("Latitude: ${currentPosition?.latitude}", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                Text("Longitude: ${currentPosition?.longitude}", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               ],
             ),
           ),
-          const Text(
-            'Donors Near you',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+          ElevatedButton(
+            onPressed: startLocationTracking,
+            child: const Text("Find Nearby Donors"),
           ),
+          const Text("Donors Near You", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+          Expanded(
+            child: ListView.builder(
+              itemCount: nearbyDonors.length,
+              itemBuilder: (context, index) {
+                return Card(
+                  margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5), // Add margin
+                  elevation: 4, // Add shadow for better appearance
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(10.0), // Add padding for spacing
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start, // Align text properly
+                      children: <Widget>[
+                        // Blood Group Tag
+                        Align(
+                          alignment: Alignment.topRight,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.red[900],
+                              shape: BoxShape.circle,
+                            ),
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                              nearbyDonors[index]['bloodGroup'] ?? 'N/A',
+                              style: const TextStyle(
+                                fontSize: 18, // Slightly smaller for better fit
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
 
-          FutureBuilder(
-            future: getNearbyUsers(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return CircularProgressIndicator();
-              }
-              if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return Text("No nearby users found.");
-              }
+                        const SizedBox(height: 5),
 
-              var users = snapshot.data as List<Map<String, dynamic>>;
-              return ListView.builder(
-                itemCount: users.length,
-                itemBuilder: (context, index) {
-                  return ListTile(
-                    title: Text(users[index]['uid']),
-                    subtitle: Text("Lat: ${users[index]['latitude']}, Long: ${users[index]['longitude']}"),
-                  );
-                },
-              );
-            },
-          )
+                        // Main ListTile
+                        ListTile(
+                          contentPadding: EdgeInsets.zero, // Remove default padding
+                          leading: const CircleAvatar(
+                            radius: 25, // Increased size for better visuals
+                            child: Icon(Icons.person, size: 24),
+                          ),
+                          title: Text(
+                            nearbyDonors[index]['name'] ?? 'Unknown',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                            overflow: TextOverflow.ellipsis, // Prevents text overflow
+                            maxLines: 1,
+                            softWrap: false,
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  const Icon(Icons.location_on_rounded, size: 16),
+                                  const SizedBox(width: 4),
+                                  Expanded(
+                                    child: Text(
+                                      nearbyDonors[index]['residence'] ?? 'Unknown',
+                                      style: const TextStyle(fontSize: 14),
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                "${nearbyDonors[index]['gender'] ?? 'N/A'} | ${nearbyDonors[index]['donations_done'] ?? '0'} donations done",
+                                style: const TextStyle(color: Colors.grey, fontSize: 14),
+                              ),
+                            ],
+                          ),
+                        ),
 
+                        const SizedBox(height: 10),
+
+                        // Button Row
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red[900],
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => DonorDetails(
+                                      patient: nearbyDonors[index]['name'],
+                                      contact: nearbyDonors[index]['contact'],
+                                      hospital: nearbyDonors[index]['hospital'],
+                                      residence: nearbyDonors[index]['residence'],
+                                      bloodGroup: nearbyDonors[index]['bloodGroup'],
+                                      gender: nearbyDonors[index]['gender'],
+                                      noOfDonations: nearbyDonors[index]['donations_done'],
+                                      details: nearbyDonors[index]['details'],
+                                      weight: nearbyDonors[index]['weight'],
+                                      age: nearbyDonors[index]['age'],
+                                      lastDonated: nearbyDonors[index]['lastDonated'],
+                                      donationFrequency: nearbyDonors[index]['donationFrequency'],
+                                      highestEducation: nearbyDonors[index]['highestEducation'],
+                                      currentOccupation: nearbyDonors[index]['currentOccupation'],
+                                      currentLivingArrg: nearbyDonors[index]['currentLivingArrg'],
+                                      eligibilityTest: nearbyDonors[index]['eligibilityTest'],
+                                      futureDonationWillingness: nearbyDonors[index]['futureDonationWillingness'],
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: const Text('Details', style: TextStyle(color: Colors.white)),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
         ],
       ),
     );
