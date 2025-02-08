@@ -18,6 +18,8 @@ class Donation {
   final String currentLivingArrg;
   final String eligibilityTest;
   final String futureDonationWillingness;
+  final String createdAt;
+
 
 
   Donation({
@@ -40,6 +42,7 @@ class Donation {
     required this.currentLivingArrg,
     required this.eligibilityTest,
     required this.futureDonationWillingness,
+    required this.createdAt
 
   });
 
@@ -62,7 +65,8 @@ class Donation {
       currentOccupation: json['occupation'] as String,
       currentLivingArrg: json['living'] as String,
       eligibilityTest: json['eligible'] as String,
-      futureDonationWillingness: json['future_will'] as String
+      futureDonationWillingness: json['future_will'] as String,
+      createdAt:json['createdAt'] as String
    );
 
   Map<String, Object?> toJson() {
@@ -85,8 +89,8 @@ class Donation {
       'occupation': currentOccupation,
       'living': currentLivingArrg,
       'eligible': eligibilityTest,
-      'future_will': futureDonationWillingness
-
+      'future_will': futureDonationWillingness,
+      'createdAt':createdAt
     };
   }
 }

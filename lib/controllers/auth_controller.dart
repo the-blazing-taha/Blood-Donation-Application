@@ -4,9 +4,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../views/user/wrapper.dart';
 
 class AuthController{
   final FirebaseStorage _storage = FirebaseStorage.instance;
@@ -25,18 +25,18 @@ class AuthController{
   }
 
   Future<String> createNewUser(String email, String fullName, String password, Uint8List? image) async{
-    String res = 'Error Occured!';
+    String res = 'Error Occurred!';
     try{
       UserCredential userCredential = await _auth.createUserWithEmailAndPassword(email: email, password: password);
-      Get.offAll(() => const Wrapper());
-      String downloadUrl = await uploadImageToStorage(image);
+      // String downloadUrl = await uploadImageToStorage(image);
         await _firestore.collection('users').doc(userCredential.user!.uid).set({
           'fullName' : fullName,
           'email' : email,
-          'downloadURL': downloadUrl,
+          // 'downloadURL': downloadUrl,
           'userId' : userCredential.user!.uid,
         });
         res = 'success';
+      Get.offAll(Wrapper());
     }
     catch(e){
         res = e.toString();

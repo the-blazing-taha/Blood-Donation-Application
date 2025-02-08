@@ -19,7 +19,6 @@ class Profile extends StatefulWidget {
 class _ProfileState extends State<Profile> {
 
 
-  final TextEditingController _searchController = TextEditingController();
 
   final user = FirebaseAuth.instance.currentUser;
   int _selectedIndex = 0;

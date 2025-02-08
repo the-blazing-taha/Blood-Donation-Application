@@ -4,6 +4,7 @@ import 'package:blood/views/user/nearby_donors.dart';
 import 'package:blood/views/user/profile.dart';
 import 'package:blood/views/user/registerdonor.dart';
 import 'package:blood/views/user/request_form.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
@@ -21,6 +22,11 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   int _selectedIndex = 0;
   final AuthController _authController = AuthController();
+  final TextEditingController _searchControllerDonors = TextEditingController();
+  final TextEditingController _searchControllerRequests = TextEditingController();
+
+  String searchQueryDonors = '';
+  String searchQueryRequests = '';
 
   void _onItemTapped(int index) {
     setState(() {
@@ -275,10 +281,27 @@ class _HomeState extends State<Home> {
 
 
       body: Column(
+
         children: [
           const Text(
             'All Donors List',
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(10.0),
+            child: TextField(
+              controller: _searchControllerDonors,
+              decoration: InputDecoration(
+                labelText: "Search by name or blood group",
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              onChanged: (value) {
+                setState(() {
+                  searchQueryDonors = value.toLowerCase();
+                });
+              },
+            ),
           ),
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
@@ -293,9 +316,20 @@ class _HomeState extends State<Home> {
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                   return const Center(child: Text('No donations found.'));
                 }
-                final donors = snapshot.data!.docs;
+
+                // Filter donors based on search query
+                final donors = snapshot.data!.docs.where((doc) {
+                  final data = doc.data() as Map<String, dynamic>;
+                  final name = (data['name'] ?? '').toLowerCase();
+                  final bloodGroup = (data['bloodGroup'] ?? '').toLowerCase();
+                  return name.contains(searchQueryDonors) || bloodGroup.contains(searchQueryDonors);
+                }).toList();
+
+                if (donors.isEmpty) {
+                  return const Center(child: Text('No matching donors found.'));
+                }
+
                 return ListView.builder(
-                  // scrollDirection: Axis.horizontal,
                   itemCount: donors.length,
                   itemBuilder: (context, index) {
                     final donor = donors[index];
@@ -303,16 +337,15 @@ class _HomeState extends State<Home> {
 
                     return Center(
                       child: Card(
-                        margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5), // Add margin
-                        elevation: 4, // Add shadow for better appearance
+                        margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        elevation: 4,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                         child: Padding(
-                          padding: const EdgeInsets.all(10.0), // Add padding for spacing
+                          padding: const EdgeInsets.all(10.0),
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start, // Align text properly
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
-                              // Blood Group Tag
                               Align(
                                 alignment: Alignment.topRight,
                                 child: Container(
@@ -324,27 +357,24 @@ class _HomeState extends State<Home> {
                                   child: Text(
                                     data['bloodGroup'] ?? 'N/A',
                                     style: const TextStyle(
-                                      fontSize: 18, // Slightly smaller for better fit
+                                      fontSize: 18,
                                       fontWeight: FontWeight.bold,
                                       color: Colors.white,
                                     ),
                                   ),
                                 ),
                               ),
-
                               const SizedBox(height: 5),
-
-                              // Main ListTile
                               ListTile(
-                                contentPadding: EdgeInsets.zero, // Remove default padding
+                                contentPadding: EdgeInsets.zero,
                                 leading: const CircleAvatar(
-                                  radius: 25, // Increased size for better visuals
+                                  radius: 25,
                                   child: Icon(Icons.person, size: 24),
                                 ),
                                 title: Text(
                                   data['name'] ?? 'Unknown',
                                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                                  overflow: TextOverflow.ellipsis, // Prevents text overflow
+                                  overflow: TextOverflow.ellipsis,
                                   maxLines: 1,
                                   softWrap: false,
                                 ),
@@ -374,10 +404,7 @@ class _HomeState extends State<Home> {
                                   ],
                                 ),
                               ),
-
                               const SizedBox(height: 10),
-
-                              // Button Row
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
@@ -422,10 +449,25 @@ class _HomeState extends State<Home> {
                           ),
                         ),
                       ),
-
                     );
                   },
                 );
+              },
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(10.0),
+            child: TextField(
+              controller: _searchControllerRequests,
+              decoration: InputDecoration(
+                labelText: "Search by name or blood group",
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              onChanged: (value) {
+                setState(() {
+                  searchQueryRequests = value.toLowerCase();
+                });
               },
             ),
           ),
@@ -446,9 +488,20 @@ class _HomeState extends State<Home> {
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                   return const Center(child: Text('No requests found.'));
                 }
-                final requests = snapshot.data!.docs;
-                return ListView.builder(
 
+                // Filter requests based on search query
+                final requests = snapshot.data!.docs.where((doc) {
+                  final data = doc.data() as Map<String, dynamic>;
+                  final name = (data['name'] ?? '').toLowerCase();
+                  final bloodGroup = (data['bloodGroup'] ?? '').toLowerCase();
+                  return name.contains(searchQueryRequests) || bloodGroup.contains(searchQueryRequests);
+                }).toList();
+
+                if (requests.isEmpty) {
+                  return const Center(child: Text('No matching requests found.'));
+                }
+
+                return ListView.builder(
                   itemCount: requests.length,
                   itemBuilder: (context, index) {
                     final request = requests[index];
@@ -456,16 +509,15 @@ class _HomeState extends State<Home> {
 
                     return Center(
                       child: Card(
-                        margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5), // Add spacing around card
-                        elevation: 4, // Adds shadow for a better look
+                        margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        elevation: 4,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                         child: Padding(
-                          padding: const EdgeInsets.all(10.0), // Padding for better spacing
+                          padding: const EdgeInsets.all(10.0),
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start, // Align text neatly
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
-                              // Blood Group Indicator
                               Align(
                                 alignment: Alignment.topRight,
                                 child: Container(
@@ -477,27 +529,24 @@ class _HomeState extends State<Home> {
                                   child: Text(
                                     data['bloodGroup'] ?? 'N/A',
                                     style: const TextStyle(
-                                      fontSize: 18, // Slightly smaller for better fit
+                                      fontSize: 18,
                                       fontWeight: FontWeight.bold,
                                       color: Colors.white,
                                     ),
                                   ),
                                 ),
                               ),
-
-                              const SizedBox(height: 5), // Add spacing
-
-                              // Main ListTile
+                              const SizedBox(height: 5),
                               ListTile(
-                                contentPadding: EdgeInsets.zero, // Remove default padding
+                                contentPadding: EdgeInsets.zero,
                                 leading: const CircleAvatar(
-                                  radius: 25, // Bigger for better visuals
+                                  radius: 25,
                                   child: Icon(Icons.person, size: 24),
                                 ),
                                 title: Text(
                                   data['name'] ?? 'Unknown',
                                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                                  overflow: TextOverflow.ellipsis, // Prevents overflow
+                                  overflow: TextOverflow.ellipsis,
                                   maxLines: 1,
                                   softWrap: false,
                                 ),
@@ -529,10 +578,7 @@ class _HomeState extends State<Home> {
                                   ],
                                 ),
                               ),
-
                               const SizedBox(height: 10),
-
-                              // Button Row
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
@@ -569,7 +615,6 @@ class _HomeState extends State<Home> {
                           ),
                         ),
                       ),
-
                     );
                   },
                 );

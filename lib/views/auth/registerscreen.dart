@@ -52,17 +52,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
               isLoading = true;
             });
           }
-          Get.to(const VerifyEmail());
-          Get.snackbar('Success', 'Account has been created for you',
-              backgroundColor: Colors.red,
-              colorText: Colors.white,
-              margin: const EdgeInsets.all(
-                15,
-              ),
-              icon: const Icon(
-                Icons.message,
-                color: Colors.white,
-              ));
+
+          // Get.snackbar('Success', 'Account has been created for you',
+          //     backgroundColor: Colors.red,
+          //     colorText: Colors.white,
+          //     margin: const EdgeInsets.all(
+          //       15,
+          //     ),
+          //     icon: const Icon(
+          //       Icons.message,
+          //       color: Colors.white,
+          //     ));
         } else {
           Get.snackbar("Error: ", res.toString(),
               backgroundColor: Colors.red,
@@ -103,10 +103,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
-
   selectGalleryImage() async {
     Uint8List im = await _authController.pickProfileImage(ImageSource.gallery);
-    if(mounted) {
+    if (mounted) {
       setState(() {
         _image = im;
       });
@@ -115,7 +114,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   captureImage() async {
     Uint8List im = await _authController.pickProfileImage(ImageSource.camera);
-    if(mounted) {
+    if (mounted) {
       setState(() {
         _image = im;
       });
@@ -123,7 +122,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   final TextEditingController _emailController = TextEditingController();
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

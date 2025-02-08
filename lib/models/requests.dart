@@ -10,6 +10,7 @@ class Request {
   final String gender;
   final String details;
   final String userId;
+  final String createdAt;
   Request({
     required this.id,
     required this.name,
@@ -21,7 +22,8 @@ class Request {
     required this.bloodGroup,
     required this.gender,
     required this.details,
-    required this.userId
+    required this.userId,
+    required this.createdAt
   });
 
   Request.fromJson(Map<String,Object?> json):this(
@@ -36,6 +38,7 @@ class Request {
     gender: json['gender'] as String,
     details: json['details'] as String,
     userId: json['userId'] as String,
+      createdAt: json['createdAt'] as String
   );
   Map<String,Object?> toJson(){
     return {
@@ -50,6 +53,7 @@ class Request {
       'gender':gender,
       'details':details,
       'userId':userId,
+      'createdAt': createdAt
     };
   }
 

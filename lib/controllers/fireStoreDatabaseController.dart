@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 
+
+
 class fireStoreDatabaseController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
@@ -40,7 +42,8 @@ class fireStoreDatabaseController {
         'gender': gender,
         'details': details,
         'longitude': position.longitude,
-        'latitude': position.latitude
+        'latitude': position.latitude,
+        'createdAt': Timestamp.now(),
       });
       res = "Request added successfully!";
     } catch (e) {
@@ -128,7 +131,9 @@ class fireStoreDatabaseController {
         'eligibilityTest':  eligibilityTest,
         'futureDonationWillingness':  futureDonationWillingness,
         'latitude':position.latitude,
-        'longitude': position.longitude
+        'longitude': position.longitude,
+        'createdAt': Timestamp.now()
+
       });
       res = "Donation appeal added successfully!";
     } catch (e) {
@@ -431,5 +436,9 @@ class fireStoreDatabaseController {
     }
   }
 }
+
+
+
+
 
 

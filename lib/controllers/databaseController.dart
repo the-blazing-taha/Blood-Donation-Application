@@ -250,7 +250,7 @@ class DatabaseService {
               bloodGroup: e['bloodGroup'] as String,
               gender: e['gender'] as String,
               details: e['details'] as String,
-              userId: e['userId'] as String
+              userId: e['userId'] as String, createdAt: ''
             ))
         .toList();
 
@@ -305,7 +305,7 @@ class DatabaseService {
               currentOccupation: e['occupation'] as String,
               currentLivingArrg: e['living'] as String,
               eligibilityTest: e['eligible'] as String,
-              futureDonationWillingness: e['future_will'] as String
+              futureDonationWillingness: e['future_will'] as String, createdAt: ''
     ))
         .toList();
 

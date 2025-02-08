@@ -410,6 +410,9 @@ class _RequestDonorState extends State<RequestDonor> {
                   _onItemTapped(7);
                   Navigator.pop(context);
                   authController.signout();
+                  setState(() {
+
+                  });
                 },
               ),
               // Other ListTiles...

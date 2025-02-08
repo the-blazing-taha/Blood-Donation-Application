@@ -6,11 +6,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/auth_controller.dart';
-import '../../controllers/databaseController.dart';
 import '../../controllers/fireStoreDatabaseController.dart';
 import 'details.dart';
 import 'home.dart';
 import 'my_donation_appeal.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 
 
@@ -526,6 +526,8 @@ class _RequestsState extends State<Requests> {
             return ListView.builder(
               itemCount: requests.length,
               itemBuilder: (context, index) {
+                var createdAt = (requests[index]['createdAt'] as Timestamp).toDate();
+                var timeAgo = timeago.format(createdAt);
                 final request = requests[index];
                 final data = request.data() as Map<String, dynamic>;
 
@@ -540,6 +542,14 @@ class _RequestsState extends State<Requests> {
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
+                          Text(
+                            timeAgo,
+                            style: const TextStyle(
+                              fontSize: 18, // Adjusted for better fit
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey,
+                            ),
+                          ),
                           // Blood Group Badge
                           Align(
                             alignment: Alignment.topRight,
