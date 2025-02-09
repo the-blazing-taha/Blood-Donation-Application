@@ -1,6 +1,9 @@
+import 'dart:core';
+import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../controllers/auth_controller.dart';
 
@@ -117,7 +120,12 @@ class Profile extends StatelessWidget {
               leading: Icon(Icons.settings, color: Colors.blue),
               title: Text('Settings'),
               trailing: Icon(Icons.arrow_forward_ios),
-              onTap: () {},
+              onTap: () {Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => Settings(),
+                ),
+              );},
             ),
             ListTile(
               leading: Icon(Icons.credit_card, color: Colors.blue),
@@ -149,8 +157,35 @@ class Profile extends StatelessWidget {
   }
 }
 
-class EditProfile extends StatelessWidget {
-  const EditProfile({super.key});
+class EditProfile extends StatefulWidget {
+   EditProfile({super.key});
+
+  @override
+  State<EditProfile> createState() => _EditProfileState();
+}
+
+class _EditProfileState extends State<EditProfile> {
+   final AuthController _authController = AuthController();
+
+   Uint8List? _image;
+
+   selectGalleryImage() async {
+     Uint8List im = await _authController.pickProfileImage(ImageSource.gallery);
+     if (mounted) {
+       setState(() {
+         _image = im;
+       });
+     }
+   }
+
+   captureImage() async {
+     Uint8List im = await _authController.pickProfileImage(ImageSource.camera);
+     if (mounted) {
+       setState(() {
+         _image = im;
+       });
+     }
+   }
 
   @override
   Widget build(BuildContext context) {
@@ -198,16 +233,16 @@ class EditProfile extends StatelessWidget {
                 ),
               ),
             ),
-            SizedBox(height: 15),
-            TextField(
-              decoration: InputDecoration(
-                prefixIcon: Icon(Icons.phone),
-                labelText: 'Phone No',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-              ),
-            ),
+            // SizedBox(height: 15),
+            // TextField(
+            //   decoration: InputDecoration(
+            //     prefixIcon: Icon(Icons.phone),
+            //     labelText: 'Phone No',
+            //     border: OutlineInputBorder(
+            //       borderRadius: BorderRadius.circular(30),
+            //     ),
+            //   ),
+            // ),
             SizedBox(height: 15),
             TextField(
               obscureText: true,
@@ -232,6 +267,88 @@ class EditProfile extends StatelessWidget {
               ),
               child: Text('Edit Profile'),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
+
+class Settings extends StatefulWidget {
+  Settings({super.key});
+
+  @override
+  State<Settings> createState() => _SettingsState();
+}
+
+class _SettingsState extends State<Settings> {
+  final AuthController _authController = AuthController();
+
+  Uint8List? _image;
+
+  selectGalleryImage() async {
+    Uint8List im = await _authController.pickProfileImage(ImageSource.gallery);
+    if (mounted) {
+      setState(() {
+        _image = im;
+      });
+    }
+  }
+
+  captureImage() async {
+    Uint8List im = await _authController.pickProfileImage(ImageSource.camera);
+    if (mounted) {
+      setState(() {
+        _image = im;
+      });
+    }
+  }
+  static const WidgetStateProperty<Icon> thumbIcon =
+  WidgetStateProperty<Icon>.fromMap(
+    <WidgetStatesConstraint, Icon>{
+      WidgetState.selected: Icon(Icons.check),
+      WidgetState.any: Icon(Icons.close),
+    },
+  );
+  bool light0 = true;
+  bool light1 = true;
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Settings'),
+        centerTitle: true,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: IconThemeData(color: Colors.black),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Switch(
+              value: light0,
+              onChanged: (bool value) {
+                setState(() {
+                  light0 = value;
+                });
+              },
+            ),
+            Switch(
+              thumbIcon: thumbIcon,
+              value: light1,
+              onChanged: (bool value) {
+                setState(() {
+                  light1 = value;
+                });
+              },
+            ),
+
+
+
           ],
         ),
       ),

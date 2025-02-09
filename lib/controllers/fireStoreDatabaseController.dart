@@ -132,8 +132,8 @@ class fireStoreDatabaseController {
         'futureDonationWillingness':  futureDonationWillingness,
         'latitude':position.latitude,
         'longitude': position.longitude,
-        'createdAt': Timestamp.now()
-
+        'createdAt': Timestamp.now(),
+        'activity' :true
       });
       res = "Donation appeal added successfully!";
     } catch (e) {

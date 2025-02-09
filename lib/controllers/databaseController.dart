@@ -26,10 +26,7 @@ class DatabaseService {
   final String _bagsNumberColumn = "bags";
   final String _bloodGroupColumn = "bloodGroup";
   final String _genderTypeColumn = "gender";
-  final String _detailsColumnName= "details";
-
-
-
+  final String _detailsColumnName = "details";
 
   final String donationsTableName = "donations";
   final String _donationIdColumnName = "_id";
@@ -43,7 +40,6 @@ class DatabaseService {
   final String _donationsLivingColumn = "living";
   final String _donationsEligibilityColumn = "eligibility";
   final String _donationsFutureWillingnessColumn = "future_will";
-
 
   final String _inventoryTableName = "inventory";
   final String _inventoryIdColumnName = "_id";
@@ -240,18 +236,18 @@ class DatabaseService {
 
     List<Request> requests = results
         .map((e) => Request(
-              id: e['id'] as String,
-              name: e['name'] as String,
-              contact: e['contact'] as String,
-              hospital: e['hospital'] as String,
-              residence: e['residence'] as String,
-              case_: e['case_'] as String,
-              bags: e['bags'] as int,
-              bloodGroup: e['bloodGroup'] as String,
-              gender: e['gender'] as String,
-              details: e['details'] as String,
-              userId: e['userId'] as String, createdAt: ''
-            ))
+            id: e['id'] as String,
+            name: e['name'] as String,
+            contact: e['contact'] as String,
+            hospital: e['hospital'] as String,
+            residence: e['residence'] as String,
+            case_: e['case_'] as String,
+            bags: e['bags'] as int,
+            bloodGroup: e['bloodGroup'] as String,
+            gender: e['gender'] as String,
+            details: e['details'] as String,
+            userId: e['userId'] as String,
+            createdAt: ''))
         .toList();
 
     return requests;
@@ -287,26 +283,27 @@ class DatabaseService {
 
     List<Donation> donations = results
         .map((e) => Donation(
-              id: e['id'] as String,
-              name: e['name'] as String,
-              contact: e['contact'] as String,
-              hospital: e['hospital'] as String,
-              residence: e['residence'] as String,
-              bloodGroup: e['bloodGroup'] as String,
-              gender: e['gender'] as String,
-              donationsDone: e['donationsDone'] as int,
-              details: e['details'] as String,
-              userId: e['userId'] as String,
-              weight: e['weight'] as int,
-              age: e['age'] as int,
-              lastDonated: e['last_donated'] as String,
-              donationFrequency: e['donation_frequency'] as String,
-              highestEducation: e['education'] as String,
-              currentOccupation: e['occupation'] as String,
-              currentLivingArrg: e['living'] as String,
-              eligibilityTest: e['eligible'] as String,
-              futureDonationWillingness: e['future_will'] as String, createdAt: ''
-    ))
+            id: e['id'] as String,
+            name: e['name'] as String,
+            contact: e['contact'] as String,
+            hospital: e['hospital'] as String,
+            residence: e['residence'] as String,
+            bloodGroup: e['bloodGroup'] as String,
+            gender: e['gender'] as String,
+            donationsDone: e['donationsDone'] as int,
+            details: e['details'] as String,
+            userId: e['userId'] as String,
+            weight: e['weight'] as int,
+            age: e['age'] as int,
+            lastDonated: e['last_donated'] as String,
+            donationFrequency: e['donation_frequency'] as String,
+            highestEducation: e['education'] as String,
+            currentOccupation: e['occupation'] as String,
+            currentLivingArrg: e['living'] as String,
+            eligibilityTest: e['eligible'] as String,
+            futureDonationWillingness: e['future_will'] as String,
+            createdAt: '',
+            activity: true))
         .toList();
 
     return donations;
@@ -322,8 +319,7 @@ class DatabaseService {
       int bags = -1,
       String bloodGroup = '',
       String gender = '',
-      String details=''
-      }) async {
+      String details = ''}) async {
     final db = await database;
 
     try {
@@ -407,26 +403,25 @@ class DatabaseService {
     }
   }
 
-
   Future<void> updateDonationAppeal(
       {required String id,
-        String name = '',
-        String contact = '',
-        String hospital = '',
-        String residence = '',
-        int donationsDone = -1,
-        String bloodGroup = '',
-        String gender = '',
-        String details='',
-        int weight=-1,
-        int age=-1,
-        String lastDonated='',
-        String donationFrequency='',
-        String highestEducation='',
-        String currentOccupation='',
-        String currentLivingArrg='',
-        String eligibilityTest='',
-        String futureDonationWillingness=''}) async {
+      String name = '',
+      String contact = '',
+      String hospital = '',
+      String residence = '',
+      int donationsDone = -1,
+      String bloodGroup = '',
+      String gender = '',
+      String details = '',
+      int weight = -1,
+      int age = -1,
+      String lastDonated = '',
+      String donationFrequency = '',
+      String highestEducation = '',
+      String currentOccupation = '',
+      String currentLivingArrg = '',
+      String eligibilityTest = '',
+      String futureDonationWillingness = ''}) async {
     final db = await database;
     try {
       if (name != '') {
@@ -573,15 +568,10 @@ class DatabaseService {
   ''';
         await db.rawUpdate(sql);
       }
-
-
     } catch (e) {
       debugPrint("ERROR IN UPDATING DONATION APPEAL: $e");
     }
   }
-
-
-
 
   Future<void> deleteRequest(String id) async {
     final db = await database;
@@ -707,7 +697,3 @@ class DatabaseService {
     return inventory;
   }
 }
-
-
-
-

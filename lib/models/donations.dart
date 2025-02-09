@@ -19,7 +19,7 @@ class Donation {
   final String eligibilityTest;
   final String futureDonationWillingness;
   final String createdAt;
-
+  final bool activity;
 
 
   Donation({
@@ -42,8 +42,8 @@ class Donation {
     required this.currentLivingArrg,
     required this.eligibilityTest,
     required this.futureDonationWillingness,
-    required this.createdAt
-
+    required this.createdAt,
+    required this.activity
   });
 
   Donation.fromJson(Map<String, Object?> json) :this(
@@ -66,7 +66,8 @@ class Donation {
       currentLivingArrg: json['living'] as String,
       eligibilityTest: json['eligible'] as String,
       futureDonationWillingness: json['future_will'] as String,
-      createdAt:json['createdAt'] as String
+      createdAt:json['createdAt'] as String,
+      activity: json['activity'] as bool
    );
 
   Map<String, Object?> toJson() {
@@ -90,7 +91,8 @@ class Donation {
       'living': currentLivingArrg,
       'eligible': eligibilityTest,
       'future_will': futureDonationWillingness,
-      'createdAt':createdAt
+      'createdAt':createdAt,
+      'activity': activity
     };
   }
 }
