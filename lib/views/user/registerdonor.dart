@@ -609,16 +609,20 @@ class _RequestDonorState extends State<RequestDonor> {
                               borderRadius: BorderRadius.circular(10),
                             ),
                             suffixIcon: IconButton(
-                              icon: Icon(
-                                  Icons.my_location, color: Colors.red[900]),
-                              onPressed: () {
-                                _getCurrentPosition();
-                                _locationController.text = _currentAddress;
-                                residence = _currentAddress;
+                              icon: Icon(Icons.my_location, color: Colors.red[900]),
+                              onPressed: () async {
+                                await _getCurrentPosition(); // Ensure position is fetched first
+                                if (_currentAddress.isNotEmpty) {
+                                  setState(() {
+                                    _locationController.text = _currentAddress;
+                                    residence = _currentAddress;
+                                  });
+                                }
                               },
                             ),
                           ),
                         ),
+
                         const SizedBox(
                           height: 10,
                         ),

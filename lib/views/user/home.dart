@@ -1,13 +1,14 @@
 import 'package:blood/views/user/details.dart';
 import 'package:blood/views/user/my_donation_appeal.dart';
 import 'package:blood/views/user/nearby_donors.dart';
+import 'package:blood/views/user/nearby_requestors.dart';
 import 'package:blood/views/user/profile.dart';
 import 'package:blood/views/user/registerdonor.dart';
 import 'package:blood/views/user/request_form.dart';
-import 'package:carousel_slider/carousel_slider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-
+import 'package:timeago/timeago.dart' as timeago;
 import '../../controllers/auth_controller.dart';
 import 'donor_details.dart';
 import 'my_requests.dart';
@@ -24,6 +25,7 @@ class _HomeState extends State<Home> {
   final AuthController _authController = AuthController();
   final TextEditingController _searchControllerDonors = TextEditingController();
   final TextEditingController _searchControllerRequests = TextEditingController();
+  final FirebaseAuth _auth= FirebaseAuth.instance;
 
   String searchQueryDonors = '';
   String searchQueryRequests = '';
@@ -34,12 +36,15 @@ class _HomeState extends State<Home> {
     });
   }
 
+
   @override
   Widget build(BuildContext context) {
     final CollectionReference requestsCollection = FirebaseFirestore.instance.collection('requests');
     final CollectionReference donationCollection =
     FirebaseFirestore.instance.collection('donors');
+    final user=FirebaseFirestore.instance.collection('users').doc(_auth.currentUser?.uid).get();
     return Scaffold(
+
       appBar: AppBar(
         title: const Text(
           "Home",
@@ -86,14 +91,72 @@ class _HomeState extends State<Home> {
                 decoration: BoxDecoration(
                   color: Colors.red[900],
                 ),
-                child: const Text(
-                  'Life Sync',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 30),
+                child: Column(
+                  children: [
+                    const Text(
+                      'Life Sync',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 30),
+                    ),
+                    FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                      future: user,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const CircularProgressIndicator(); // Show a loading indicator
+                        } else if (snapshot.hasError) {
+                          return Text('Error: ${snapshot.error}'); // Handle errors
+                        } else if (snapshot.hasData && snapshot.data!.exists) {
+                          Map<String, dynamic>? userData = snapshot.data!.data();
+                          String? profileImageUrl = userData?['profileImage'];
+                          return Column(
+                            children: [
+                              CircleAvatar(
+                                radius: 30, // Adjust size as needed
+                                backgroundColor: Colors.grey[300], // Fallback color
+                                child: ClipOval(
+                                  child: profileImageUrl != null && profileImageUrl.isNotEmpty
+                                      ? Image.network(
+                                    profileImageUrl,
+                                    width: 60, // 2 * radius
+                                    height: 60,
+                                    fit: BoxFit.cover,
+                                  )
+                                      : const Icon(Icons.person, size: 40), // Display default icon if no image
+                                ),
+                              ),
+                            ],
+                          );
+                        } else {
+                          return const Text('No user data found.');
+                        }
+                      },
+                    ),
+                    FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                      future: user,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const CircularProgressIndicator(); // Show a loading indicator
+                        } else if (snapshot.hasError) {
+                          return Text('Error: ${snapshot.error}'); // Handle errors
+                        } else if (snapshot.hasData && snapshot.data!.exists) {
+                          Map<String, dynamic>? userData = snapshot.data!.data();
+                          String? userName = userData?['fullName'];
+                          return Column(
+                            children: [
+                              Text(userName as String, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold,fontFamily:'Pacifico' ),),
+                            ],
+                          );
+                        } else {
+                          return const Text('No user data found.');
+                        }
+                      },
+                    ),
+                  ],
                 ),
               ),
+
               ListTile(
                 leading: const Icon(
                   Icons.home,
@@ -254,6 +317,28 @@ class _HomeState extends State<Home> {
                 },
               ),
 
+              ListTile(
+                leading: const Icon(
+                  Icons.near_me_outlined,
+                  color: Colors.white,
+                ),
+                title: const Text('Nearby Requesters',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16)),
+                selected: _selectedIndex == 8,
+                onTap: () {
+                  _onItemTapped(8);
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const NearbyRequesters(),
+                    ),
+                  );
+                },
+              ),
 
               ListTile(
                 leading: const Icon(
@@ -265,9 +350,9 @@ class _HomeState extends State<Home> {
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 16)),
-                selected: _selectedIndex == 8,
+                selected: _selectedIndex == 9,
                 onTap: () {
-                  _onItemTapped(8);
+                  _onItemTapped(9);
                   Navigator.pop(context);
                   _authController.signout();
                 },
@@ -334,7 +419,10 @@ class _HomeState extends State<Home> {
                   itemBuilder: (context, index) {
                     final donor = donors[index];
                     final data = donor.data() as Map<String, dynamic>;
-
+                    var createdAt = donor['createdAt'] != null
+                        ? (donor['createdAt'] as Timestamp).toDate()
+                        : DateTime.now();
+                    var timeAgo = timeago.format(createdAt);
                     return Center(
                       child: Card(
                         margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -346,6 +434,14 @@ class _HomeState extends State<Home> {
                             mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
+                              Text(
+                                timeAgo,
+                                style: const TextStyle(
+                                  fontSize: 18, // Adjusted for better fit
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey,
+                                ),
+                              ),
                               Align(
                                 alignment: Alignment.topRight,
                                 child: Container(
@@ -471,6 +567,7 @@ class _HomeState extends State<Home> {
               },
             ),
           ),
+
           const Text(
             'All Requests',
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
@@ -506,7 +603,10 @@ class _HomeState extends State<Home> {
                   itemBuilder: (context, index) {
                     final request = requests[index];
                     final data = request.data() as Map<String, dynamic>;
-
+                    var createdAt = request['createdAt'] != null
+                        ? (request['createdAt'] as Timestamp).toDate()
+                        : DateTime.now();
+                    var timeAgo = timeago.format(createdAt);
                     return Center(
                       child: Card(
                         margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -518,6 +618,14 @@ class _HomeState extends State<Home> {
                             mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
+                              Text(
+                                timeAgo,
+                                style: const TextStyle(
+                                  fontSize: 18, // Adjusted for better fit
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey,
+                                ),
+                              ),
                               Align(
                                 alignment: Alignment.topRight,
                                 child: Container(

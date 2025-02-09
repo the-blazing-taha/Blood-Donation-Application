@@ -1,265 +1,240 @@
-import 'package:blood/views/user/registerdonor.dart';
-import 'package:blood/views/user/request_form.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-
 import '../../controllers/auth_controller.dart';
-import 'home.dart';
-import 'my_donation_appeal.dart';
-import 'my_requests.dart';
 
-class Profile extends StatefulWidget {
-
+class Profile extends StatelessWidget {
   const Profile({super.key});
-  @override
-  State<Profile> createState() => _ProfileState();
-}
 
-class _ProfileState extends State<Profile> {
-
-
-
-  final user = FirebaseAuth.instance.currentUser;
-  int _selectedIndex = 0;
-  final AuthController authController = AuthController();
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
   @override
   Widget build(BuildContext context) {
-    var isDark = MediaQuery.of(context).platformBrightness == Brightness.dark;
+    final FirebaseAuth auth= FirebaseAuth.instance;
+    final user=FirebaseFirestore.instance.collection('users').doc(auth.currentUser?.uid).get();
+    final AuthController authController = AuthController();
+
     return Scaffold(
-        appBar: AppBar(
-          title: const Text(
-            "Profile",
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
+      appBar: AppBar(
+        title: Text('Profile',style: TextStyle(color: Colors.white),),
+        centerTitle: true,
+        backgroundColor: Colors.red[900],
+        elevation: 0,
+        iconTheme: IconThemeData(color: Colors.white,),
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            SizedBox(height: 20),
+            FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+              future: user,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const CircularProgressIndicator(); // Show a loading indicator
+                } else if (snapshot.hasError) {
+                  return Text('Error: ${snapshot.error}'); // Handle errors
+                } else if (snapshot.hasData && snapshot.data!.exists) {
+                  Map<String, dynamic>? userData = snapshot.data!.data();
+                  String? profileImageUrl = userData?['profileImage'];
+                  return Column(
+                    children: [
+                      CircleAvatar(
+                        radius: 55, // Adjust size as needed
+                        backgroundColor: Colors.yellow[600], // Fallback color
+                        child: ClipOval(
+                          child: profileImageUrl != null && profileImageUrl.isNotEmpty
+                              ? Image.network(
+                            profileImageUrl,
+                            width: 100, // 2 * radius
+                            height: 100,
+                            fit: BoxFit.cover,
+                          )
+                              : const Icon(Icons.person, size: 40), // Display default icon if no image
+                        ),
+                      ),
+                    ],
+                  );
+                } else {
+                  return const CircleAvatar(
+                    radius: 70,
+                    child: Icon(
+                      Icons.person,
+                      size: 80,
+                    ),
+                  );
+                }
+              },
             ),
-          ),
-          actions: [
-            IconButton(
-              splashRadius: 10,
-              padding: const EdgeInsets.all(1.0),
-              onPressed: () {},
-              icon: const Icon(
-                Icons.person,
-                color: Colors.white,
+            SizedBox(height: 10),
+            FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+              future: user,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const CircularProgressIndicator(); // Show a loading indicator
+                } else if (snapshot.hasError) {
+                  return Text('Error: ${snapshot.error}'); // Handle errors
+                } else if (snapshot.hasData && snapshot.data!.exists) {
+                  Map<String, dynamic>? userData = snapshot.data!.data();
+                  String? userName = userData?['fullName'];
+                  return Column(
+                    children: [
+                      Text(userName as String, style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold,fontSize: 20 ),),
+                    ],
+                  );
+                } else {
+                  return const Text('No user data found.');
+                }
+              },
+            ),
+            Text(
+              auth.currentUser?.email as String,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey,
               ),
-            )
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EditProfile(),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red[900],
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                padding: EdgeInsets.symmetric(horizontal: 30, vertical: 10),
+              ),
+              child: Text('Edit Profile'),
+            ),
+            SizedBox(height: 30),
+            ListTile(
+              leading: Icon(Icons.settings, color: Colors.blue),
+              title: Text('Settings'),
+              trailing: Icon(Icons.arrow_forward_ios),
+              onTap: () {},
+            ),
+            ListTile(
+              leading: Icon(Icons.credit_card, color: Colors.blue),
+              title: Text('Billing Details'),
+              trailing: Icon(Icons.arrow_forward_ios),
+              onTap: () {},
+            ),
+            ListTile(
+              leading: Icon(Icons.group, color: Colors.blue),
+              title: Text('User Management'),
+              trailing: Icon(Icons.arrow_forward_ios),
+              onTap: () {},
+            ),
+            ListTile(
+              leading: Icon(Icons.info, color: Colors.blue),
+              title: Text('Information'),
+              trailing: Icon(Icons.arrow_forward_ios),
+              onTap: () {},
+            ),
+            ListTile(
+              leading: Icon(Icons.logout, color: Colors.red),
+              title: Text('Logout'),
+              onTap: () {authController.signout();},
+            ),
           ],
-          leading: Builder(
-            builder: (BuildContext context) {
-              return IconButton(
-                icon: const Icon(
-                  Icons.menu,
-                  color: Colors.white,
-                ),
-                onPressed: () {
-                  Scaffold.of(context).openDrawer();
-                },
-              );
-            },
-          ),
-          backgroundColor: Colors.red[900],
-          centerTitle: true,
         ),
-        drawer: Opacity(
-          opacity: 0.6,
-          child: Drawer(
-            backgroundColor: Colors.red[900],
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: [
-                DrawerHeader(
-                  decoration: BoxDecoration(
-                    color: Colors.red[900],
-                  ),
-                  child: const Text(
-                    'Life Sync',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 30),
-                  ),
-                ),
-                ListTile(
-                  leading: const Icon(
-                    Icons.home,
-                    color: Colors.white,
-                  ),
-                  title: const Text(
-                    'Home',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16),
-                  ),
-                  selected: _selectedIndex == 0,
-                  onTap: () {
-                    _onItemTapped(0);
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const Home(),
-                      ),
-                    );
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(
-                    Icons.bloodtype_sharp,
-                    color: Colors.white,
-                  ),
-                  title: const Text(
-                    'Your Requests',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16),
-                  ),
-                  selected: _selectedIndex == 1,
-                  onTap: () {
-                    _onItemTapped(1);
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const Requests(),
-                      ),
-                    );
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(
-                    Icons.person,
-                    color: Colors.white,
-                  ),
-                  title: const Text('Register as Donor',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16)),
-                  selected: _selectedIndex == 3,
-                  onTap: () {
-                    _onItemTapped(3);
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const RequestDonor(),
-                      ),
-                    );
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(
-                    Icons.format_align_center,
-                    color: Colors.white,
-                  ),
-                  title: const Text('My Donation Appeal',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16)),
-                  selected: _selectedIndex == 4,
-                  onTap: () {
-                    _onItemTapped(3);
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const DonationAppeal(),
-                      ),
-                    );
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(
-                    Icons.request_page,
-                    color: Colors.white,
-                  ),
-                  title: const Text('Add Blood Request',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16)),
-                  selected: _selectedIndex == 5,
-                  onTap: () {
-                    _onItemTapped(5);
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const RequestForm(),
-                      ),
-                    );
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(
-                    Icons.request_page,
-                    color: Colors.white,
-                  ),
-                  title: const Text('Profile',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16)),
-                  selected: _selectedIndex == 6,
-                  onTap: () {
-                    _onItemTapped(6);
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const Profile(),
-                      ),
-                    );
-                  },
-                ),
+      ),
+    );
+  }
+}
 
-                ListTile(
-                  leading: const Icon(
-                    Icons.logout,
-                    color: Colors.white,
-                  ),
-                  title: const Text('Log Out',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16)),
-                  selected: _selectedIndex == 7,
-                  onTap: () {
-                    _onItemTapped(7);
-                    Navigator.pop(context);
-                    authController.signout();
-                  },
+class EditProfile extends StatelessWidget {
+  const EditProfile({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Edit Profile'),
+        centerTitle: true,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: IconThemeData(color: Colors.black),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            CircleAvatar(
+              radius: 50,
+              backgroundImage: AssetImage('assets/profile_placeholder.png'), // Replace with your image asset
+              child: Align(
+                alignment: Alignment.bottomRight,
+                child: CircleAvatar(
+                  radius: 15,
+                  backgroundColor: Colors.yellow,
+                  child: Icon(Icons.camera_alt, size: 16, color: Colors.black),
                 ),
-                // Other ListTiles...
-              ],
+              ),
             ),
-          ),
+            SizedBox(height: 20),
+            TextField(
+              decoration: InputDecoration(
+                prefixIcon: Icon(Icons.person),
+                labelText: 'Full Name',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
+              ),
+            ),
+            SizedBox(height: 15),
+            TextField(
+              decoration: InputDecoration(
+                prefixIcon: Icon(Icons.email),
+                labelText: 'E-Mail',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
+              ),
+            ),
+            SizedBox(height: 15),
+            TextField(
+              decoration: InputDecoration(
+                prefixIcon: Icon(Icons.phone),
+                labelText: 'Phone No',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
+              ),
+            ),
+            SizedBox(height: 15),
+            TextField(
+              obscureText: true,
+              decoration: InputDecoration(
+                prefixIcon: Icon(Icons.lock),
+                labelText: 'Password',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
+              ),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {},
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.yellow,
+                foregroundColor: Colors.black,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                padding: EdgeInsets.symmetric(horizontal: 30, vertical: 10),
+              ),
+              child: Text('Edit Profile'),
+            ),
+          ],
         ),
-
-
-
-
-        body: SingleChildScrollView(
-          child: Container(
-            padding:  EdgeInsets.all(kDefaultFontSize),
-            child: Column(
-              children: [
-                
-              ],
-            ),
-          ),
-        )
+      ),
     );
   }
 }

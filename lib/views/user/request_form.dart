@@ -475,7 +475,7 @@ class _RequestFormState extends State<RequestForm> {
                       onChanged: (phone) {
                         setState(() {
                           contact = phone.completeNumber;
-                        });
+                          });
                       },
                     ),
                     const Align(
@@ -539,7 +539,7 @@ class _RequestFormState extends State<RequestForm> {
                       },
                       decoration: InputDecoration(
                         hintText:
-                            'e.g House. 131, Street 2, Gulberg Sukh Chayn Gardens Lahore, District Kasur',
+                        'e.g House. 131, Street 2, Gulberg Sukh Chayn Gardens Lahore, District Kasur',
                         enabledBorder: OutlineInputBorder(
                           borderSide: BorderSide(
                             color: Colors.red[900]!,
@@ -563,21 +563,22 @@ class _RequestFormState extends State<RequestForm> {
                         ),
                         suffixIcon: IconButton(
                           icon: Icon(Icons.my_location, color: Colors.red[900]),
-                          onPressed: () {
-                            _getCurrentPosition();
-                            _locationController.text = _currentAddress;
-                            residence=_locationController.text;
+                          onPressed: () async {
+                            await _getCurrentPosition(); // Ensure position is fetched first
+                            if (_currentAddress.isNotEmpty) {
+                              setState(() {
+                                _locationController.text = _currentAddress;
+                                residence = _currentAddress;
+                              });
+                            }
                           },
                         ),
                       ),
                     ),
+
                     const SizedBox(
                       height: 10,
                     ),
-
-
-
-
 
 
                     const Align(

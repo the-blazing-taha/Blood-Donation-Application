@@ -199,6 +199,15 @@ class fireStoreDatabaseController {
     });
   }
 
+  Future<void> updateRequesterPosition(double longitude,double latitude)async{
+    await firestore.collection('requests')
+        .doc(_auth.currentUser?.uid)
+        .update({
+      'latitude': latitude,
+      'longitude': longitude,
+    });
+  }
+
   Future<void> updateRequest(
       {required String docId,
         String name = '',

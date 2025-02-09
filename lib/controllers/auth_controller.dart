@@ -1,10 +1,10 @@
 import 'dart:typed_data';
+import 'package:blood/views/auth/loginscreen.dart';
 import 'package:blood/views/user/wrapper.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 import 'package:image_picker/image_picker.dart';
 
 
@@ -28,11 +28,11 @@ class AuthController{
     String res = 'Error Occurred!';
     try{
       UserCredential userCredential = await _auth.createUserWithEmailAndPassword(email: email, password: password);
-      // String downloadUrl = await uploadImageToStorage(image);
+       String downloadUrl = await uploadImageToStorage(image);
         await _firestore.collection('users').doc(userCredential.user!.uid).set({
           'fullName' : fullName,
           'email' : email,
-          // 'downloadURL': downloadUrl,
+          'profileImage': downloadUrl,
           'userId' : userCredential.user!.uid,
         });
         res = 'success';
@@ -71,6 +71,7 @@ class AuthController{
 
   signout()async{
     await FirebaseAuth.instance.signOut();
+    Get.to(LoginScreen());
   }
 
   reset(String email)async{

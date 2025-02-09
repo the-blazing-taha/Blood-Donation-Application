@@ -15,7 +15,7 @@ class VerifyEmail extends StatefulWidget {
 
 class _VerifyEmailState extends State<VerifyEmail> {
   bool isSending = false;
-  int countdown = 20; // 5 minutes
+  int countdown = 120; // 5 minutes
   Timer? timer;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
