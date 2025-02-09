@@ -288,7 +288,7 @@ class _HomeState extends State<Home> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const Profile(),
+                      builder: (context) => Profile(),
                     ),
                   );
                 },

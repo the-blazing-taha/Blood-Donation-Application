@@ -6,23 +6,38 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../controllers/auth_controller.dart';
+import '../../controllers/fireStoreDatabaseController.dart';
+import 'globals.dart';
 
-class Profile extends StatelessWidget {
+class Profile extends StatefulWidget {
   const Profile({super.key});
 
   @override
+  State<Profile> createState() => _ProfileState();
+}
+
+class _ProfileState extends State<Profile> {
+  @override
   Widget build(BuildContext context) {
-    final FirebaseAuth auth= FirebaseAuth.instance;
-    final user=FirebaseFirestore.instance.collection('users').doc(auth.currentUser?.uid).get();
+    final FirebaseAuth auth = FirebaseAuth.instance;
+    final user = FirebaseFirestore.instance
+        .collection('users')
+        .doc(auth.currentUser?.uid)
+        .get();
     final AuthController authController = AuthController();
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Profile',style: TextStyle(color: Colors.white),),
+        title: Text(
+          'Profile',
+          style: TextStyle(color: Colors.white),
+        ),
         centerTitle: true,
         backgroundColor: Colors.red[900],
         elevation: 0,
-        iconTheme: IconThemeData(color: Colors.white,),
+        iconTheme: IconThemeData(
+          color: Colors.white,
+        ),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -44,14 +59,16 @@ class Profile extends StatelessWidget {
                         radius: 55, // Adjust size as needed
                         backgroundColor: Colors.yellow[600], // Fallback color
                         child: ClipOval(
-                          child: profileImageUrl != null && profileImageUrl.isNotEmpty
+                          child: profileImageUrl != null &&
+                                  profileImageUrl.isNotEmpty
                               ? Image.network(
-                            profileImageUrl,
-                            width: 100, // 2 * radius
-                            height: 100,
-                            fit: BoxFit.cover,
-                          )
-                              : const Icon(Icons.person, size: 40), // Display default icon if no image
+                                  profileImageUrl,
+                                  width: 100, // 2 * radius
+                                  height: 100,
+                                  fit: BoxFit.cover,
+                                )
+                              : const Icon(Icons.person,
+                                  size: 40), // Display default icon if no image
                         ),
                       ),
                     ],
@@ -80,7 +97,13 @@ class Profile extends StatelessWidget {
                   String? userName = userData?['fullName'];
                   return Column(
                     children: [
-                      Text(userName as String, style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold,fontSize: 20 ),),
+                      Text(
+                        userName as String,
+                        style: TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20),
+                      ),
                     ],
                   );
                 } else {
@@ -120,12 +143,14 @@ class Profile extends StatelessWidget {
               leading: Icon(Icons.settings, color: Colors.blue),
               title: Text('Settings'),
               trailing: Icon(Icons.arrow_forward_ios),
-              onTap: () {Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => Settings(),
-                ),
-              );},
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => Settings(),
+                  ),
+                );
+              },
             ),
             ListTile(
               leading: Icon(Icons.credit_card, color: Colors.blue),
@@ -148,7 +173,9 @@ class Profile extends StatelessWidget {
             ListTile(
               leading: Icon(Icons.logout, color: Colors.red),
               title: Text('Logout'),
-              onTap: () {authController.signout();},
+              onTap: () {
+                authController.signout();
+              },
             ),
           ],
         ),
@@ -158,34 +185,34 @@ class Profile extends StatelessWidget {
 }
 
 class EditProfile extends StatefulWidget {
-   EditProfile({super.key});
+  const EditProfile({super.key});
 
   @override
   State<EditProfile> createState() => _EditProfileState();
 }
 
 class _EditProfileState extends State<EditProfile> {
-   final AuthController _authController = AuthController();
+  final AuthController _authController = AuthController();
 
-   Uint8List? _image;
+  Uint8List? _image;
 
-   selectGalleryImage() async {
-     Uint8List im = await _authController.pickProfileImage(ImageSource.gallery);
-     if (mounted) {
-       setState(() {
-         _image = im;
-       });
-     }
-   }
+  selectGalleryImage() async {
+    Uint8List im = await _authController.pickProfileImage(ImageSource.gallery);
+    if (mounted) {
+      setState(() {
+        _image = im;
+      });
+    }
+  }
 
-   captureImage() async {
-     Uint8List im = await _authController.pickProfileImage(ImageSource.camera);
-     if (mounted) {
-       setState(() {
-         _image = im;
-       });
-     }
-   }
+  captureImage() async {
+    Uint8List im = await _authController.pickProfileImage(ImageSource.camera);
+    if (mounted) {
+      setState(() {
+        _image = im;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -203,7 +230,8 @@ class _EditProfileState extends State<EditProfile> {
           children: [
             CircleAvatar(
               radius: 50,
-              backgroundImage: AssetImage('assets/profile_placeholder.png'), // Replace with your image asset
+              backgroundImage: AssetImage(
+                  'assets/profile_placeholder.png'), // Replace with your image asset
               child: Align(
                 alignment: Alignment.bottomRight,
                 child: CircleAvatar(
@@ -274,10 +302,8 @@ class _EditProfileState extends State<EditProfile> {
   }
 }
 
-
-
 class Settings extends StatefulWidget {
-  Settings({super.key});
+  const Settings({super.key});
 
   @override
   State<Settings> createState() => _SettingsState();
@@ -285,7 +311,6 @@ class Settings extends StatefulWidget {
 
 class _SettingsState extends State<Settings> {
   final AuthController _authController = AuthController();
-
   Uint8List? _image;
 
   selectGalleryImage() async {
@@ -305,20 +330,31 @@ class _SettingsState extends State<Settings> {
       });
     }
   }
-  static const WidgetStateProperty<Icon> thumbIcon =
-  WidgetStateProperty<Icon>.fromMap(
-    <WidgetStatesConstraint, Icon>{
-      WidgetState.selected: Icon(Icons.check),
-      WidgetState.any: Icon(Icons.close),
-    },
-  );
-  bool light0 = true;
+
+  Future<String?> getDocIDByName() async {
+    var collection = FirebaseFirestore.instance.collection('donors');
+    var querySnapshot = await collection
+        .where('userId', isEqualTo: auth.currentUser?.uid)
+        .get();
+    if (querySnapshot.docs.isNotEmpty) {
+      return querySnapshot.docs.first.id; // Return first document ID
+    }
+    return null; // Return null if no document found
+  }
+
   bool light1 = true;
+  final fireStoreDatabaseController _firebaseDatabase =
+      fireStoreDatabaseController();
+  final FirebaseAuth auth = FirebaseAuth.instance;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Settings'),
+        title: Text(
+          'Settings',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0,
@@ -329,28 +365,119 @@ class _SettingsState extends State<Settings> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Switch(
-              value: light0,
-              onChanged: (bool value) {
-                setState(() {
-                  light0 = value;
-                });
+            // Profile Image Selection
+            GestureDetector(
+              onTap: () {
+                showModalBottomSheet(
+                  context: context,
+                  builder: (context) => buildBottomSheet(),
+                );
               },
+              child: CircleAvatar(
+                radius: 50,
+                backgroundColor: Colors.grey[300],
+                backgroundImage: _image != null ? MemoryImage(_image!) : null,
+                child: _image == null
+                    ? Icon(Icons.camera_alt, color: Colors.white, size: 30)
+                    : null,
+              ),
             ),
-            Switch(
-              thumbIcon: thumbIcon,
+            SizedBox(height: 20),
+
+            // Styled Switches
+            buildCustomSwitch(
+              title: "Donor Mode",
+              value: donorMode,
+              onChanged: (bool value) async {
+                // Make the function async
+                setState(() {
+                  donorMode = value;
+                });
+
+                String? docID = await getDocIDByName(); // Await the document ID
+
+                if (docID != null) {
+                  await _firebaseDatabase.updateDonorMode(
+                      docID, donorMode); // Call update function
+                } else {
+                  print("Document ID not found");
+                }
+              },
+              activeColor: Colors.green,
+            ),
+
+            buildCustomSwitch(
+              title: "Dark Mode",
               value: light1,
               onChanged: (bool value) {
                 setState(() {
                   light1 = value;
                 });
               },
+              activeColor: Colors.deepPurple,
             ),
-
-
-
           ],
         ),
+      ),
+    );
+  }
+
+  // Custom Switch Widget
+  Widget buildCustomSwitch({
+    required String title,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+    required Color activeColor,
+  }) {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      elevation: 3,
+      child: ListTile(
+        title: Text(title,
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+        trailing: Switch(
+          value: value,
+          onChanged: onChanged,
+          activeColor: activeColor,
+        ),
+      ),
+    );
+  }
+
+  // Bottom Sheet for Image Selection
+  Widget buildBottomSheet() {
+    return Container(
+      padding: EdgeInsets.all(20),
+      height: 150,
+      child: Column(
+        children: [
+          Text("Choose Profile Picture",
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          SizedBox(height: 15),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              ElevatedButton.icon(
+                onPressed: selectGalleryImage,
+                icon: Icon(Icons.photo),
+                label: Text("Gallery"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+              ElevatedButton.icon(
+                onPressed: captureImage,
+                icon: Icon(Icons.camera),
+                label: Text("Camera"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

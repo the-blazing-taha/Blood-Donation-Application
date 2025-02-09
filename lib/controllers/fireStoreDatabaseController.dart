@@ -444,6 +444,21 @@ class fireStoreDatabaseController {
       debugPrint("ERROR IN UPDATING DONATION APPEAL: $e");
     }
   }
+
+  Future<void> updateDonorMode(String docId, bool mode) async {
+    await FirebaseFirestore.instance.collection('donors')
+        .doc(docId)
+        .update({'activity': mode});
+  }
+
+  Stream<bool> doesDonorExist(String userId) {
+    return FirebaseFirestore.instance
+        .collection('donors')
+        .where('userId', isEqualTo: userId)
+        .limit(1)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.isNotEmpty); // Convert to true/false
+  }
 }
 
 

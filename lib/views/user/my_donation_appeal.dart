@@ -429,7 +429,7 @@ class _HomeState extends State<DonationAppeal> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const Profile(),
+                      builder: (context) =>  Profile(),
                     ),
                   );
                 },

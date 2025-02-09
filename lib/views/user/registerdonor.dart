@@ -1,13 +1,11 @@
 import 'dart:core';
 import 'package:blood/views/user/profile.dart';
 import 'package:blood/views/user/request_form.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 
 import '../../controllers/auth_controller.dart';
@@ -389,7 +387,7 @@ class _RequestDonorState extends State<RequestDonor> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const Profile(),
+                      builder: (context) =>  Profile(),
                     ),
                   );
                 },
@@ -1188,74 +1186,56 @@ class _RequestDonorState extends State<RequestDonor> {
                         ),
                         Container(
                           alignment: Alignment.center,
-                          child: ElevatedButton(
-                            onPressed:() async {
-                              try {
-                                _firebaseDatabase.addDonor(
-                                    name,
-                                    contact,
-                                    hospital,
-                                    residence,
-                                    noOfDonation,
-                                    bloodGroup,
-                                    gender,
-                                    details,
-                                    weight,
-                                    age,
-                                    lastDonated,
-                                    donationFrequency,
-                                    highestEducation,
-                                    currentOccupation,
-                                    currentLivingArrg,
-                                    eligibilityTest,
-                                    futureDonationWillingness);
-                                setState(() {});
-                                Get.snackbar('Success: ', 'Donor added successfully!',
-                                    backgroundColor: Colors.red,
-                                    colorText: Colors.white,
-                                    margin: const EdgeInsets.all(
-                                      15,
-                                    ),
-                                    icon: const Icon(
-                                      Icons.message,
-                                      color: Colors.white,
-                                    ));
-                              }
-                              catch (e) {
-                                Get.snackbar('ERROR: ', e.toString(),
-                                    backgroundColor: Colors.red,
-                                    colorText: Colors.white,
-                                    margin: const EdgeInsets.all(
-                                      15,
-                                    ),
-                                    icon: const Icon(
-                                      Icons.message,
-                                      color: Colors.white,
-                                    ));
-                              }
+                          child: StreamBuilder<bool>(
+                            stream: _firebaseDatabase.doesDonorExist(auth.currentUser!.uid),
+                            builder: (context, snapshot) {
+                              bool donorExists = snapshot.data ?? false; // Default to false if no data yet
+
+                              return ElevatedButton(
+                                onPressed: donorExists
+                                    ? null // Disable button if donor exists
+                                    : () async {
+                                  try {
+                                    await _firebaseDatabase.addDonor(
+                                        name, contact, hospital, residence, noOfDonation, bloodGroup,
+                                        gender, details, weight, age, lastDonated, donationFrequency,
+                                        highestEducation, currentOccupation, currentLivingArrg,
+                                        eligibilityTest, futureDonationWillingness
+                                    );
+
+                                    setState(() {});
+
+                                    Get.snackbar('Success', 'Donor added successfully!',
+                                        backgroundColor: Colors.green,
+                                        colorText: Colors.white,
+                                        margin: const EdgeInsets.all(15),
+                                        icon: const Icon(Icons.check, color: Colors.white));
+                                  } catch (e) {
+                                    Get.snackbar('ERROR', e.toString(),
+                                        backgroundColor: Colors.red,
+                                        colorText: Colors.white,
+                                        margin: const EdgeInsets.all(15),
+                                        icon: const Icon(Icons.error, color: Colors.white));
+                                  }
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  foregroundColor: Colors.white,
+                                  backgroundColor: donorExists ? Colors.grey : Colors.red[900], // Grey when disabled
+                                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  elevation: 5,
+                                ),
+                                child: Text(
+                                  donorExists ? 'Already Registered' : 'Submit',
+                                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                ),
+                              );
                             },
-                            style: ElevatedButton.styleFrom(
-                              foregroundColor: Colors.white,
-                              backgroundColor: Colors.red[900],
-                              // Background color
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 30, vertical: 10),
-                              // Padding
-                              shape: RoundedRectangleBorder(
-                                borderRadius:
-                                BorderRadius.circular(10), // Rounded corners
-                              ),
-                              elevation: 5, // Shadow elevation
-                            ),
-                            child: const Text(
-                              'Submit',
-                              style: TextStyle(
-                                fontSize: 18, // Font size
-                                fontWeight: FontWeight.bold, // Font weight
-                              ),
-                            ),
                           ),
                         ),
+
                       ],
                     ),
                   ),
