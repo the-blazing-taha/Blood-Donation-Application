@@ -31,7 +31,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool vertical = false;
 
   void registerUser() async {
-    if (_image != null) {
       if (formkey.currentState!.validate()) {
         if(mounted) {
           setState(() {
@@ -39,7 +38,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           });
         }
         String res = await _authController.createNewUser(
-            email, fullName, password, _image);
+            email: email, fullName: fullName,password: password,image: _image);
         if (mounted) {
           setState(() {
             isLoading = false;
@@ -51,17 +50,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               isLoading = true;
             });
           }
-
-          // Get.snackbar('Success', 'Account has been created for you',
-          //     backgroundColor: Colors.red,
-          //     colorText: Colors.white,
-          //     margin: const EdgeInsets.all(
-          //       15,
-          //     ),
-          //     icon: const Icon(
-          //       Icons.message,
-          //       color: Colors.white,
-          //     ));
         } else {
           Get.snackbar("Error: ", res.toString(),
               backgroundColor: Colors.red,
@@ -87,19 +75,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               color: Colors.white,
             ));
       }
-    } else {
-      Get.snackbar('No Image', 'Please capture the image',
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-          margin: const EdgeInsets.all(
-            15,
-          ),
-          snackPosition: SnackPosition.BOTTOM,
-          icon: const Icon(
-            Icons.message,
-            color: Colors.white,
-          ));
-    }
+
   }
 
   selectGalleryImage() async {

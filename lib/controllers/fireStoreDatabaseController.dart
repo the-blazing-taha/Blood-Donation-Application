@@ -27,6 +27,7 @@ class fireStoreDatabaseController {
         distanceFilter: 100,
       );
       Position position = await Geolocator.getCurrentPosition(locationSettings: locationSettings);
+      String? profileUrl = await getProfileUrl();
 
       DocumentReference requestRef = firestore.collection('requests').doc();
       await requestRef.set({
@@ -44,6 +45,7 @@ class fireStoreDatabaseController {
         'longitude': position.longitude,
         'latitude': position.latitude,
         'createdAt': Timestamp.now(),
+        'profileUrl': profileUrl
       });
       res = "Request added successfully!";
     } catch (e) {
@@ -87,6 +89,17 @@ class fireStoreDatabaseController {
     // continue accessing the position of the device.
     return await Geolocator.getCurrentPosition();
   }
+  Future<String?> getProfileUrl() async {
+    var userDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(_auth.currentUser?.uid)
+        .get();
+
+    if (userDoc.exists) {
+      return userDoc.data()?['profileImage']; // Get 'profileUrl' field
+    }
+    return null; // Return null if no document found
+  }
   Future<String> addDonor(
       String name,
       String contact,
@@ -107,9 +120,10 @@ class fireStoreDatabaseController {
       String futureDonationWillingness) async {
     String res = "Something went wrong while uploading the donation !";
     try {
-
       Position position = await _determinePosition();
       DocumentReference donorRef = firestore.collection('donors').doc(_auth.currentUser?.uid);
+      String? profileUrl = await getProfileUrl();
+
       await donorRef.set({
         'docId': donorRef.id,
         'userId': _auth.currentUser?.uid,
@@ -133,7 +147,8 @@ class fireStoreDatabaseController {
         'latitude':position.latitude,
         'longitude': position.longitude,
         'createdAt': Timestamp.now(),
-        'activity' :true
+        'activity' :true,
+        'profileUrl':profileUrl
       });
       res = "Donation appeal added successfully!";
     } catch (e) {

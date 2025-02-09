@@ -1,4 +1,5 @@
 import 'dart:core';
+import 'package:blood/views/user/globals.dart';
 import 'package:blood/views/user/profile.dart';
 import 'package:blood/views/user/request_form.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -141,61 +142,68 @@ class _RequestDonorState extends State<RequestDonor> {
 
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text(
-              'Location services are disabled. Please enable the services')));
+      _showSnackbar('Location services are disabled. Please enable them.');
       return false;
     }
+
     permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Location permissions are denied')));
+        _showSnackbar('Location permissions are denied.');
         return false;
       }
     }
+
     if (permission == LocationPermission.deniedForever) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text(
-              'Location permissions are permanently denied, we cannot request permissions.')));
+      _showSnackbar('Location permissions are permanently denied. Please enable them in settings.');
       return false;
     }
+
     return true;
   }
 
-  Future<void> _getCurrentPosition() async {
+  Future<String?> _getCurrentPosition() async {
     final hasPermission = await _handleLocationPermission();
-    if (!hasPermission) return;
-    await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high)
-        .then((Position position) {
-      setState(() => _currentPosition = position);
-    }).catchError((e) {
-      debugPrint(e);
-    });
+    if (!hasPermission) return null;
 
-    await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high)
-        .then((Position position) {
-      setState(() => _currentPosition = position);
-      _getAddressFromLatLng(_currentPosition!);
-    }).catchError((e) {
-      debugPrint(e);
-    });
+    try {
+      Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
+
+      _currentPosition = position; // ✅ Directly update position
+      return await _getAddressFromLatLng(position); // ✅ Fetch and return address
+    } catch (e) {
+      debugPrint("Error fetching location: $e");
+      return null;
+    }
   }
 
-  Future<void> _getAddressFromLatLng(Position position) async {
-    await placemarkFromCoordinates(
-        _currentPosition!.latitude, _currentPosition!.longitude)
-        .then((List<Placemark> placemarks) {
-      Placemark place = placemarks[0];
-      setState(() {
-        _currentAddress =
-        '${place.street}, ${place.subLocality},${place.subAdministrativeArea}, ${place.postalCode}';
-      });
-    }).catchError((e) {
-      debugPrint(e);
-    });
+  Future<String?> _getAddressFromLatLng(Position position) async {
+    try {
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+          position.latitude, position.longitude);
+
+      Placemark place = placemarks.first;
+
+      String fullAddress =
+          '${place.street}, ${place.subLocality}, ${place.subAdministrativeArea}, ${place.postalCode}';
+
+      _currentAddress = fullAddress; // ✅ Update global variable
+      return fullAddress; // ✅ Return address
+    } catch (e) {
+      debugPrint("Error fetching address: $e");
+      return null;
+    }
   }
+
+// ✅ Utility function to show snackbars
+  void _showSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
 
 
 
@@ -609,11 +617,11 @@ class _RequestDonorState extends State<RequestDonor> {
                             suffixIcon: IconButton(
                               icon: Icon(Icons.my_location, color: Colors.red[900]),
                               onPressed: () async {
-                                await _getCurrentPosition(); // Ensure position is fetched first
-                                if (_currentAddress.isNotEmpty) {
+                                String? address = await _getCurrentPosition(); // ✅ Fetch location
+                                if (address != null) {
                                   setState(() {
-                                    _locationController.text = _currentAddress;
-                                    residence = _currentAddress;
+                                    _locationController.text = address; // ✅ Update TextFormField immediately
+                                    residence = address;
                                   });
                                 }
                               },
@@ -1203,13 +1211,14 @@ class _RequestDonorState extends State<RequestDonor> {
                                         eligibilityTest, futureDonationWillingness
                                     );
 
-                                    setState(() {});
+                                    setState(() {donorMode = true;});
 
                                     Get.snackbar('Success', 'Donor added successfully!',
                                         backgroundColor: Colors.green,
                                         colorText: Colors.white,
                                         margin: const EdgeInsets.all(15),
                                         icon: const Icon(Icons.check, color: Colors.white));
+
                                   } catch (e) {
                                     Get.snackbar('ERROR', e.toString(),
                                         backgroundColor: Colors.red,

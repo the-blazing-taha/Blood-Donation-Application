@@ -1,3 +1,4 @@
+import 'package:blood/views/user/globals.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:blood/views/user/donor_details.dart';
 import 'package:blood/views/user/profile.dart';
@@ -616,7 +617,7 @@ class _HomeState extends State<DonationAppeal> {
                                     onPressed: () {
                                       try {
                                         firebaseDatabase.deleteDonation(data['docId']);
-                                        setState(() {});
+                                        setState(() {donorMode=false;});
                                         Get.snackbar("Success: ","Donation deleted successfully!",
                                             backgroundColor: Colors.red,
                                             colorText: Colors.white,

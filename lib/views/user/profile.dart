@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../controllers/auth_controller.dart';
@@ -390,17 +391,49 @@ class _SettingsState extends State<Settings> {
               value: donorMode,
               onChanged: (bool value) async {
                 // Make the function async
-                setState(() {
-                  donorMode = value;
-                });
+
 
                 String? docID = await getDocIDByName(); // Await the document ID
 
                 if (docID != null) {
+                  setState(() {
+                    donorMode = value;
+                  });
                   await _firebaseDatabase.updateDonorMode(
                       docID, donorMode); // Call update function
+                 donorMode ? Get.snackbar('Donor mode enabled', 'You will be shown as donor to everyone!',
+                      backgroundColor: Colors.red,
+                      colorText: Colors.white,
+                      duration: Duration(seconds: 6),
+                      margin: const EdgeInsets.all(
+                        15,
+                      ),
+                      icon: const Icon(
+                        Icons.message,
+                        color: Colors.white,
+                      )): Get.snackbar('Donor mode disabled', 'You will not be shown as donor to everyone!',
+                     backgroundColor: Colors.red,
+                     colorText: Colors.white,
+                     duration: Duration(seconds: 6),
+                     margin: const EdgeInsets.all(
+                       15,
+                     ),
+                     icon: const Icon(
+                       Icons.message,
+                       color: Colors.white,
+                     ));
                 } else {
-                  print("Document ID not found");
+                  Get.snackbar('Donation Form not filled', 'To turn the donor mode on, fill the donation form!',
+                      backgroundColor: Colors.red,
+                      colorText: Colors.white,
+                      duration: Duration(seconds: 6),
+                      margin: const EdgeInsets.all(
+                        15,
+                      ),
+                      icon: const Icon(
+                        Icons.message,
+                        color: Colors.white,
+                      ));
                 }
               },
               activeColor: Colors.green,

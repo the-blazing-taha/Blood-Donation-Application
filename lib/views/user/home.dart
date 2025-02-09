@@ -40,8 +40,9 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     final CollectionReference requestsCollection = FirebaseFirestore.instance.collection('requests');
-    final CollectionReference donationCollection =
-    FirebaseFirestore.instance.collection('donors');
+    final Stream<QuerySnapshot> donationCollection =
+    FirebaseFirestore.instance.collection('donors').where('activity', isEqualTo: true)
+        .snapshots();
     final user=FirebaseFirestore.instance.collection('users').doc(_auth.currentUser?.uid).get();
     return Scaffold(
 
@@ -390,7 +391,7 @@ class _HomeState extends State<Home> {
           ),
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
-              stream: donationCollection.snapshots(),
+              stream: donationCollection,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
@@ -463,9 +464,21 @@ class _HomeState extends State<Home> {
                               const SizedBox(height: 5),
                               ListTile(
                                 contentPadding: EdgeInsets.zero,
-                                leading: const CircleAvatar(
-                                  radius: 25,
-                                  child: Icon(Icons.person, size: 24),
+                                leading: CircleAvatar(
+                                  radius: 30, // Adjust size as needed
+                                  backgroundColor: Colors.black, // Fallback color
+                                  child: ClipOval(
+                                    child: data['profileUrl'] != null &&
+                                        data['profileUrl'].isNotEmpty
+                                        ? Image.network(
+                                      data['profileUrl'],
+                                      width: 100, // 2 * radius
+                                      height: 100,
+                                      fit: BoxFit.cover,
+                                    )
+                                        : const Icon(Icons.person,color: Colors.white,
+                                        size: 40), // Display default icon if no image
+                                  ),
                                 ),
                                 title: Text(
                                   data['name'] ?? 'Unknown',
@@ -647,9 +660,21 @@ class _HomeState extends State<Home> {
                               const SizedBox(height: 5),
                               ListTile(
                                 contentPadding: EdgeInsets.zero,
-                                leading: const CircleAvatar(
-                                  radius: 25,
-                                  child: Icon(Icons.person, size: 24),
+                                leading: CircleAvatar(
+                                  radius: 30, // Adjust size as needed
+                                  backgroundColor: Colors.yellow[600], // Fallback color
+                                  child: ClipOval(
+                                    child: data['profileUrl'] != null &&
+                                        data['profileUrl'].isNotEmpty
+                                        ? Image.network(
+                                      data['profileUrl'],
+                                      width: 100, // 2 * radius
+                                      height: 100,
+                                      fit: BoxFit.cover,
+                                    )
+                                        : const Icon(Icons.person,
+                                        size: 40), // Display default icon if no image
+                                  ),
                                 ),
                                 title: Text(
                                   data['name'] ?? 'Unknown',

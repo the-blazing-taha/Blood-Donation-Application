@@ -24,7 +24,7 @@ class AuthController{
     }
   }
 
-  Future<String> createNewUser(String email, String fullName, String password, Uint8List? image) async{
+  Future<String> createNewUser({required String email, required String fullName, required String password, Uint8List? image}) async{
     String res = 'Error Occurred!';
     try{
       UserCredential userCredential = await _auth.createUserWithEmailAndPassword(email: email, password: password);

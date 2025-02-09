@@ -7,8 +7,7 @@ import 'package:timeago/timeago.dart' as timeago;
 import '../../controllers/auth_controller.dart';
 import '../../controllers/fireStoreDatabaseController.dart';
 import 'donor_details.dart';
-import 'home.dart';
-import 'my_requests.dart';
+
 
 class NearbyDonors extends StatefulWidget {
   const NearbyDonors({super.key});
@@ -89,6 +88,7 @@ class _NearbyDonorsState extends State<NearbyDonors> {
           .where('longitude', isGreaterThan: lon - lonChange)
           .where('longitude', isLessThan: lon + lonChange)
           .where('userId', isNotEqualTo: auth.currentUser!.uid)
+          .where('activity', isEqualTo: true)
           .get();
 
       List<Map<String, dynamic>> usersNearby = [];
