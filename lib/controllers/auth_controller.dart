@@ -23,26 +23,41 @@ class AuthController{
       throw Exception('No image selected!');
     }
   }
-
-  Future<String> createNewUser({required String email, required String fullName, required String password, Uint8List? image}) async{
+  Future<String> createNewUser({
+    required String email,
+    required String fullName,
+    required String password,
+    Uint8List? image, // <-- Make it nullable
+  }) async {
     String res = 'Error Occurred!';
-    try{
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(email: email, password: password);
-       String downloadUrl = await uploadImageToStorage(image);
-        await _firestore.collection('users').doc(userCredential.user!.uid).set({
-          'fullName' : fullName,
-          'email' : email,
-          'profileImage': downloadUrl,
-          'userId' : userCredential.user!.uid,
-        });
-        res = 'success';
+    try {
+      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      String? downloadUrl;
+
+      // Only upload image if user provided one
+      if (image != null) {
+        downloadUrl = await uploadImageToStorage(image);
+      }
+
+      await _firestore.collection('users').doc(userCredential.user!.uid).set({
+        'fullName': fullName,
+        'email': email,
+        'profileImage': downloadUrl ?? '', // Default empty string if no image
+        'userId': userCredential.user!.uid,
+      });
+
+      res = 'success';
       Get.offAll(Wrapper());
-    }
-    catch(e){
-        res = e.toString();
+    } catch (e) {
+      res = e.toString();
     }
     return res;
   }
+
 
 
   uploadImageToStorage(Uint8List? image)async{
@@ -63,10 +78,6 @@ class AuthController{
         res = e.toString();
       }
       return res;
-  }
-
-  resetPassword(String email)async{
-    await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
   }
 
   signout()async{

@@ -1,3 +1,4 @@
+import 'package:blood/views/auth/forgotpassword.dart';
 import 'package:blood/views/auth/registerscreen.dart';
 import 'package:blood/views/user/home.dart';
 import 'package:flutter/material.dart';
@@ -24,7 +25,7 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() {
         isLoading = true;
       });
-      String res = await _authController.loginUser(email, password);
+      String res = await _authController.loginUser(email.trim(), password.trim());
       setState(() {
         isLoading = false;
       });
@@ -64,6 +65,8 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         backgroundColor: Colors.red[900],
         centerTitle: true,
+        automaticallyImplyLeading: false, // Removes the back arrow
+
       ),
       body: Padding(
         padding: const EdgeInsets.all(15),
@@ -167,6 +170,24 @@ class _LoginScreenState extends State<LoginScreen> {
                 },
                 child: const Text(
                   "Need an Account?",
+                ),
+              ),
+              const SizedBox(
+                height: 20,
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) {
+                        return const ForgotPassword();
+                      },
+                    ),
+                  );
+                },
+                child: const Text(
+                  "Forgot password?",
                 ),
               ),
             ],

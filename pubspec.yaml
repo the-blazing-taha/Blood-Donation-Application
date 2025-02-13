@@ -59,16 +59,19 @@ dependencies:
   firebase_messaging: ^15.2.1
   timeago: ^3.7.0
   cached_network_image: ^3.4.1
-
-flutter_icons:
-  android: true
-  ios: true
-  image_path: "icon.png"  # Path to your icon
-  adaptive_icon_background: "#ffffff"  # (Optional) Android adaptive background
-  adaptive_icon_foreground: "icon.png"  # (Optional) Foreground image
+  firebase_analytics: ^11.4.2
+  flutter_local_notifications: ^17.2.4
+#flutter_icons:
+#  android: true
+#  ios: true
+#  image_path: "icon.png"  # Path to your icon
+#  adaptive_icon_background: "#ffffff"  # (Optional) Android adaptive background
+#  adaptive_icon_foreground: "icon.png"  # (Optional) Foreground image
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_launcher_icons: ^0.14.3
+
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is

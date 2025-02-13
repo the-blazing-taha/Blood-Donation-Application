@@ -38,7 +38,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           });
         }
         String res = await _authController.createNewUser(
-            email: email, fullName: fullName,password: password,image: _image);
+            email: email.trim(), fullName: fullName.trim(),password: password.trim(),image: _image);
         if (mounted) {
           setState(() {
             isLoading = false;

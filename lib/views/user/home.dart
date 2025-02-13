@@ -208,7 +208,7 @@ class _HomeState extends State<Home> {
               ),
               ListTile(
                 leading: const Icon(
-                  Icons.person,
+                  Icons.bloodtype_sharp,
                   color: Colors.white,
                 ),
                 title: const Text('Register as Donor',
@@ -230,10 +230,10 @@ class _HomeState extends State<Home> {
               ),
               ListTile(
                 leading: const Icon(
-                  Icons.format_align_center,
+                  Icons.person,
                   color: Colors.white,
                 ),
-                title: const Text('My Donation Appeal',
+                title: const Text('Your Donation Registration',
                     style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -335,7 +335,7 @@ class _HomeState extends State<Home> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const NearbyRequesters(),
+                      builder: (context) => const NearbyRequestors(),
                     ),
                   );
                 },

@@ -152,11 +152,9 @@ class _RequestFormState extends State<RequestForm> {
         selectedIndex = index;
       });
     }
-
     signout() {
       FirebaseAuth.instance.signOut();
     }
-
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -374,9 +372,6 @@ class _RequestFormState extends State<RequestForm> {
           ),
         ),
       ),
-
-
-
       body: SizedBox(
         height: MediaQuery.of(context).size.height,
         width: MediaQuery.of(context).size.width,

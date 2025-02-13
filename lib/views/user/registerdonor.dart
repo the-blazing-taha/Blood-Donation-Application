@@ -505,13 +505,6 @@ class _RequestDonorState extends State<RequestDonor> {
                           height: 10,
                         ),
                         IntlPhoneField(
-                          onChanged: (phone) {
-                            setState(() {
-                              contact = phone.completeNumber.replaceAll(
-                                  RegExp(r"\D"), " ");
-                            });
-                          },
-                          keyboardType: TextInputType.number,
                           decoration: InputDecoration(
                             hintText: '3221040476',
                             border: OutlineInputBorder(
@@ -529,6 +522,12 @@ class _RequestDonorState extends State<RequestDonor> {
                                   10), // Red border color when enabled
                             ),
                           ),
+                          initialCountryCode: 'PK',
+                          onChanged: (phone) {
+                            setState(() {
+                              contact = phone.completeNumber;
+                            });
+                          },
                         ),
                         const Align(
                           alignment: Alignment.centerLeft,
@@ -760,7 +759,7 @@ class _RequestDonorState extends State<RequestDonor> {
                         const Align(
                           alignment: Alignment.centerLeft,
                           child: Text(
-                            'Your age (KG):',
+                            'Your age (Years):',
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                         ),
@@ -1197,6 +1196,10 @@ class _RequestDonorState extends State<RequestDonor> {
                           child: StreamBuilder<bool>(
                             stream: _firebaseDatabase.doesDonorExist(auth.currentUser!.uid),
                             builder: (context, snapshot) {
+                              if (snapshot.connectionState == ConnectionState.waiting) {
+                                return const CircularProgressIndicator(); // Show loading indicator
+                              }
+
                               bool donorExists = snapshot.data ?? false; // Default to false if no data yet
 
                               return ElevatedButton(

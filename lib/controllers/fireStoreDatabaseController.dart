@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
@@ -28,7 +29,9 @@ class fireStoreDatabaseController {
       );
       Position position = await Geolocator.getCurrentPosition(locationSettings: locationSettings);
       String? profileUrl = await getProfileUrl();
-
+      // Get the FCM token
+      String? fcmToken = await FirebaseMessaging.instance.getToken();
+      print("User FCM Token: $fcmToken");
       DocumentReference requestRef = firestore.collection('requests').doc();
       await requestRef.set({
         'docId': requestRef.id,
@@ -45,7 +48,8 @@ class fireStoreDatabaseController {
         'longitude': position.longitude,
         'latitude': position.latitude,
         'createdAt': Timestamp.now(),
-        'profileUrl': profileUrl
+        'profileUrl': profileUrl,
+        'fcmToken': fcmToken
       });
       res = "Request added successfully!";
     } catch (e) {
@@ -100,6 +104,20 @@ class fireStoreDatabaseController {
     }
     return null; // Return null if no document found
   }
+  Future<bool> getProfileDonorMode() async {
+    var userDoc = await FirebaseFirestore.instance
+        .collection('donors')
+        .doc(_auth.currentUser?.uid)
+        .get();
+
+    if (userDoc.exists) {
+      return userDoc.data()?['activity'] ?? false; // Default to false
+    }
+    return false; // Return false instead of null
+  }
+
+
+
   Future<String> addDonor(
       String name,
       String contact,
@@ -123,6 +141,7 @@ class fireStoreDatabaseController {
       Position position = await _determinePosition();
       DocumentReference donorRef = firestore.collection('donors').doc(_auth.currentUser?.uid);
       String? profileUrl = await getProfileUrl();
+      String? fcmToken = await FirebaseMessaging.instance.getToken();
 
       await donorRef.set({
         'docId': donorRef.id,
@@ -148,7 +167,8 @@ class fireStoreDatabaseController {
         'longitude': position.longitude,
         'createdAt': Timestamp.now(),
         'activity' :true,
-        'profileUrl':profileUrl
+        'profileUrl':profileUrl,
+        'fcmToken': fcmToken
       });
       res = "Donation appeal added successfully!";
     } catch (e) {

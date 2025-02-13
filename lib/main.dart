@@ -1,12 +1,13 @@
 import 'dart:io';
 import 'package:blood/controllers/notificationController.dart';
+import 'package:blood/views/user/nearby_donors.dart';
 import 'package:blood/views/user/wrapper.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 
-
+final navigatorKey = GlobalKey<NavigatorState>();
 
 void setLocale() {
   FirebaseAuth.instance
@@ -25,7 +26,7 @@ void main() async {
               storageBucket: 'gs://blood-donation-applicati-30737.firebasestorage.app'),
         )
       : await Firebase.initializeApp();
-  // await NotificationController().initNotifications();
+  await NotificationController.instance.initialize();
   runApp(const MyApp());
 }
 
@@ -35,11 +36,14 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return const GetMaterialApp(
+    return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
-      // home: NavigationExample(),
+      navigatorKey: navigatorKey,
       home: Wrapper(),
+      routes:  {
+          NearbyDonors.route:(context) => const NearbyDonors()
+      },
     );
   }
 }

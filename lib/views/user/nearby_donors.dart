@@ -4,44 +4,53 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:timeago/timeago.dart' as timeago;
-import '../../controllers/auth_controller.dart';
 import '../../controllers/fireStoreDatabaseController.dart';
 import 'donor_details.dart';
 
-
 class NearbyDonors extends StatefulWidget {
   const NearbyDonors({super.key});
+  static const route = '/nearby-donors';
 
   @override
   State<NearbyDonors> createState() => _NearbyDonorsState();
 }
 
 class _NearbyDonorsState extends State<NearbyDonors> {
-  int _selectedIndex = 0;
-  final AuthController _authController = AuthController();
   final FirebaseAuth auth = FirebaseAuth.instance;
-  final fireStoreDatabaseController firebaseDatabase = fireStoreDatabaseController();
-
+  final fireStoreDatabaseController firebaseDatabase =
+  fireStoreDatabaseController();
   Position? currentPosition;
   List<Map<String, dynamic>> nearbyDonors = [];
   bool isLoading = false;
+  String selectedBloodGroup = '';
 
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
+  final List<String> bloodGroups = [
+    'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'
+  ];
+
+  final Map<String, List<String>> compatibleBloodGroups = {
+    'A+': ['A+', 'A-', 'O+', 'O-'],
+    'A-': ['A-', 'O-'],
+    'B+': ['B+', 'B-', 'O+', 'O-'],
+    'B-': ['B-', 'O-'],
+    'O+': ['O+', 'O-'],
+    'O-': ['O-'],
+    'AB+': ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'],
+    'AB-': ['A-', 'B-', 'O-', 'AB-'],
+  };
 
   Future<void> startLocationTracking() async {
     try {
-      Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
       setState(() {
         currentPosition = position;
         isLoading = true;
       });
 
       if (await doesUserExist()) {
-        await firebaseDatabase.updateDonorPosition(position.longitude, position.latitude);
+        await firebaseDatabase.updateDonorPosition(
+            position.longitude, position.latitude);
       }
 
       await findNearbyDonors();
@@ -51,7 +60,10 @@ class _NearbyDonorsState extends State<NearbyDonors> {
   }
 
   Future<bool> doesUserExist() async {
-    final doc = await FirebaseFirestore.instance.collection('donors').doc(auth.currentUser?.uid).get();
+    final doc = await FirebaseFirestore.instance
+        .collection('donors')
+        .doc(auth.currentUser?.uid)
+        .get();
     return doc.exists;
   }
 
@@ -60,60 +72,58 @@ class _NearbyDonorsState extends State<NearbyDonors> {
     double dLat = (lat2 - lat1) * pi / 180;
     double dLon = (lon2 - lon1) * pi / 180;
     double a = sin(dLat / 2) * sin(dLat / 2) +
-        cos(lat1 * pi / 180) * cos(lat2 * pi / 180) *
-            sin(dLon / 2) * sin(dLon / 2);
+        cos(lat1 * pi / 180) *
+            cos(lat2 * pi / 180) *
+            sin(dLon / 2) *
+            sin(dLon / 2);
     double c = 2 * atan2(sqrt(a), sqrt(1 - a));
     return R * c; // Distance in km
   }
 
   Future<void> findNearbyDonors() async {
-    if (currentPosition == null) return;
+    if (currentPosition == null || selectedBloodGroup.isEmpty) return;
 
     setState(() {
-      isLoading = true; // Start loading
+      isLoading = true;
     });
 
     FirebaseFirestore firestore = FirebaseFirestore.instance;
     double lat = currentPosition!.latitude;
     double lon = currentPosition!.longitude;
     double searchRadiusKm = 0.1; // 100 meters
-
     double latChange = searchRadiusKm / 111.12;
     double lonChange = searchRadiusKm / (111.12 * cos(lat * pi / 180));
 
     try {
-      QuerySnapshot snapshot = await firestore.collection('donors')
-          .where('latitude', isGreaterThan: lat - latChange)
-          .where('latitude', isLessThan: lat + latChange)
-          .where('longitude', isGreaterThan: lon - lonChange)
-          .where('longitude', isLessThan: lon + lonChange)
-          .where('userId', isNotEqualTo: auth.currentUser!.uid)
+      List<String> validBloodGroups = compatibleBloodGroups[selectedBloodGroup]!;
+
+      QuerySnapshot snapshot = await firestore
+          .collection('donors')
+          .where('latitude', isGreaterThanOrEqualTo: lat - latChange)
+          .where('latitude', isLessThanOrEqualTo: lat + latChange)
+          .where('longitude', isGreaterThanOrEqualTo: lon - lonChange)
+          .where('longitude', isLessThanOrEqualTo: lon + lonChange)
           .where('activity', isEqualTo: true)
+          .where('bloodGroup', whereIn: validBloodGroups)
+          .where('userId', isNotEqualTo: auth.currentUser?.uid)
           .get();
 
-      List<Map<String, dynamic>> usersNearby = [];
-
-      for (var doc in snapshot.docs) {
-        var data = doc.data() as Map<String, dynamic>;
-        if (data['latitude'] == null || data['longitude'] == null) continue;
-
+      List<Map<String, dynamic>> usersNearby = snapshot.docs
+          .map((doc) => doc.data() as Map<String, dynamic>)
+          .where((data) {
         double userLat = data['latitude'];
         double userLon = data['longitude'];
-        double distance = calculateDistance(lat, lon, userLat, userLon);
-
-        if (distance <= 0.1) { // 100 meters
-          usersNearby.add(data);
-        }
-      }
+        return calculateDistance(lat, lon, userLat, userLon) <= searchRadiusKm;
+      }).toList();
 
       setState(() {
         nearbyDonors = usersNearby;
-        isLoading = false; // Stop loading
+        isLoading = false;
       });
     } catch (e) {
       print("Error finding donors: $e");
       setState(() {
-        isLoading = false; // Stop loading even if error occurs
+        isLoading = false;
       });
     }
   }
@@ -122,94 +132,184 @@ class _NearbyDonorsState extends State<NearbyDonors> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Nearby Donors", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+        title: const Text("Nearby Donors",
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
         backgroundColor: Colors.red[900],
         centerTitle: true,
       ),
       body: Column(
         children: [
-          Center(
-            child: currentPosition == null
-                ? const Text("Press the button to find nearby donors")
-                : Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text("Latitude: ${currentPosition?.latitude}", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                Text("Longitude: ${currentPosition?.longitude}", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              ],
+          Padding(
+            padding: const EdgeInsets.all(10.0),
+            child: DropdownButtonFormField(
+              decoration: const InputDecoration(
+                labelText: "Select Blood Group",
+                border: OutlineInputBorder(),
+              ),
+              value: selectedBloodGroup.isEmpty ? null : selectedBloodGroup,
+              items: bloodGroups.map((bg) => DropdownMenuItem(
+                value: bg,
+                child: Text(bg),
+              )).toList(),
+              onChanged: (value) {
+                setState(() {
+                  selectedBloodGroup = value!;
+                });
+              },
             ),
           ),
           ElevatedButton(
-            onPressed: isLoading ? null : startLocationTracking, // Disable button when loading
+            onPressed: isLoading || selectedBloodGroup.isEmpty
+                ? null
+                : startLocationTracking,
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red[900],
             ),
             child: isLoading
-                ? const SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(
-                color: Colors.white,
-                strokeWidth: 2, // Make spinner smaller
-              ),
-            )
-                : const Text("Find Nearby Donors",style: TextStyle(color: Colors.white),),
+                ? const CircularProgressIndicator(color: Colors.white)
+                : const Text("Find Nearby Donors", style: TextStyle(color: Colors.white)),
           ),
-
-          const SizedBox(height: 10),
-          const Text("Donors Near You", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
           Expanded(
             child: nearbyDonors.isEmpty
                 ? const Center(child: Text("No nearby donors found"))
                 : ListView.builder(
               itemCount: nearbyDonors.length,
               itemBuilder: (context, index) {
-                var donor = nearbyDonors[index];
+                final donor = nearbyDonors[index];
                 var createdAt = donor['createdAt'] != null
                     ? (donor['createdAt'] as Timestamp).toDate()
                     : DateTime.now();
                 var timeAgo = timeago.format(createdAt);
-
                 return Card(
                   margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   elevation: 4,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  child: ListTile(
-                    leading: const CircleAvatar(radius: 25, child: Icon(Icons.person, size: 24)),
-                    title: Text(donor['name'] ?? 'Unknown', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                    subtitle: Text("${donor['bloodGroup'] ?? 'N/A'} | $timeAgo"),
-                    trailing: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red[900],
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      ),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => DonorDetails(
-                              patient: nearbyDonors[index]['name'],
-                              contact: nearbyDonors[index]['contact'],
-                              hospital: nearbyDonors[index]['hospital'],
-                              residence: nearbyDonors[index]['residence'],
-                              bloodGroup: nearbyDonors[index]['bloodGroup'],
-                              gender: nearbyDonors[index]['gender'],
-                              noOfDonations: nearbyDonors[index]['donations_done'],
-                              details: nearbyDonors[index]['details'],
-                              weight: nearbyDonors[index]['weight'],
-                              age: nearbyDonors[index]['age'],
-                              lastDonated: nearbyDonors[index]['lastDonated'],
-                              donationFrequency: nearbyDonors[index]['donationFrequency'],
-                              highestEducation: nearbyDonors[index]['highestEducation'],
-                              currentOccupation: nearbyDonors[index]['currentOccupation'],
-                              currentLivingArrg: nearbyDonors[index]['currentLivingArrg'],
-                              eligibilityTest: nearbyDonors[index]['eligibilityTest'],
-                              futureDonationWillingness: nearbyDonors[index]['futureDonationWillingness'],
+                  child: Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          timeAgo,
+                          style: const TextStyle(
+                            fontSize: 18, // Adjusted for better fit
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey,
+                          ),
+                        ),
+                        Align(
+                          alignment: Alignment.topRight,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.red[900],
+                              shape: BoxShape.circle,
+                            ),
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                              nearbyDonors[index]['bloodGroup'] ?? 'N/A',
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
-                        );
-                      },
-                      child: const Text('Details', style: TextStyle(color: Colors.white)),
+                        ),
+                        const SizedBox(height: 5),
+                        ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: CircleAvatar(
+                            radius: 30, // Adjust size as needed
+                            backgroundColor: Colors.black, // Fallback color
+                            child: ClipOval(
+                              child: donor['profileUrl'] != null &&
+                                  donor['profileUrl'].isNotEmpty
+                                  ? Image.network(
+                                nearbyDonors[index]['profileUrl'],
+                                width: 100, // 2 * radius
+                                height: 100,
+                                fit: BoxFit.cover,
+                              )
+                                  : const Icon(Icons.person,color: Colors.white,
+                                  size: 40), // Display default icon if no image
+                            ),
+                          ),
+                          title: Text(
+                            nearbyDonors[index]['name'] ?? 'Unknown',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                            softWrap: false,
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  const Icon(Icons.location_on_rounded, size: 16),
+                                  const SizedBox(width: 4),
+                                  Expanded(
+                                    child: Text(
+                                      nearbyDonors[index]['residence'] ?? 'Unknown',
+                                      style: const TextStyle(fontSize: 14),
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                "${donor['gender'] ?? 'N/A'} | ${donor['donations_done'] ?? '0'} donations done",
+                                style: const TextStyle(color: Colors.grey, fontSize: 14),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red[900],
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => DonorDetails(
+                                      patient: donor['name'],
+                                      contact: donor['contact'],
+                                      hospital: donor['hospital'],
+                                      residence: donor['residence'],
+                                      bloodGroup: donor['bloodGroup'],
+                                      gender: donor['gender'],
+                                      noOfDonations: donor['donations_done'],
+                                      details: donor['details'],
+                                      weight: donor['weight'],
+                                      age: donor['age'],
+                                      lastDonated: donor['lastDonated'],
+                                      donationFrequency: donor['donationFrequency'],
+                                      highestEducation: donor['highestEducation'],
+                                      currentOccupation: donor['currentOccupation'],
+                                      currentLivingArrg: donor['currentLivingArrg'],
+                                      eligibilityTest: donor['eligibilityTest'],
+                                      futureDonationWillingness: donor['futureDonationWillingness'],
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: const Text('Details', style: TextStyle(color: Colors.white)),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
                 );

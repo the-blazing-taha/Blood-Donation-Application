@@ -58,7 +58,7 @@ class _ProfileState extends State<Profile> {
                     children: [
                       CircleAvatar(
                         radius: 55, // Adjust size as needed
-                        backgroundColor: Colors.yellow[600], // Fallback color
+                        backgroundColor: Colors.grey[300], // Fallback color
                         child: ClipOval(
                           child: profileImageUrl != null &&
                                   profileImageUrl.isNotEmpty
@@ -69,7 +69,7 @@ class _ProfileState extends State<Profile> {
                                   fit: BoxFit.cover,
                                 )
                               : const Icon(Icons.person,
-                                  size: 40), // Display default icon if no image
+                                  size: 80), // Display default icon if no image
                         ),
                       ),
                     ],
@@ -262,16 +262,7 @@ class _EditProfileState extends State<EditProfile> {
                 ),
               ),
             ),
-            // SizedBox(height: 15),
-            // TextField(
-            //   decoration: InputDecoration(
-            //     prefixIcon: Icon(Icons.phone),
-            //     labelText: 'Phone No',
-            //     border: OutlineInputBorder(
-            //       borderRadius: BorderRadius.circular(30),
-            //     ),
-            //   ),
-            // ),
+
             SizedBox(height: 15),
             TextField(
               obscureText: true,
@@ -313,6 +304,7 @@ class Settings extends StatefulWidget {
 class _SettingsState extends State<Settings> {
   final AuthController _authController = AuthController();
   Uint8List? _image;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   selectGalleryImage() async {
     Uint8List im = await _authController.pickProfileImage(ImageSource.gallery);
@@ -330,6 +322,33 @@ class _SettingsState extends State<Settings> {
         _image = im;
       });
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    fetchDonorMode(); // Fetch donor mode asynchronously
+  }
+
+  void fetchDonorMode() async {
+    bool? mode = await _firebaseDatabase.getProfileDonorMode();
+    if (mounted) { // Prevent calling setState on an unmounted widget
+      setState(() {
+        donorMode = mode; // Set donorMode from Firestore
+      });
+    }
+  }
+
+  Future<bool?> getProfileDonorMode() async {
+    var userDoc = await FirebaseFirestore.instance
+        .collection('donors')
+        .doc(_auth.currentUser?.uid)
+        .get();
+
+    if (userDoc.exists) {
+      return userDoc.data()?['activity']; // Return Firestore value
+    }
+    return null; // Return null if no document found
   }
 
   Future<String?> getDocIDByName() async {
@@ -391,10 +410,7 @@ class _SettingsState extends State<Settings> {
               value: donorMode,
               onChanged: (bool value) async {
                 // Make the function async
-
-
                 String? docID = await getDocIDByName(); // Await the document ID
-
                 if (docID != null) {
                   setState(() {
                     donorMode = value;
