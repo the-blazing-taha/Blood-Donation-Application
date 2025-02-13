@@ -20,6 +20,7 @@ class NotificationController {
     await _setupMessageHandlers();
     final token=await _messaging.getToken();
     print('FCM Token: $token');
+
   }
   Future<void> _requestPermission() async {
     final settings = await _messaging.requestPermission(
