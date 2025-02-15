@@ -54,23 +54,37 @@ dependencies:
   web_socket_channel: ^3.0.1
   geocoding: ^3.0.0
   geolocator: ^13.0.2
-  flutter_launcher_icons: ^0.14.3
   carousel_slider: ^5.0.0
   firebase_messaging: ^15.2.1
   timeago: ^3.7.0
   cached_network_image: ^3.4.1
   firebase_analytics: ^11.4.2
   flutter_local_notifications: ^17.2.4
-#flutter_icons:
-#  android: true
-#  ios: true
-#  image_path: "icon.png"  # Path to your icon
-#  adaptive_icon_background: "#ffffff"  # (Optional) Android adaptive background
-#  adaptive_icon_foreground: "icon.png"  # (Optional) Foreground image
+  googleapis_auth: ^1.6.0
+
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_launcher_icons: ^0.14.3
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/icon.png"
+  min_sdk_android: 21 # android min sdk min:16, default 21
+#  web:
+#    generate: true
+#    image_path: "path/to/image.png"
+#    background_color: "#hexcode"
+#    theme_color: "#hexcode"
+#  windows:
+#    generate: true
+#    image_path: "path/to/image.png"
+#    icon_size: 48 # min:48, max:256, default: 48
+#  macos:
+#    generate: true
+#    image_path: "path/to/image.png"
 
 
   # The "flutter_lints" package below contains a set of recommended lints to

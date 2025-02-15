@@ -217,77 +217,81 @@ class _EditProfileState extends State<EditProfile> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Edit Profile'),
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        elevation: 0,
-        iconTheme: IconThemeData(color: Colors.black),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            CircleAvatar(
-              radius: 50,
-              backgroundImage: AssetImage(
-                  'assets/profile_placeholder.png'), // Replace with your image asset
-              child: Align(
-                alignment: Alignment.bottomRight,
-                child: CircleAvatar(
-                  radius: 15,
-                  backgroundColor: Colors.yellow,
-                  child: Icon(Icons.camera_alt, size: 16, color: Colors.black),
+    return SizedBox(
+      height: MediaQuery.of(context).size.height,
+      width: MediaQuery.of(context).size.width,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('Edit Profile'),
+          centerTitle: true,
+          backgroundColor: Colors.white,
+          elevation: 0,
+          iconTheme: IconThemeData(color: Colors.black),
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              CircleAvatar(
+                radius: 50,
+                backgroundImage: AssetImage(
+                    'assets/profile_placeholder.png'), // Replace with your image asset
+                child: Align(
+                  alignment: Alignment.bottomRight,
+                  child: CircleAvatar(
+                    radius: 15,
+                    backgroundColor: Colors.yellow,
+                    child: Icon(Icons.camera_alt, size: 16, color: Colors.black),
+                  ),
                 ),
               ),
-            ),
-            SizedBox(height: 20),
-            TextField(
-              decoration: InputDecoration(
-                prefixIcon: Icon(Icons.person),
-                labelText: 'Full Name',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30),
+              SizedBox(height: 20),
+              TextField(
+                decoration: InputDecoration(
+                  prefixIcon: Icon(Icons.person),
+                  labelText: 'Full Name',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
                 ),
               ),
-            ),
-            SizedBox(height: 15),
-            TextField(
-              decoration: InputDecoration(
-                prefixIcon: Icon(Icons.email),
-                labelText: 'E-Mail',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30),
+              SizedBox(height: 15),
+              TextField(
+                decoration: InputDecoration(
+                  prefixIcon: Icon(Icons.email),
+                  labelText: 'E-Mail',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
                 ),
               ),
-            ),
 
-            SizedBox(height: 15),
-            TextField(
-              obscureText: true,
-              decoration: InputDecoration(
-                prefixIcon: Icon(Icons.lock),
-                labelText: 'Password',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30),
+              SizedBox(height: 15),
+              TextField(
+                obscureText: true,
+                decoration: InputDecoration(
+                  prefixIcon: Icon(Icons.lock),
+                  labelText: 'Password',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
                 ),
               ),
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.yellow,
-                foregroundColor: Colors.black,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {},
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.yellow,
+                  foregroundColor: Colors.black,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  padding: EdgeInsets.symmetric(horizontal: 30, vertical: 10),
                 ),
-                padding: EdgeInsets.symmetric(horizontal: 30, vertical: 10),
+                child: Text('Edit Profile'),
               ),
-              child: Text('Edit Profile'),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

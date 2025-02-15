@@ -110,70 +110,74 @@ class _NearbyRequestorsState extends State<NearbyRequestors> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Nearby Blood Requestors",
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-        backgroundColor: Colors.red[900],
-        centerTitle: true,
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(10.0),
-            child: DropdownButtonFormField(
-              decoration: const InputDecoration(
-                labelText: "Select Blood Group",
-                border: OutlineInputBorder(),
+    return SizedBox(
+      height: MediaQuery.of(context).size.height,
+      width: MediaQuery.of(context).size.width,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text("Nearby Blood Requestors",
+              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+          backgroundColor: Colors.red[900],
+          centerTitle: true,
+        ),
+        body: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: DropdownButtonFormField(
+                decoration: const InputDecoration(
+                  labelText: "Select Blood Group",
+                  border: OutlineInputBorder(),
+                ),
+                value: selectedBloodGroup.isEmpty ? null : selectedBloodGroup,
+                items: bloodGroups.map((bg) => DropdownMenuItem(
+                  value: bg,
+                  child: Text(bg),
+                )).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    selectedBloodGroup = value!;
+                  });
+                },
               ),
-              value: selectedBloodGroup.isEmpty ? null : selectedBloodGroup,
-              items: bloodGroups.map((bg) => DropdownMenuItem(
-                value: bg,
-                child: Text(bg),
-              )).toList(),
-              onChanged: (value) {
-                setState(() {
-                  selectedBloodGroup = value!;
-                });
-              },
             ),
-          ),
-          ElevatedButton(
-            onPressed: isLoading || selectedBloodGroup.isEmpty
-                ? null
-                : startLocationTracking,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red[900],
+            ElevatedButton(
+              onPressed: isLoading || selectedBloodGroup.isEmpty
+                  ? null
+                  : startLocationTracking,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red[900],
+              ),
+              child: isLoading
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : const Text("Find Nearby Requestors", style: TextStyle(color: Colors.white)),
             ),
-            child: isLoading
-                ? const CircularProgressIndicator(color: Colors.white)
-                : const Text("Find Nearby Requestors", style: TextStyle(color: Colors.white)),
-          ),
-          Expanded(
-            child: nearbyRequestors.isEmpty
-                ? const Center(child: Text("No nearby requestors found"))
-                : ListView.builder(
-              itemCount: nearbyRequestors.length,
-              itemBuilder: (context, index) {
-                final requestor = nearbyRequestors[index];
-                var createdAt = requestor['createdAt'] != null
-                    ? (requestor['createdAt'] as Timestamp).toDate()
-                    : DateTime.now();
-                var timeAgo = timeago.format(createdAt);
-                return Card(
-                  margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  elevation: 4,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  child: ListTile(
-                    title: Text(requestor['name'] ?? 'Unknown',
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text("Requested ${requestor['bloodGroup']} blood $timeAgo"),
-                  ),
-                );
-              },
+            Expanded(
+              child: nearbyRequestors.isEmpty
+                  ? const Center(child: Text("No nearby requestors found"))
+                  : ListView.builder(
+                itemCount: nearbyRequestors.length,
+                itemBuilder: (context, index) {
+                  final requestor = nearbyRequestors[index];
+                  var createdAt = requestor['createdAt'] != null
+                      ? (requestor['createdAt'] as Timestamp).toDate()
+                      : DateTime.now();
+                  var timeAgo = timeago.format(createdAt);
+                  return Card(
+                    margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    child: ListTile(
+                      title: Text(requestor['name'] ?? 'Unknown',
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
+                      subtitle: Text("Requested ${requestor['bloodGroup']} blood $timeAgo"),
+                    ),
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

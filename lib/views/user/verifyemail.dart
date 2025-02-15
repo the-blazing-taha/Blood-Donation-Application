@@ -102,46 +102,50 @@ class _VerifyEmailState extends State<VerifyEmail> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Verify Email"),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(28.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text("Open your email and click the verification link!"),
-            if (countdown > 0)
-              Padding(
-                padding: const EdgeInsets.only(top: 10),
-                child: Text(
-                  "Link expires in ${countdown ~/ 60}:${(countdown % 60).toString().padLeft(2, '0')}",
-                  style: const TextStyle(color: Colors.red, fontSize: 18, fontWeight: FontWeight.bold),
+    return SizedBox(
+      height: MediaQuery.of(context).size.height,
+      width: MediaQuery.of(context).size.width,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text("Verify Email"),
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(28.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text("Open your email and click the verification link!"),
+              if (countdown > 0)
+                Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: Text(
+                    "Link expires in ${countdown ~/ 60}:${(countdown % 60).toString().padLeft(2, '0')}",
+                    style: const TextStyle(color: Colors.red, fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
                 ),
-              ),
+            ],
+          ),
+        ),
+        floatingActionButton: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            FloatingActionButton(
+              heroTag: "reload",
+              onPressed: checkVerification,
+              tooltip: "Reload",
+              child: const Icon(Icons.restart_alt_rounded),
+            ),
+            const SizedBox(height: 20),
+            FloatingActionButton(
+              heroTag: "sendAgain",
+              onPressed: (isSending || countdown > 0) ? null : sendVerifyLink,
+              tooltip: "Send Link Again",
+              child: isSending
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : const Icon(Icons.email),
+            ),
           ],
         ),
-      ),
-      floatingActionButton: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          FloatingActionButton(
-            heroTag: "reload",
-            onPressed: checkVerification,
-            tooltip: "Reload",
-            child: const Icon(Icons.restart_alt_rounded),
-          ),
-          const SizedBox(height: 20),
-          FloatingActionButton(
-            heroTag: "sendAgain",
-            onPressed: (isSending || countdown > 0) ? null : sendVerifyLink,
-            tooltip: "Send Link Again",
-            child: isSending
-                ? const CircularProgressIndicator(color: Colors.white)
-                : const Icon(Icons.email),
-          ),
-        ],
       ),
     );
   }

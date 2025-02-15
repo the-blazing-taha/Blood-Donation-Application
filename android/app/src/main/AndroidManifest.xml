@@ -3,7 +3,7 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
 
     <application
-        android:label="blood"
+        android:label="Life Sync"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

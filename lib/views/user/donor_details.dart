@@ -66,407 +66,407 @@ class DonorDetailsState extends State<DonorDetails> {
     final String eligibilityTest = widget.eligibilityTest;
     final String futureDonationWillingness = widget.futureDonationWillingness;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Donor Details',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        leading: IconButton(
-          icon: const Icon(
-            Icons.menu,
-            color: Colors.white,
-          ),
-          onPressed: () {
-            Scaffold.of(context).openDrawer();
-          },
-        ),
-        backgroundColor: Colors.red[900],
-        centerTitle: true,
-      ),
-      body: SizedBox(
-        height: MediaQuery.of(context).size.height,
-        width: MediaQuery.of(context).size.width,
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(
-                  height: 20,
-                ),
-                const Text("Patient Name:"),
-                const SizedBox(
-                  height: 5,
-                ),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    patientName,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const SizedBox(
-                  height: 20,
-                ),
-                const Text("Location:"),
-                const SizedBox(
-                  height: 5,
-                ),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    residence,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const SizedBox(
-                  height: 20,
-                ),
-                const Text("Blood Group:"),
-                const SizedBox(
-                  height: 5,
-                ),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    bloodGroup,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const SizedBox(
-                  height: 20,
-                ),
-                const Text("Hospital:"),
-                const SizedBox(
-                  height: 5,
-                ),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    hospital,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const SizedBox(
-                  height: 20,
-                ),
-                const Text("Gender:"),
-                const SizedBox(
-                  height: 5,
-                ),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    gender,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const SizedBox(
-                  height: 20,
-                ),
-                const Text("Details:"),
-                const SizedBox(
-                  height: 5,
-                ),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    details,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const SizedBox(
-                  height: 20,
-                ),
-                const Text("Contact Number:"),
-                const SizedBox(
-                  height: 5,
-                ),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    contact,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(
-                  height: 20,
-                ),
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                const Text("Weight (Kg):"),
-                const SizedBox(
-                  height: 5,
-                ),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    weight.toString(),
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-
-
-                const SizedBox(
-                  height: 20,
-                ),
-                const Text("Age:"),
-                const SizedBox(
-                  height: 5,
-                ),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    age.toString(),
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-
-
-                const SizedBox(
-                  height: 20,
-                ),
-                const Text("Last Donated blood:"),
-                const SizedBox(
-                  height: 5,
-                ),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    lastDonated,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-
-
-                const SizedBox(
-                  height: 20,
-                ),
-                const Text("Donation Frequency:"),
-                const SizedBox(
-                  height: 5,
-                ),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    donationFrequency,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-
-
-                const SizedBox(
-                  height: 20,
-                ),
-                const Text("Highest Education achieved:"),
-                const SizedBox(
-                  height: 5,
-                ),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    highestEducation,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(
-                  height: 20,
-                ),
-                const Text("Current Occupation:"),
-                const SizedBox(
-                  height: 5,
-                ),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    currentOccupation,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const SizedBox(
-                  height: 20,
-                ),
-                const Text("Current Living Arrangement:"),
-                const SizedBox(
-                  height: 5,
-                ),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    currentLivingArrg,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const SizedBox(
-                  height: 20,
-                ),
-                const Text("Tested for eligibility in last 6 months:"),
-                const SizedBox(
-                  height: 5,
-                ),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    eligibilityTest,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-
-
-
-                const SizedBox(
-                  height: 20,
-                ),
-                const Text("Number of donations done:"),
-                const SizedBox(
-                  height: 5,
-                ),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    noOfdonations.toString(),
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const SizedBox(
-                  height: 20,
-                ),
-                const Text("Would Donate in future? :"),
-                const SizedBox(
-                  height: 5,
-                ),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    futureDonationWillingness,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const SizedBox(
-                  height: 15,
-                ),
-
-
-
-
-
-
-
-
-                Container(
-                  alignment: Alignment.center,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // Respond to button press
-                    },
-                    style: ElevatedButton.styleFrom(
-                      foregroundColor: Colors.white,
-                      backgroundColor: Colors.red[900], // Background color
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 120, vertical: 10), // Padding
-                      shape: RoundedRectangleBorder(
-                        borderRadius:
-                        BorderRadius.circular(10), // Rounded corners
-                      ),
-                      elevation: 5, // Shadow elevation
-                    ),
-                    child: const Text(
-                      'Call',
-                      style: TextStyle(
-                        fontSize: 18, // Font size
-                        fontWeight: FontWeight.bold, // Font weight
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(
-                  height: 10,
-                ),
-                Container(
-                  alignment: Alignment.center,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // Respond to button press
-                    },
-                    style: ElevatedButton.styleFrom(
-                      foregroundColor: Colors.red[900],
-                      // backgroundColor: , // Background color
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 100, vertical: 10), // Padding
-                      shape: RoundedRectangleBorder(
-                        borderRadius:
-                        BorderRadius.circular(10), // Rounded corners
-                      ),
-            
-                      elevation: 5, // Shadow elevation
-                    ),
-                    child: const Text(
-                      'Message',
-                      style: TextStyle(
-                        fontSize: 18, // Font size
-                        fontWeight: FontWeight.bold, // Font weight
-                      ),
-                    ),
-                  ),
-                )
-              ],
+    return SizedBox(
+      height: MediaQuery.of(context).size.height,
+      width: MediaQuery.of(context).size.width,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text(
+            'Donor Details',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
             ),
           ),
+          leading: IconButton(
+            icon: const Icon(
+              Icons.menu,
+              color: Colors.white,
+            ),
+            onPressed: () {
+              Scaffold.of(context).openDrawer();
+            },
+          ),
+          backgroundColor: Colors.red[900],
+          centerTitle: true,
         ),
+        body: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  const Text("Patient Name:"),
+                  const SizedBox(
+                    height: 5,
+                  ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      patientName,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  const Text("Location:"),
+                  const SizedBox(
+                    height: 5,
+                  ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      residence,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  const Text("Blood Group:"),
+                  const SizedBox(
+                    height: 5,
+                  ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      bloodGroup,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  const Text("Hospital:"),
+                  const SizedBox(
+                    height: 5,
+                  ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      hospital,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  const Text("Gender:"),
+                  const SizedBox(
+                    height: 5,
+                  ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      gender,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  const Text("Details:"),
+                  const SizedBox(
+                    height: 5,
+                  ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      details,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  const Text("Contact Number:"),
+                  const SizedBox(
+                    height: 5,
+                  ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      contact,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(
+                    height: 20,
+                  ),
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                  const Text("Weight (Kg):"),
+                  const SizedBox(
+                    height: 5,
+                  ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      weight.toString(),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+
+
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  const Text("Age:"),
+                  const SizedBox(
+                    height: 5,
+                  ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      age.toString(),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+
+
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  const Text("Last Donated blood:"),
+                  const SizedBox(
+                    height: 5,
+                  ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      lastDonated,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+
+
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  const Text("Donation Frequency:"),
+                  const SizedBox(
+                    height: 5,
+                  ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      donationFrequency,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+
+
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  const Text("Highest Education achieved:"),
+                  const SizedBox(
+                    height: 5,
+                  ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      highestEducation,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  const Text("Current Occupation:"),
+                  const SizedBox(
+                    height: 5,
+                  ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      currentOccupation,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  const Text("Current Living Arrangement:"),
+                  const SizedBox(
+                    height: 5,
+                  ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      currentLivingArrg,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  const Text("Tested for eligibility in last 6 months:"),
+                  const SizedBox(
+                    height: 5,
+                  ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      eligibilityTest,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+
+
+
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  const Text("Number of donations done:"),
+                  const SizedBox(
+                    height: 5,
+                  ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      noOfdonations.toString(),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  const Text("Would Donate in future? :"),
+                  const SizedBox(
+                    height: 5,
+                  ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      futureDonationWillingness,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 15,
+                  ),
+
+
+
+
+
+
+
+
+                  // Container(
+                  //   alignment: Alignment.center,
+                  //   child: ElevatedButton(
+                  //     onPressed: () {
+                  //       // Respond to button press
+                  //     },
+                  //     style: ElevatedButton.styleFrom(
+                  //       foregroundColor: Colors.white,
+                  //       backgroundColor: Colors.red[900], // Background color
+                  //       padding: const EdgeInsets.symmetric(
+                  //           horizontal: 120, vertical: 10), // Padding
+                  //       shape: RoundedRectangleBorder(
+                  //         borderRadius:
+                  //         BorderRadius.circular(10), // Rounded corners
+                  //       ),
+                  //       elevation: 5, // Shadow elevation
+                  //     ),
+                  //     child: const Text(
+                  //       'Call',
+                  //       style: TextStyle(
+                  //         fontSize: 18, // Font size
+                  //         fontWeight: FontWeight.bold, // Font weight
+                  //       ),
+                  //     ),
+                  //   ),
+                  // ),
+                  // const SizedBox(
+                  //   height: 10,
+                  // ),
+                  // Container(
+                  //   alignment: Alignment.center,
+                  //   child: ElevatedButton(
+                  //     onPressed: () {
+                  //       // Respond to button press
+                  //     },
+                  //     style: ElevatedButton.styleFrom(
+                  //       foregroundColor: Colors.red[900],
+                  //       // backgroundColor: , // Background color
+                  //       padding: const EdgeInsets.symmetric(
+                  //           horizontal: 100, vertical: 10), // Padding
+                  //       shape: RoundedRectangleBorder(
+                  //         borderRadius:
+                  //         BorderRadius.circular(10), // Rounded corners
+                  //       ),
+                  //
+                  //       elevation: 5, // Shadow elevation
+                  //     ),
+                  //     child: const Text(
+                  //       'Message',
+                  //       style: TextStyle(
+                  //         fontSize: 18, // Font size
+                  //         fontWeight: FontWeight.bold, // Font weight
+                  //       ),
+                  //     ),
+                  //   ),
+                  // )
+                ],
+              ),
+            ),
+          ),
       ),
     );
   }

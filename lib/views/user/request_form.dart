@@ -1,17 +1,22 @@
+import 'dart:convert';
 import 'dart:core';
+import 'dart:io';
+import 'dart:math';
 import 'package:blood/controllers/fireStoreDatabaseController.dart';
 import 'package:blood/views/user/profile.dart';
 import 'package:blood/views/user/registerdonor.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:googleapis_auth/auth_io.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
-import '../../controllers/databaseController.dart';
 import '../admin/blood_appeal_admin.dart';
 import 'home.dart';
 import 'my_requests.dart';
+import 'package:http/http.dart' as http;
 
 class RequestForm extends StatefulWidget {
   const RequestForm({super.key});
@@ -75,7 +80,6 @@ class _RequestFormState extends State<RequestForm> {
     'Sickle cell disease'
   ];
   bool vertical = false;
-  final DatabaseService _databaseService = DatabaseService.instance;
   final TextEditingController _locationController = TextEditingController();
   final fireStoreDatabaseController _firebaseDatabase = fireStoreDatabaseController();
 
@@ -143,6 +147,131 @@ class _RequestFormState extends State<RequestForm> {
     });
   }
 
+  final FirebaseAuth auth = FirebaseAuth.instance;
+  Position? currentPosition;
+  List<Map<String, dynamic>> nearbyDonors = [];
+  bool isLoading = false;
+  String selectedBloodGroup = '';
+  final FirebaseFirestore firestore = FirebaseFirestore.instance;
+  final String projectId = "blood-donation-applicati-30737";
+
+  final Map<String, List<String>> compatibleBloodGroups = {
+    'A+': ['A+', 'A-', 'O+', 'O-'],
+    'A-': ['A-', 'O-'],
+    'B+': ['B+', 'B-', 'O+', 'O-'],
+    'B-': ['B-', 'O-'],
+    'O+': ['O+', 'O-'],
+    'O-': ['O-'],
+    'AB+': ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'],
+    'AB-': ['A-', 'B-', 'O-', 'AB-'],
+  };
+
+  double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+    const double R = 6371;
+    double dLat = (lat2 - lat1) * pi / 180;
+    double dLon = (lon2 - lon1) * pi / 180;
+    double a = sin(dLat / 2) * sin(dLat / 2) +
+        cos(lat1 * pi / 180) *
+            cos(lat2 * pi / 180) *
+            sin(dLon / 2) *
+            sin(dLon / 2);
+    double c = 2 * atan2(sqrt(a), sqrt(1 - a));
+    return R * c;
+  }
+
+  Future<void> findNearbyDonors() async {
+    if (currentPosition == null || selectedBloodGroup.isEmpty) return;
+    setState(() {
+      isLoading = true;
+    });
+    double lat = currentPosition!.latitude;
+    double lon = currentPosition!.longitude;
+    double searchRadiusKm = 0.9;
+    double latChange = searchRadiusKm / 111.12;
+    double lonChange = searchRadiusKm / (111.12 * cos(lat * pi / 180));
+
+    try {
+      List<String> validBloodGroups = compatibleBloodGroups[selectedBloodGroup]!;
+      QuerySnapshot snapshot = await firestore
+          .collection('donors')
+          .where('latitude', isGreaterThanOrEqualTo: lat - latChange)
+          .where('latitude', isLessThanOrEqualTo: lat + latChange)
+          .where('longitude', isGreaterThanOrEqualTo: lon - lonChange)
+          .where('longitude', isLessThanOrEqualTo: lon + lonChange)
+          .where('activity', isEqualTo: true)
+          .where('bloodGroup', whereIn: validBloodGroups)
+          .where('userId', isNotEqualTo: auth.currentUser?.uid)
+          .get();
+
+      List<Map<String, dynamic>> usersNearby = snapshot.docs
+          .map((doc) => doc.data() as Map<String, dynamic>)
+          .where((data) {
+        double userLat = data['latitude'];
+        double userLon = data['longitude'];
+        return calculateDistance(lat, lon, userLat, userLon) <= searchRadiusKm;
+      }).toList();
+
+      setState(() {
+        nearbyDonors = usersNearby;
+        isLoading = false;
+      });
+    } catch (e) {
+      print("Error finding donors: $e");
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  Future<String> getAccessToken() async {
+    final serviceAccountJson = File("serviceaccount.json").readAsStringSync();
+    final credentials = ServiceAccountCredentials.fromJson(serviceAccountJson);
+    final client = await clientViaServiceAccount(credentials, ["https://www.googleapis.com/auth/cloud-platform"]);
+    return client.credentials.accessToken.data;
+  }
+
+  Future<void> sendNotifications() async {
+    final String accessToken = await getAccessToken();
+    final List tokens = nearbyDonors.map((donor) => donor['fcmToken']).toList();
+
+    for (String token in tokens) {
+      final message = {
+        "message": {
+          "token": token,
+          "notification": {
+            "title": "Urgent Blood Request!",
+            "body": "A patient near you needs your help. Please donate blood.",
+          },
+          "data": {
+            "type": "blood_request",
+            "click_action": "FLUTTER_NOTIFICATION_CLICK",
+          }
+        }
+      };
+
+      try {
+        final response = await http.post(
+          Uri.parse("https://fcm.googleapis.com/v1/projects/$projectId/messages:send"),
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer $accessToken",
+          },
+          body: jsonEncode(message),
+        );
+
+        if (response.statusCode == 200) {
+          print("Notification sent to $token");
+        } else {
+          print("Failed to send notification: ${response.body}");
+        }
+      } catch (e) {
+        print("Error sending notification: $e");
+      }
+    }
+  }
+
+
+
   @override
   Widget build(BuildContext context) {
     int selectedIndex = 0;
@@ -155,722 +284,729 @@ class _RequestFormState extends State<RequestForm> {
     signout() {
       FirebaseAuth.instance.signOut();
     }
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          "Request Form",
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        actions: [
-          IconButton(
-            splashRadius: 10,
-            padding: const EdgeInsets.all(1.0),
-            onPressed: () {},
-            icon: const Icon(
-              Icons.person,
+    return SizedBox(
+      height: MediaQuery.of(context).size.height,
+      width: MediaQuery.of(context).size.width,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text(
+            "Request Form",
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
-          )
-        ],
-        leading: Builder(
-          builder: (BuildContext context) {
-            return IconButton(
+          ),
+          actions: [
+            IconButton(
+              splashRadius: 10,
+              padding: const EdgeInsets.all(1.0),
+              onPressed: () {},
               icon: const Icon(
-                Icons.menu,
+                Icons.person,
                 color: Colors.white,
               ),
-              onPressed: () {
-                Scaffold.of(context).openDrawer();
-              },
-            );
-          },
-        ),
-        backgroundColor: Colors.red[900],
-        centerTitle: true,
-      ),
-      drawer: Opacity(
-        opacity: 0.6,
-        child: Drawer(
+            )
+          ],
+          leading: Builder(
+            builder: (BuildContext context) {
+              return IconButton(
+                icon: const Icon(
+                  Icons.menu,
+                  color: Colors.white,
+                ),
+                onPressed: () {
+                  Scaffold.of(context).openDrawer();
+                },
+              );
+            },
+          ),
           backgroundColor: Colors.red[900],
-          child: ListView(
-            padding: EdgeInsets.zero,
-            children: [
-              DrawerHeader(
-                decoration: BoxDecoration(
-                  color: Colors.red[900],
-                ),
-                child: const Text(
-                  'Life Sync',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 30),
-                ),
-              ),
-              ListTile(
-                leading: const Icon(
-                  Icons.home,
-                  color: Colors.white,
-                ),
-                title: const Text(
-                  'Home',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16),
-                ),
-                selected: selectedIndex == 0,
-                onTap: () {
-                  onItemTapped(0);
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const Home(),
-                    ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(
-                  Icons.bloodtype_sharp,
-                  color: Colors.white,
-                ),
-                title: const Text(
-                  'Your Requests',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16),
-                ),
-                selected: selectedIndex == 1,
-                onTap: () {
-                  onItemTapped(1);
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const Requests(),
-                    ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(
-                  Icons.people,
-                  color: Colors.white,
-                ),
-                title: const Text(
-                  'All Donors',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16),
-                ),
-                selected: selectedIndex == 2,
-                onTap: () {
-                  onItemTapped(2);
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const DonorList(),
-                    ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(
-                  Icons.person,
-                  color: Colors.white,
-                ),
-                title: const Text('Register as Donor',
+          centerTitle: true,
+        ),
+        drawer: Opacity(
+          opacity: 0.6,
+          child: Drawer(
+            backgroundColor: Colors.red[900],
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                DrawerHeader(
+                  decoration: BoxDecoration(
+                    color: Colors.red[900],
+                  ),
+                  child: const Text(
+                    'Life Sync',
                     style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
-                        fontSize: 16)),
-                selected: selectedIndex == 3,
-                onTap: () {
-                  onItemTapped(3);
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const RequestDonor(),
-                    ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(
-                  Icons.request_page,
-                  color: Colors.white,
+                        fontSize: 30),
+                  ),
                 ),
-                title: const Text('Add Blood Request',
+                ListTile(
+                  leading: const Icon(
+                    Icons.home,
+                    color: Colors.white,
+                  ),
+                  title: const Text(
+                    'Home',
                     style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
-                        fontSize: 16)),
-                selected: selectedIndex == 4,
-                onTap: () {
-                  onItemTapped(4);
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const RequestForm(),
-                    ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(
-                  Icons.request_page,
-                  color: Colors.white,
+                        fontSize: 16),
+                  ),
+                  selected: selectedIndex == 0,
+                  onTap: () {
+                    onItemTapped(0);
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const Home(),
+                      ),
+                    );
+                  },
                 ),
-                title: const Text('Profile',
+                ListTile(
+                  leading: const Icon(
+                    Icons.bloodtype_sharp,
+                    color: Colors.white,
+                  ),
+                  title: const Text(
+                    'Your Requests',
                     style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
-                        fontSize: 16)),
-                selected: selectedIndex == 5,
-                onTap: () {
-                  onItemTapped(5);
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => Profile(),
-                    ),
-                  );
-                },
-              ),
+                        fontSize: 16),
+                  ),
+                  selected: selectedIndex == 1,
+                  onTap: () {
+                    onItemTapped(1);
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const Requests(),
+                      ),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(
+                    Icons.people,
+                    color: Colors.white,
+                  ),
+                  title: const Text(
+                    'All Donors',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16),
+                  ),
+                  selected: selectedIndex == 2,
+                  onTap: () {
+                    onItemTapped(2);
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const DonorList(),
+                      ),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(
+                    Icons.person,
+                    color: Colors.white,
+                  ),
+                  title: const Text('Register as Donor',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16)),
+                  selected: selectedIndex == 3,
+                  onTap: () {
+                    onItemTapped(3);
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const RequestDonor(),
+                      ),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(
+                    Icons.request_page,
+                    color: Colors.white,
+                  ),
+                  title: const Text('Add Blood Request',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16)),
+                  selected: selectedIndex == 4,
+                  onTap: () {
+                    onItemTapped(4);
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const RequestForm(),
+                      ),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(
+                    Icons.request_page,
+                    color: Colors.white,
+                  ),
+                  title: const Text('Profile',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16)),
+                  selected: selectedIndex == 5,
+                  onTap: () {
+                    onItemTapped(5);
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => Profile(),
+                      ),
+                    );
+                  },
+                ),
 
-              ListTile(
-                leading: const Icon(
-                  Icons.logout,
-                  color: Colors.white,
+                ListTile(
+                  leading: const Icon(
+                    Icons.logout,
+                    color: Colors.white,
+                  ),
+                  title: const Text('Log Out',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16)),
+                  selected: selectedIndex == 6,
+                  onTap: () {
+                    onItemTapped(6);
+                    Navigator.pop(context);
+                    signout();
+                  },
                 ),
-                title: const Text('Log Out',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16)),
-                selected: selectedIndex == 6,
-                onTap: () {
-                  onItemTapped(6);
-                  Navigator.pop(context);
-                  signout();
-                },
-              ),
 
-              // Other ListTiles...
-            ],
+                // Other ListTiles...
+              ],
+            ),
           ),
         ),
-      ),
-      body: SizedBox(
-        height: MediaQuery.of(context).size.height,
-        width: MediaQuery.of(context).size.width,
-        child: Padding(
-          padding: const EdgeInsets.all(15),
-          child: Form(
-            key: formkey,
-            child: Center(
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    const Text(
-                      'Patient Details',
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    const Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'Patient Name',
-                        style: TextStyle(fontWeight: FontWeight.bold),
+        body: SizedBox(
+          height: MediaQuery.of(context).size.height,
+          width: MediaQuery.of(context).size.width,
+          child: Padding(
+            padding: const EdgeInsets.all(15),
+            child: Form(
+              key: formkey,
+              child: Center(
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(
+                        height: 10,
                       ),
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    TextFormField(
-                      onChanged: (value) {
-                        setState(() {
-                          patient = value;
-                        });
-                      },
-                      decoration: InputDecoration(
-                        // label: const Text('Number of Bags'),
-                        hintText: 'e.g Mohammad Aliar',
-                        enabledBorder: OutlineInputBorder(
-                          borderSide:
-                              BorderSide(color: Colors.red[900]!, width: 2.5),
-                          borderRadius: BorderRadius.circular(5),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Colors.red[900]!,
-                            width: 3,
-                          ),
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        errorBorder: OutlineInputBorder(
-                          borderSide: const BorderSide(
-                            color: Colors.red,
-                            width: 2,
-                          ),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
+                      const Text(
+                        'Patient Details',
+                        style:
+                            TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
                       ),
-                    ),
-                    const SizedBox(
-                      height: 15,
-                    ),
-                    const Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'Contact',
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                      const SizedBox(
+                        height: 10,
                       ),
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    IntlPhoneField(
-                      decoration: InputDecoration(
-                        hintText: '3221040476',
-                        border: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.red[900]!),
-                          borderRadius: BorderRadius.circular(100),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.red[900]!),
-                          borderRadius: BorderRadius.circular(
-                              10), // Red border color when focused
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.red[900]!),
-                          borderRadius: BorderRadius.circular(
-                              10), // Red border color when enabled
-                        ),
-                      ),
-                      initialCountryCode: 'PK',
-                      onChanged: (phone) {
-                        setState(() {
-                          contact = phone.completeNumber;
-                          });
-                      },
-                    ),
-                    const Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'Hospital Name',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    TextFormField(
-                      onChanged: (value) {
-                        hospital = value;
-                      },
-                      decoration: InputDecoration(
-                        hintText: 'e.g Lahore Children Hospital',
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Colors.red[900]!,
-                            width: 3,
-                          ),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Colors.red[900]!,
-                            width: 3,
-                          ),
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        errorBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Colors.red[900]!,
-                            width: 2,
-                          ),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 15,
-                    ),
-                    const Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'Residence',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    TextFormField(
-                      controller: _locationController,
-                      onChanged: (value) {
-                        setState(() {
-                          residence = value;
-                        });
-                      },
-                      decoration: InputDecoration(
-                        hintText:
-                        'e.g House. 131, Street 2, Gulberg Sukh Chayn Gardens Lahore, District Kasur',
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Colors.red[900]!,
-                            width: 3,
-                          ),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Colors.red[900]!,
-                            width: 3,
-                          ),
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        errorBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Colors.red[900]!,
-                            width: 2,
-                          ),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        suffixIcon: IconButton(
-                          icon: Icon(Icons.my_location, color: Colors.red[900]),
+                      Center(
+                        child: isLoading
+                            ? CircularProgressIndicator()
+                            : ElevatedButton(
                           onPressed: () async {
-                            await _getCurrentPosition(); // Ensure position is fetched first
-                            if (_currentAddress.isNotEmpty) {
-                              setState(() {
-                                _locationController.text = _currentAddress;
-                                residence = _currentAddress;
-                              });
+                            await findNearbyDonors();
+                            if (nearbyDonors.isNotEmpty) {
+                              await sendNotifications();
                             }
                           },
+                          child: Text("Send Notification"),
                         ),
                       ),
-                    ),
-
-                    const SizedBox(
-                      height: 10,
-                    ),
-
-
-                    const Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'Case',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    DropdownMenu<String>(
-                      inputDecorationTheme: InputDecorationTheme(
-                        border: MaterialStateOutlineInputBorder.resolveWith(
-                          (states) => states.contains(WidgetState.focused)
-                              ? const OutlineInputBorder(
-                                  borderSide: BorderSide(color: Colors.red))
-                              : const OutlineInputBorder(
-                                  borderSide: BorderSide(
-                                    color: Colors.red,
-                                    width: 3,
-                                  ),
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(10.0))),
+                      const Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Patient Name',
+                          style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ),
-                      width: 325,
-                      initialSelection: list.first,
-                      onSelected: (value) {
-                        setState(() {
-                          donationCase = value!;
-                        });
-                      },
-                      dropdownMenuEntries:
-                          list.map<DropdownMenuEntry<String>>((String value) {
-                        return DropdownMenuEntry<String>(
-                            value: value, label: value);
-                      }).toList(),
-                    ),
-
-
-
-
-
-
-                    const SizedBox(
-                      height: 20,
-                    ),
-                    const Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'Bags',
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                      const SizedBox(
+                        height: 10,
                       ),
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    TextFormField(
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter
-                            .digitsOnly, // Ensures only digits are entered
-                      ],
-                      onChanged: (value) {
-                        setState(() {
-                          // Safely parse the string to an integer
-                          bags = int.tryParse(value) ??
-                              0; // If parsing fails, it will default to 0
-                        });
-                      },
-                      decoration: InputDecoration(
-                        hintText: 'e.g 3',
-                        enabledBorder: OutlineInputBorder(
-                          borderSide:
-                              BorderSide(color: Colors.red[900]!, width: 3),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Colors.red[900]!,
-                            width: 3,
-                          ),
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        errorBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Colors.red[900]!,
-                            width: 3,
-                          ),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 20,
-                    ),
-                    const Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'Details',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    TextFormField(
-                      onChanged: (value) {
-                        setState(() {
-                          details = value;
-                        });
-                      },
-                      decoration: InputDecoration(
-                        hintText:
-                            'e.g I have been suffering a lot so kindly give me the blood.',
-                        enabledBorder: OutlineInputBorder(
-                          borderSide:
-                              BorderSide(color: Colors.red[900]!, width: 2.5),
-                          borderRadius: BorderRadius.circular(5),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Colors.red[900]!,
-                            width: 3,
-                          ),
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        errorBorder: OutlineInputBorder(
-                          borderSide: const BorderSide(
-                            color: Colors.red,
-                            width: 2,
-                          ),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 20,
-                    ),
-                    const Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'Blood Group',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 20,
-                    ),
-                    Wrap(
-                      spacing: 20.0, // Add spacing between buttons
-                      runSpacing: 10.0, // Add spacing between rows
-                      children:
-                          List<Widget>.generate(groups.length, (int index) {
-                        return ChoiceChip(
-                          shadowColor: Colors.black,
-                          showCheckmark: false, // Remove the tick mark
-                          label: groups[index],
-                          selected: _selectedGroups[index],
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 1.0,
-                              vertical: 1.0), // Increase padding
-                          onSelected: (bool selected) {
-                            setState(() {
-                              if (_selectedGroups[index] && !selected) {
-                                // This block is executed when the chip is unselected
-                                _selectedGroups[index] = false;
-                                bloodGroup = '';
-                              } else {
-                                // Allow only one selection at a time
-                                for (int i = 0;
-                                    i < _selectedGroups.length;
-                                    i++) {
-                                  _selectedGroups[i] = false;
-                                }
-                                _selectedGroups[index] = selected;
-                                bloodGroup = (groups[index] as Text).data!;
-                              }
-                            });
-                          },
-                          side: BorderSide(
-                            color: Colors.red[900]!,
-                            width: 3.0, // Set the border thickness
-                          ),
-                          selectedColor: Colors.red[900],
-                          backgroundColor: Colors.white,
-                          labelStyle: TextStyle(
-                            fontWeight: FontWeight.w900,
-                            fontSize: 30,
-                            color: _selectedGroups[index]
-                                ? Colors.white
-                                : Colors.red[900],
-                          ),
-                        );
-                      }),
-                    ),
-                    const SizedBox(
-                      height: 20,
-                    ),
-                    const Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'Gender',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 20,
-                    ),
-                    Wrap(
-                      spacing: 13.0, // Add spacing between buttons
-                      runSpacing: 13.0, // Add spacing between rows
-                      children:
-                          List<Widget>.generate(genders.length, (int index) {
-                        return ChoiceChip(
-                          showCheckmark: false, // Remove the tick mark
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 20.0,
-                              vertical: 20.0), // Increase padding
-                          label: genders[index],
-                          selected: _selectedGenders[index],
-                          onSelected: (bool selected) {
-                            setState(() {
-                              if (_selectedGenders[index] && !selected) {
-                                // This block is executed when the chip is unselected
-                                _selectedGenders[index] = false;
-                                gender = '';
-                              } else {
-                                // Allow only one selection at a time
-                                for (int i = 0;
-                                    i < _selectedGenders.length;
-                                    i++) {
-                                  _selectedGenders[i] = false;
-                                }
-                                _selectedGenders[index] = selected;
-                                if (index == 0) {
-                                  gender = 'Male';
-                                } else if (index == 1) {
-                                  gender = 'Female';
-                                }
-                              }
-                            });
-                          },
-                          side: BorderSide(
-                            color: Colors.red[900]!,
-                            width: 3.0, // Set the border thickness
-                          ),
-                          selectedColor: Colors.red[900],
-                          backgroundColor: Colors.white,
-                        );
-                      }),
-                    ),
-                    const SizedBox(
-                      height: 30,
-                    ),
-                    Container(
-                      alignment: Alignment.center,
-                      child: ElevatedButton(
-                        onPressed: () async {
-                          if (donationCase != "None") {
-                            _databaseService.addRequest(
-                                patient,
-                                contact,
-                                hospital,
-                                residence,
-                                donationCase,
-                                bags,
-                                bloodGroup,
-                                gender,
-                                details);
-                            _firebaseDatabase.addRequest(patient, contact, hospital, residence, donationCase, bags, bloodGroup, gender, details);
-                          } else {
-                            print("ERROR: Case of donation not selected!");
-                          }
+                      TextFormField(
+                        onChanged: (value) {
+                          setState(() {
+                            patient = value;
+                          });
                         },
-                        style: ElevatedButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          backgroundColor: Colors.red[900], // Background color
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 30, vertical: 10), // Padding
-                          shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(10), // Rounded corners
+                        decoration: InputDecoration(
+                          // label: const Text('Number of Bags'),
+                          hintText: 'e.g Mohammad Aliar',
+                          enabledBorder: OutlineInputBorder(
+                            borderSide:
+                                BorderSide(color: Colors.red[900]!, width: 2.5),
+                            borderRadius: BorderRadius.circular(5),
                           ),
-                          elevation: 5, // Shadow elevation
-                        ),
-                        child: const Text(
-                          'Submit',
-                          style: TextStyle(
-                            fontSize: 18, // Font size
-                            fontWeight: FontWeight.bold, // Font weight
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Colors.red[900]!,
+                              width: 3,
+                            ),
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderSide: const BorderSide(
+                              color: Colors.red,
+                              width: 2,
+                            ),
+                            borderRadius: BorderRadius.circular(10),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(
+                        height: 15,
+                      ),
+                      const Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Contact',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      IntlPhoneField(
+                        decoration: InputDecoration(
+                          hintText: '3221040476',
+                          border: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.red[900]!),
+                            borderRadius: BorderRadius.circular(100),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.red[900]!),
+                            borderRadius: BorderRadius.circular(
+                                10), // Red border color when focused
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.red[900]!),
+                            borderRadius: BorderRadius.circular(
+                                10), // Red border color when enabled
+                          ),
+                        ),
+                        initialCountryCode: 'PK',
+                        onChanged: (phone) {
+                          setState(() {
+                            contact = phone.completeNumber;
+                            });
+                        },
+                      ),
+                      const Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Hospital Name',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      TextFormField(
+                        onChanged: (value) {
+                          hospital = value;
+                        },
+                        decoration: InputDecoration(
+                          hintText: 'e.g Lahore Children Hospital',
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Colors.red[900]!,
+                              width: 3,
+                            ),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Colors.red[900]!,
+                              width: 3,
+                            ),
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Colors.red[900]!,
+                              width: 2,
+                            ),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 15,
+                      ),
+                      const Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Residence',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      TextFormField(
+                        controller: _locationController,
+                        onChanged: (value) {
+                          setState(() {
+                            residence = value;
+                          });
+                        },
+                        decoration: InputDecoration(
+                          hintText:
+                          'e.g House. 131, Street 2, Gulberg Sukh Chayn Gardens Lahore, District Kasur',
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Colors.red[900]!,
+                              width: 3,
+                            ),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Colors.red[900]!,
+                              width: 3,
+                            ),
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Colors.red[900]!,
+                              width: 2,
+                            ),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          suffixIcon: IconButton(
+                            icon: Icon(Icons.my_location, color: Colors.red[900]),
+                            onPressed: () async {
+                              await _getCurrentPosition(); // Ensure position is fetched first
+                              if (_currentAddress.isNotEmpty) {
+                                setState(() {
+                                  _locationController.text = _currentAddress;
+                                  residence = _currentAddress;
+                                });
+                              }
+                            },
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(
+                        height: 10,
+                      ),
+
+
+                      const Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Case',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      DropdownMenu<String>(
+                        inputDecorationTheme: InputDecorationTheme(
+                          border: MaterialStateOutlineInputBorder.resolveWith(
+                            (states) => states.contains(WidgetState.focused)
+                                ? const OutlineInputBorder(
+                                    borderSide: BorderSide(color: Colors.red))
+                                : const OutlineInputBorder(
+                                    borderSide: BorderSide(
+                                      color: Colors.red,
+                                      width: 3,
+                                    ),
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(10.0))),
+                          ),
+                        ),
+                        width: 325,
+                        initialSelection: list.first,
+                        onSelected: (value) {
+                          setState(() {
+                            donationCase = value!;
+                          });
+                        },
+                        dropdownMenuEntries:
+                            list.map<DropdownMenuEntry<String>>((String value) {
+                          return DropdownMenuEntry<String>(
+                              value: value, label: value);
+                        }).toList(),
+                      ),
+
+
+
+
+
+
+                      const SizedBox(
+                        height: 20,
+                      ),
+                      const Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Bags',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      TextFormField(
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter
+                              .digitsOnly, // Ensures only digits are entered
+                        ],
+                        onChanged: (value) {
+                          setState(() {
+                            // Safely parse the string to an integer
+                            bags = int.tryParse(value) ??
+                                0; // If parsing fails, it will default to 0
+                          });
+                        },
+                        decoration: InputDecoration(
+                          hintText: 'e.g 3',
+                          enabledBorder: OutlineInputBorder(
+                            borderSide:
+                                BorderSide(color: Colors.red[900]!, width: 3),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Colors.red[900]!,
+                              width: 3,
+                            ),
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Colors.red[900]!,
+                              width: 3,
+                            ),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 20,
+                      ),
+                      const Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Details',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      TextFormField(
+                        onChanged: (value) {
+                          setState(() {
+                            details = value;
+                          });
+                        },
+                        decoration: InputDecoration(
+                          hintText:
+                              'e.g I have been suffering a lot so kindly give me the blood.',
+                          enabledBorder: OutlineInputBorder(
+                            borderSide:
+                                BorderSide(color: Colors.red[900]!, width: 2.5),
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Colors.red[900]!,
+                              width: 3,
+                            ),
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderSide: const BorderSide(
+                              color: Colors.red,
+                              width: 2,
+                            ),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 20,
+                      ),
+                      const Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Blood Group',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 20,
+                      ),
+                      Wrap(
+                        spacing: 20.0, // Add spacing between buttons
+                        runSpacing: 10.0, // Add spacing between rows
+                        children:
+                            List<Widget>.generate(groups.length, (int index) {
+                          return ChoiceChip(
+                            shadowColor: Colors.black,
+                            showCheckmark: false, // Remove the tick mark
+                            label: groups[index],
+                            selected: _selectedGroups[index],
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 1.0,
+                                vertical: 1.0), // Increase padding
+                            onSelected: (bool selected) {
+                              setState(() {
+                                if (_selectedGroups[index] && !selected) {
+                                  // This block is executed when the chip is unselected
+                                  _selectedGroups[index] = false;
+                                  bloodGroup = '';
+                                } else {
+                                  // Allow only one selection at a time
+                                  for (int i = 0;
+                                      i < _selectedGroups.length;
+                                      i++) {
+                                    _selectedGroups[i] = false;
+                                  }
+                                  _selectedGroups[index] = selected;
+                                  bloodGroup = (groups[index] as Text).data!;
+                                }
+                              });
+                            },
+                            side: BorderSide(
+                              color: Colors.red[900]!,
+                              width: 3.0, // Set the border thickness
+                            ),
+                            selectedColor: Colors.red[900],
+                            backgroundColor: Colors.white,
+                            labelStyle: TextStyle(
+                              fontWeight: FontWeight.w900,
+                              fontSize: 30,
+                              color: _selectedGroups[index]
+                                  ? Colors.white
+                                  : Colors.red[900],
+                            ),
+                          );
+                        }),
+                      ),
+                      const SizedBox(
+                        height: 20,
+                      ),
+                      const Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Gender',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 20,
+                      ),
+                      Wrap(
+                        spacing: 13.0, // Add spacing between buttons
+                        runSpacing: 13.0, // Add spacing between rows
+                        children:
+                            List<Widget>.generate(genders.length, (int index) {
+                          return ChoiceChip(
+                            showCheckmark: false, // Remove the tick mark
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20.0,
+                                vertical: 20.0), // Increase padding
+                            label: genders[index],
+                            selected: _selectedGenders[index],
+                            onSelected: (bool selected) {
+                              setState(() {
+                                if (_selectedGenders[index] && !selected) {
+                                  // This block is executed when the chip is unselected
+                                  _selectedGenders[index] = false;
+                                  gender = '';
+                                } else {
+                                  // Allow only one selection at a time
+                                  for (int i = 0;
+                                      i < _selectedGenders.length;
+                                      i++) {
+                                    _selectedGenders[i] = false;
+                                  }
+                                  _selectedGenders[index] = selected;
+                                  if (index == 0) {
+                                    gender = 'Male';
+                                  } else if (index == 1) {
+                                    gender = 'Female';
+                                  }
+                                }
+                              });
+                            },
+                            side: BorderSide(
+                              color: Colors.red[900]!,
+                              width: 3.0, // Set the border thickness
+                            ),
+                            selectedColor: Colors.red[900],
+                            backgroundColor: Colors.white,
+                          );
+                        }),
+                      ),
+                      const SizedBox(
+                        height: 30,
+                      ),
+                      Container(
+                        alignment: Alignment.center,
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            if (donationCase != "None") {
+                              _firebaseDatabase.addRequest(patient, contact, hospital, residence, donationCase, bags, bloodGroup, gender, details);
+                            } else {
+                              print("ERROR: Case of donation not selected!");
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            foregroundColor: Colors.white,
+                            backgroundColor: Colors.red[900], // Background color
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 30, vertical: 10), // Padding
+                            shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(10), // Rounded corners
+                            ),
+                            elevation: 5, // Shadow elevation
+                          ),
+                          child: const Text(
+                            'Submit',
+                            style: TextStyle(
+                              fontSize: 18, // Font size
+                              fontWeight: FontWeight.bold, // Font weight
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
