@@ -48,8 +48,9 @@ class fireStoreDatabaseController {
         'longitude': position.longitude,
         'latitude': position.latitude,
         'createdAt': Timestamp.now(),
-        'profileUrl': profileUrl,
-        'fcmToken': fcmToken
+        'profileUrl': profileUrl ?? "",
+        'email': _auth.currentUser?.email
+
       });
       res = "Request added successfully!";
     } catch (e) {
@@ -141,7 +142,6 @@ class fireStoreDatabaseController {
       Position position = await _determinePosition();
       DocumentReference donorRef = firestore.collection('donors').doc(_auth.currentUser?.uid);
       String? profileUrl = await getProfileUrl();
-      String? fcmToken = await FirebaseMessaging.instance.getToken();
 
       await donorRef.set({
         'docId': donorRef.id,
@@ -168,7 +168,7 @@ class fireStoreDatabaseController {
         'createdAt': Timestamp.now(),
         'activity' :true,
         'profileUrl':profileUrl,
-        'fcmToken': fcmToken
+        'email': _auth.currentUser?.email
       });
       res = "Donation appeal added successfully!";
     } catch (e) {

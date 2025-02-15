@@ -11,6 +11,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 import 'package:googleapis_auth/auth_io.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import '../admin/blood_appeal_admin.dart';
@@ -77,7 +79,9 @@ class _RequestFormState extends State<RequestForm> {
     'Anemia',
     'Cancer',
     'Hemophilia',
-    'Sickle cell disease'
+    'Sickle cell disease',
+    'Weakness',
+    'Operational Blood loss'
   ];
   bool vertical = false;
   final TextEditingController _locationController = TextEditingController();
@@ -628,7 +632,6 @@ class _RequestFormState extends State<RequestForm> {
                           ),
                         ),
                         width: 325,
-                        initialSelection: list.first,
                         onSelected: (value) {
                           setState(() {
                             donationCase = value!;
@@ -642,17 +645,13 @@ class _RequestFormState extends State<RequestForm> {
                       ),
 
 
-
-
-
-
                       const SizedBox(
                         height: 20,
                       ),
                       const Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          'Bags',
+                          'Quantity of blood needed',
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ),
@@ -861,7 +860,30 @@ class _RequestFormState extends State<RequestForm> {
                         child: ElevatedButton(
                           onPressed: () async {
                             if (donationCase != "None") {
-                              _firebaseDatabase.addRequest(patient, contact, hospital, residence, donationCase, bags, bloodGroup, gender, details);
+                              try {
+                                _firebaseDatabase.addRequest(
+                                    patient,
+                                    contact,
+                                    hospital,
+                                    residence,
+                                    donationCase,
+                                    bags,
+                                    bloodGroup,
+                                    gender,
+                                    details);
+                              }
+                              catch(e){
+                                Get.snackbar('Warning:', e.toString(),
+                                    backgroundColor: Colors.red,
+                                    colorText: Colors.white,
+                                    margin: const EdgeInsets.all(
+                                      15,
+                                    ),
+                                    icon: const Icon(
+                                      Icons.message,
+                                      color: Colors.white,
+                                    ));
+                              }
                             } else {
                               print("ERROR: Case of donation not selected!");
                             }

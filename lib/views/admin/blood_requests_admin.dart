@@ -241,7 +241,7 @@ class _BloodRequestsAdminState extends State<BloodRequestsAdmin> {
                                           case_: request.case_,
                                           bags: request.bags,
                                           bloodGroup: request.bloodGroup,
-                                          gender: request.gender,
+                                          gender: request.gender, email: null,
                                         ),
                                       ),
                                     );

@@ -113,7 +113,8 @@ class _RequestDonorState extends State<RequestDonor> {
     'Industrial',
     'Farmer',
     'Clerk',
-    'Teacher'
+    'Teacher',
+    'Other'
   ];
 
   static List<String> living_arrangement = <String>[
@@ -722,6 +723,9 @@ class _RequestDonorState extends State<RequestDonor> {
                               ),
                             ),
                           ),
+                          const SizedBox(
+                            height: 15,
+                          ),
                           const Align(
                             alignment: Alignment.centerLeft,
                             child: Text(
@@ -762,6 +766,9 @@ class _RequestDonorState extends State<RequestDonor> {
                                 borderRadius: BorderRadius.circular(10),
                               ),
                             ),
+                          ),
+                          const SizedBox(
+                            height: 15,
                           ),
                           const Align(
                             alignment: Alignment.centerLeft,
@@ -804,6 +811,9 @@ class _RequestDonorState extends State<RequestDonor> {
                               ),
                             ),
                           ),
+                          const SizedBox(
+                            height: 15,
+                          ),
                           const Align(
                             alignment: Alignment.centerLeft,
                             child: Text(
@@ -844,6 +854,9 @@ class _RequestDonorState extends State<RequestDonor> {
                                   value: value, label: value);
                             }).toList(),
                           ),
+                          const SizedBox(
+                            height: 15,
+                          ),
                           const Align(
                             alignment: Alignment.centerLeft,
                             child: Text(
@@ -883,6 +896,9 @@ class _RequestDonorState extends State<RequestDonor> {
                                   value: value, label: value);
                             }).toList(),
                           ),
+                          const SizedBox(
+                            height: 15,
+                          ),
                           const Align(
                             alignment: Alignment.centerLeft,
                             child: Text(
@@ -920,6 +936,9 @@ class _RequestDonorState extends State<RequestDonor> {
                               return DropdownMenuEntry<String>(
                                   value: value, label: value);
                             }).toList(),
+                          ),
+                          const SizedBox(
+                            height: 15,
                           ),
                           const Align(
                             alignment: Alignment.centerLeft,
@@ -977,6 +996,9 @@ class _RequestDonorState extends State<RequestDonor> {
                                 },
                               ),
                             ),
+                          const SizedBox(
+                            height: 15,
+                          ),
                           const Align(
                             alignment: Alignment.centerLeft,
                             child: Text(
@@ -1016,6 +1038,9 @@ class _RequestDonorState extends State<RequestDonor> {
                                   value: value, label: value);
                             }).toList(),
                           ),
+                          const SizedBox(
+                            height: 15,
+                          ),
                           const Align(
                             alignment: Alignment.centerLeft,
                             child: Text(
@@ -1054,6 +1079,9 @@ class _RequestDonorState extends State<RequestDonor> {
                               return DropdownMenuEntry<String>(
                                   value: value, label: value);
                             }).toList(),
+                          ),
+                          const SizedBox(
+                            height: 15,
                           ),
                           const Align(
                             alignment: Alignment.centerLeft,

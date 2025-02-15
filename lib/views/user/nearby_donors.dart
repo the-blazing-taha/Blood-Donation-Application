@@ -304,6 +304,8 @@ class _NearbyDonorsState extends State<NearbyDonors> {
                                         currentLivingArrg: donor['currentLivingArrg'],
                                         eligibilityTest: donor['eligibilityTest'],
                                         futureDonationWillingness: donor['futureDonationWillingness'],
+                                        email: donor['profileUrl'],
+
                                       ),
                                     ),
                                   );

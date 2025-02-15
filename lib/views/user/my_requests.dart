@@ -711,6 +711,7 @@ class _RequestsState extends State<Requests> {
                                           bags: data['bags'],
                                           bloodGroup: data['bloodGroup'],
                                           gender: data['gender'],
+                                          email: data['profileUrl'],
                                         ),
                                       ),
                                     );

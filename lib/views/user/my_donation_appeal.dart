@@ -703,6 +703,7 @@ class _HomeState extends State<DonationAppeal> {
                                               currentLivingArrg: data['currentLivingArrg'],
                                               eligibilityTest: data['eligibilityTest'],
                                               futureDonationWillingness: data['futureDonationWillingness'],
+                                              email: data['profileUrl'],
                                             ),
                                           ),
                                         );

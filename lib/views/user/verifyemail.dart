@@ -15,7 +15,7 @@ class VerifyEmail extends StatefulWidget {
 
 class _VerifyEmailState extends State<VerifyEmail> {
   bool isSending = false;
-  int countdown = 120; // 5 minutes
+  int countdown = 120; // 2 minutes
   Timer? timer;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
@@ -31,7 +31,7 @@ class _VerifyEmailState extends State<VerifyEmail> {
     timer = Timer.periodic(const Duration(seconds: 1), (timer) async {
       if (countdown > 0) {
         setState(() => countdown--);
-        if (countdown % 5 == 0) { // Check verification only every 5 seconds
+        if (countdown % 5 == 0) {
           await checkVerification();
         }
       } else {
@@ -41,11 +41,10 @@ class _VerifyEmailState extends State<VerifyEmail> {
     });
   }
 
-
   // Function to check email verification status
   Future<void> checkVerification() async {
-    await FirebaseAuth.instance.currentUser!.reload();
-    if (FirebaseAuth.instance.currentUser!.emailVerified) {
+    await _auth.currentUser!.reload();
+    if (_auth.currentUser!.emailVerified) {
       timer?.cancel();
       Get.offAll(() => const Wrapper());
     }
@@ -54,41 +53,44 @@ class _VerifyEmailState extends State<VerifyEmail> {
   // Function to handle expired link
   Future<void> handleExpiredLink() async {
     try {
-      final user = FirebaseAuth.instance.currentUser;
+      final user = _auth.currentUser;
       if (user != null) {
         await user.delete();
-        await FirebaseFirestore.instance.collection('users').doc(_auth.currentUser?.uid).delete();
-        Get.to(RegisterScreen()); // Move navigation inside try block
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).delete();
+        Get.to(() => const RegisterScreen());
       }
     } catch (e) {
-      Get.snackbar('Error', 'Failed to delete user: ${e.toString()}',
-          margin: const EdgeInsets.all(30),
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red,
-          colorText: Colors.white);
+      Get.snackbar(
+        'Error', 'Failed to delete user: ${e.toString()}',
+        margin: const EdgeInsets.all(20),
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
     }
   }
 
-
   // Function to send the email verification link
   Future<void> sendVerifyLink() async {
-    // if (isSending || countdown > 0) return;
     setState(() => isSending = true);
-
     try {
-      final user = FirebaseAuth.instance.currentUser!;
+      final user = _auth.currentUser!;
       await user.sendEmailVerification();
-      Get.snackbar('Link Sent', 'A link has been sent to your email.',
-          margin: const EdgeInsets.all(30),
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green,
-          colorText: Colors.white);
+      Get.snackbar(
+        'Link Sent', 'A verification link has been sent to your email.',
+        margin: const EdgeInsets.all(20),
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+      );
     } catch (e) {
-      Get.snackbar('Error', e.toString(),
-          margin: const EdgeInsets.all(30),
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red,
-          colorText: Colors.white);
+      Get.snackbar(
+        'Error', e.toString(),
+        margin: const EdgeInsets.all(20),
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
     } finally {
       setState(() => isSending = false);
     }
@@ -102,49 +104,74 @@ class _VerifyEmailState extends State<VerifyEmail> {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: MediaQuery.of(context).size.height,
-      width: MediaQuery.of(context).size.width,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text("Verify Email"),
-        ),
-        body: Padding(
-          padding: const EdgeInsets.all(28.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text("Open your email and click the verification link!"),
-              if (countdown > 0)
-                Padding(
-                  padding: const EdgeInsets.only(top: 10),
-                  child: Text(
-                    "Link expires in ${countdown ~/ 60}:${(countdown % 60).toString().padLeft(2, '0')}",
-                    style: const TextStyle(color: Colors.red, fontSize: 18, fontWeight: FontWeight.bold),
+    return Scaffold(
+      backgroundColor: Colors.blueGrey[50], // Light background
+      appBar: AppBar(
+        title: const Text("Email Verification"),
+        centerTitle: true,
+        backgroundColor: Colors.blueAccent,
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Card(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+            elevation: 5,
+            shadowColor: Colors.blueAccent,
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.email, size: 80, color: Colors.blueAccent),
+                  const SizedBox(height: 20),
+                  const Text(
+                    "Verify Your Email",
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                   ),
-                ),
-            ],
+                  const SizedBox(height: 10),
+                  const Text(
+                    "A verification link has been sent to your email. Please check your inbox and click the link to verify your account.",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 16),
+                  ),
+                  const SizedBox(height: 15),
+
+                  if (countdown > 0)
+                    Text(
+                      "Link expires in ${countdown ~/ 60}:${(countdown % 60).toString().padLeft(2, '0')}",
+                      style: const TextStyle(fontSize: 18, color: Colors.red, fontWeight: FontWeight.bold),
+                    ),
+
+                  const SizedBox(height: 20),
+                  ElevatedButton.icon(
+                    onPressed: checkVerification,
+                    icon: const Icon(Icons.refresh),
+                    label: const Text("Check Verification"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  ),
+
+                  const SizedBox(height: 15),
+                  ElevatedButton.icon(
+                    onPressed: (isSending || countdown > 0) ? null : sendVerifyLink,
+                    icon: isSending
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : const Icon(Icons.email),
+                    label: const Text("Resend Email"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-        ),
-        floatingActionButton: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            FloatingActionButton(
-              heroTag: "reload",
-              onPressed: checkVerification,
-              tooltip: "Reload",
-              child: const Icon(Icons.restart_alt_rounded),
-            ),
-            const SizedBox(height: 20),
-            FloatingActionButton(
-              heroTag: "sendAgain",
-              onPressed: (isSending || countdown > 0) ? null : sendVerifyLink,
-              tooltip: "Send Link Again",
-              child: isSending
-                  ? const CircularProgressIndicator(color: Colors.white)
-                  : const Icon(Icons.email),
-            ),
-          ],
         ),
       ),
     );

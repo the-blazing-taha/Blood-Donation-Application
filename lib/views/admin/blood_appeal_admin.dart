@@ -270,7 +270,7 @@ class _DonorListState extends State<DonorList> {
                                     currentOccupation: null,
                                     currentLivingArrg: null,
                                     eligibilityTest: null,
-                                    futureDonationWillingness: null,
+                                    futureDonationWillingness: null, email: null,
                                   ),
                                 ),
                               );

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-
 class Details extends StatefulWidget {
   final dynamic patient;
   final dynamic contact;
@@ -10,17 +9,22 @@ class Details extends StatefulWidget {
   final dynamic bags;
   final dynamic bloodGroup;
   final dynamic gender;
+  final dynamic email;
+  final dynamic profileImage;
 
-  const Details(
-      {super.key,
-      required this.patient,
-      required this.contact,
-      required this.hospital,
-      required this.residence,
-      required this.case_,
-      required this.bags,
-      required this.bloodGroup,
-      required this.gender});
+  const Details({
+    super.key,
+    required this.patient,
+    required this.contact,
+    required this.hospital,
+    required this.residence,
+    required this.case_,
+    required this.bags,
+    required this.bloodGroup,
+    required this.gender,
+    required this.email,
+    this.profileImage,
+  });
 
   @override
   DetailsState createState() => DetailsState();
@@ -29,262 +33,249 @@ class Details extends StatefulWidget {
 class DetailsState extends State<Details> {
   @override
   Widget build(BuildContext context) {
-    final String patientName = widget.patient; // Assuming patient is a String
-    final String contact = widget.contact;
-    final String hospital = widget.hospital;
-    final String residence = widget.residence;
-    final String case_ = widget.case_; // Assuming case_ is a String
-    final int bags = widget.bags; // Assuming bags is an int
-    final String bloodGroup = widget.bloodGroup;
-    final String gender = widget.gender;
-
-
-
-
-    return SizedBox(
-      height: MediaQuery.of(context).size.height,
-      width: MediaQuery.of(context).size.width,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text(
-            'Details',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          leading: IconButton(
-            icon: const Icon(
-              Icons.menu,
-              color: Colors.white,
-            ),
-            onPressed: () {
-              Scaffold.of(context).openDrawer();
-            },
-          ),
-          backgroundColor: Colors.red[900],
-          centerTitle: true,
+    return Scaffold(
+      backgroundColor: Colors.grey[100],
+      appBar: AppBar(
+        title: const Text(
+          'Patient Details',
+          style: TextStyle(color: Colors.white),
         ),
-
-
-        body: SizedBox(
-          height: MediaQuery.of(context).size.height,
-          width: MediaQuery.of(context).size.width,
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: SingleChildScrollView(
+        backgroundColor: Colors.red[900],
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Profile Section
+            Center(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  const Text("Patient Name:"),
-                  const SizedBox(
-                    height: 5,
-                  ),
-                   Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      patientName,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
+                  Center(
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        // Outer glowing circle
+                        Container(
+                          width: 130,
+                          height: 130,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.red.shade900,
+                                Colors.red.shade400
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.red.withOpacity(0.4),
+                                blurRadius: 15,
+                                spreadRadius: 5,
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Profile picture
+                        CircleAvatar(
+                          radius: 60,
+                          backgroundColor: Colors.white,
+                          child: ClipOval(
+                            child: widget.profileImage != null &&
+                                widget.profileImage.isNotEmpty
+                                ? Image.network(
+                              widget.profileImage,
+                              width: 120,
+                              height: 120,
+                              fit: BoxFit.cover,
+                            )
+                                : Container(
+                              width: 120,
+                              height: 120,
+                              decoration: BoxDecoration(
+                                color: Colors.grey[300],
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.person,
+                                size: 80,
+                                // color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(
-                    height: 20,
-                  ),
-                  const Text("Gender:"),
-                  const SizedBox(
-                    height: 5,
-                  ),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      gender,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 10, horizontal: 15),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.red.shade900, Colors.red.shade400],
+                        // Gradient effect
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
+                      borderRadius: BorderRadius.circular(20),
+                      // Smooth rounded edges
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.red.withOpacity(0.3),
+                          blurRadius: 8,
+                          spreadRadius: 2,
+                          offset: const Offset(2, 4), // Subtle shadow effect
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.email, color: Colors.white),
+                        // White email icon
+                        const SizedBox(width: 10),
+                        // Spacing
+                        Expanded(
+                          child: Text(
+                            widget.email,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white, // White text for contrast
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            // Prevents overflow
+                            maxLines: 3,
+                            softWrap: false,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(
-                    height: 20,
-                  ),
-                  const Text("Hospital:"),
-                  const SizedBox(
-                    height: 5,
-                  ),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      hospital,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 20,
-                  ),
-                  const Text("Location:"),
-                  const SizedBox(
-                    height: 5,
-                  ),
-                   Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      residence,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 20,
-                  ),
-                  const Text("Blood Group:"),
-                  const SizedBox(
-                    height: 5,
-                  ),
-                   Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      bloodGroup,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 20,
-                  ),
-                  const Text("Contact Number:"),
-                  const SizedBox(
-                    height: 5,
-                  ),
-                   Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      contact,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 20,
-                  ),
-                  const Text("Case:"),
-                  const SizedBox(
-                    height: 5,
-                  ),
-                   Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      case_,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 20,
-                  ),
-                  const Text("Number of Bags:"),
-                  const SizedBox(
-                    height: 5,
-                  ),
-                   Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      bags.toString(),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 20,
-                  ),
-                  const Text("Others:"),
-                  const SizedBox(
-                    height: 5,
-                  ),
-                  const Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'Needed Urgently',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 15,
-                  ),
-                  // Container(
-                  //   alignment: Alignment.center,
-                  //   child: ElevatedButton(
-                  //     onPressed: () {
-                  //       // Respond to button press
-                  //     },
-                  //     style: ElevatedButton.styleFrom(
-                  //       foregroundColor: Colors.white,
-                  //       backgroundColor: Colors.red[900], // Background color
-                  //       padding: const EdgeInsets.symmetric(
-                  //           horizontal: 120, vertical: 10), // Padding
-                  //       shape: RoundedRectangleBorder(
-                  //         borderRadius:
-                  //             BorderRadius.circular(10), // Rounded corners
-                  //       ),
-                  //       elevation: 5, // Shadow elevation
-                  //     ),
-                  //     child: const Text(
-                  //       'Call',
-                  //       style: TextStyle(
-                  //         fontSize: 18, // Font size
-                  //         fontWeight: FontWeight.bold, // Font weight
-                  //       ),
-                  //     ),
-                  //   ),
-                  // ),
-                  // const SizedBox(
-                  //   height: 10,
-                  // ),
-                  // Container(
-                  //   alignment: Alignment.center,
-                  //   child: ElevatedButton(
-                  //     onPressed: () {
-                  //       // Respond to button press
-                  //     },
-                  //     style: ElevatedButton.styleFrom(
-                  //       foregroundColor: Colors.red[900],
-                  //       // backgroundColor: , // Background color
-                  //       padding: const EdgeInsets.symmetric(
-                  //           horizontal: 100, vertical: 10), // Padding
-                  //       shape: RoundedRectangleBorder(
-                  //         borderRadius:
-                  //             BorderRadius.circular(10), // Rounded corners
-                  //       ),
-                  //
-                  //       elevation: 5, // Shadow elevation
-                  //     ),
-                  //     child: const Text(
-                  //       'Message',
-                  //       style: TextStyle(
-                  //         fontSize: 18, // Font size
-                  //         fontWeight: FontWeight.bold, // Font weight
-                  //       ),
-                  //     ),
-                  //   ),
-                  // )
+
                 ],
               ),
             ),
+            const SizedBox(height: 20),
+
+            // Information Cards
+            _infoCard("Patient Name", widget.patient),
+            _infoCard("Gender", widget.gender),
+            _infoCard("Hospital", widget.hospital),
+            _infoCard("Location", widget.residence),
+            _infoCard("Blood Group", widget.bloodGroup, highlight: true),
+            _infoCard("Contact Number", widget.contact),
+            _infoCard("Case", widget.case_),
+            _infoCard("Bags Needed", widget.bags.toString(), highlight: true),
+            _infoCard("Urgency", "Needed Urgently", highlight: true),
+
+            const SizedBox(height: 30),
+
+            // Call & Message Buttons
+            // Row(
+            //   mainAxisAlignment: MainAxisAlignment.center,
+            //   children: [
+            //     _actionButton(Icons.call, "Call", Colors.red[900]!, () {
+            //       // Add Call functionality
+            //     }),
+            //     const SizedBox(width: 20),
+            //     _actionButton(Icons.message, "Message", Colors.black, () {
+            //       // Add Message functionality
+            //     }),
+            //   ],
+            // ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Widget for displaying information inside a Card
+  Widget _infoCard(String title, String value, {bool highlight = false}) {
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(15.0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          // Aligns long text correctly
+          children: [
+            // Title (Fixed width to prevent shifting)
+            SizedBox(
+              width: 120, // Adjust as needed
+              child: Text(
+                title,
+                style: const TextStyle(fontSize: 16, color: Colors.black54),
+              ),
+            ),
+
+            const SizedBox(width: 10), // Adds spacing
+
+            // Expanded Text to handle long content
+            Expanded(
+              child: Text(
+                value,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: highlight ? Colors.red[900] : Colors.black,
+                ),
+                overflow: TextOverflow.ellipsis, // Truncates if needed
+                maxLines: 10, // Limits height
+                softWrap: true, // Allows wrapping
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+// Action Button Widget with Matching Decoration
+  Widget _actionButton(IconData icon, String label, VoidCallback onPressed) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 30),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.red.shade900, Colors.red.shade400],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.red.withOpacity(0.3),
+              blurRadius: 8,
+              spreadRadius: 2,
+              offset: const Offset(2, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: Colors.white),
+            const SizedBox(width: 10),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
+

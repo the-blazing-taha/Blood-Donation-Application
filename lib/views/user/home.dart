@@ -549,6 +549,8 @@ class _HomeState extends State<Home> {
                                                 currentLivingArrg: data['currentLivingArrg'],
                                                 eligibilityTest: data['eligibilityTest'],
                                                 futureDonationWillingness: data['futureDonationWillingness'],
+                                                profileImage:data['profileUrl'],
+                                                email: data['email'],
                                               ),
                                             ),
                                           );
@@ -738,6 +740,8 @@ class _HomeState extends State<Home> {
                                                 bags: data['bags'],
                                                 bloodGroup: data['bloodGroup'],
                                                 gender: data['gender'],
+                                                email: data['email'],
+                                                profileImage: data['profileUrl'],
                                               ),
                                             ),
                                           );

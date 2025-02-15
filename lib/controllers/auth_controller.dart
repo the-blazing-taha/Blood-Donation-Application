@@ -82,7 +82,7 @@ class AuthController{
 
   signout()async{
     await FirebaseAuth.instance.signOut();
-    Get.to(LoginScreen());
+    Get.offAll(LoginScreen()); // Clears the navigation stack
   }
 
   reset(String email)async{

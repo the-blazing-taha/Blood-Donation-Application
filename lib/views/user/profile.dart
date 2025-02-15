@@ -310,6 +310,7 @@ class _SettingsState extends State<Settings> {
   Uint8List? _image;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
+
   selectGalleryImage() async {
     Uint8List im = await _authController.pickProfileImage(ImageSource.gallery);
     if (mounted) {
