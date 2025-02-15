@@ -166,112 +166,6 @@ class _RequestFormState extends State<RequestForm> {
     'AB-': ['A-', 'B-', 'O-', 'AB-'],
   };
 
-  double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
-    const double R = 6371;
-    double dLat = (lat2 - lat1) * pi / 180;
-    double dLon = (lon2 - lon1) * pi / 180;
-    double a = sin(dLat / 2) * sin(dLat / 2) +
-        cos(lat1 * pi / 180) *
-            cos(lat2 * pi / 180) *
-            sin(dLon / 2) *
-            sin(dLon / 2);
-    double c = 2 * atan2(sqrt(a), sqrt(1 - a));
-    return R * c;
-  }
-
-  Future<void> findNearbyDonors() async {
-    if (currentPosition == null || selectedBloodGroup.isEmpty) return;
-    setState(() {
-      isLoading = true;
-    });
-    double lat = currentPosition!.latitude;
-    double lon = currentPosition!.longitude;
-    double searchRadiusKm = 0.9;
-    double latChange = searchRadiusKm / 111.12;
-    double lonChange = searchRadiusKm / (111.12 * cos(lat * pi / 180));
-
-    try {
-      List<String> validBloodGroups = compatibleBloodGroups[selectedBloodGroup]!;
-      QuerySnapshot snapshot = await firestore
-          .collection('donors')
-          .where('latitude', isGreaterThanOrEqualTo: lat - latChange)
-          .where('latitude', isLessThanOrEqualTo: lat + latChange)
-          .where('longitude', isGreaterThanOrEqualTo: lon - lonChange)
-          .where('longitude', isLessThanOrEqualTo: lon + lonChange)
-          .where('activity', isEqualTo: true)
-          .where('bloodGroup', whereIn: validBloodGroups)
-          .where('userId', isNotEqualTo: auth.currentUser?.uid)
-          .get();
-
-      List<Map<String, dynamic>> usersNearby = snapshot.docs
-          .map((doc) => doc.data() as Map<String, dynamic>)
-          .where((data) {
-        double userLat = data['latitude'];
-        double userLon = data['longitude'];
-        return calculateDistance(lat, lon, userLat, userLon) <= searchRadiusKm;
-      }).toList();
-
-      setState(() {
-        nearbyDonors = usersNearby;
-        isLoading = false;
-      });
-    } catch (e) {
-      print("Error finding donors: $e");
-      setState(() {
-        isLoading = false;
-      });
-    }
-  }
-
-  Future<String> getAccessToken() async {
-    final serviceAccountJson = File("serviceaccount.json").readAsStringSync();
-    final credentials = ServiceAccountCredentials.fromJson(serviceAccountJson);
-    final client = await clientViaServiceAccount(credentials, ["https://www.googleapis.com/auth/cloud-platform"]);
-    return client.credentials.accessToken.data;
-  }
-
-  Future<void> sendNotifications() async {
-    final String accessToken = await getAccessToken();
-    final List tokens = nearbyDonors.map((donor) => donor['fcmToken']).toList();
-
-    for (String token in tokens) {
-      final message = {
-        "message": {
-          "token": token,
-          "notification": {
-            "title": "Urgent Blood Request!",
-            "body": "A patient near you needs your help. Please donate blood.",
-          },
-          "data": {
-            "type": "blood_request",
-            "click_action": "FLUTTER_NOTIFICATION_CLICK",
-          }
-        }
-      };
-
-      try {
-        final response = await http.post(
-          Uri.parse("https://fcm.googleapis.com/v1/projects/$projectId/messages:send"),
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer $accessToken",
-          },
-          body: jsonEncode(message),
-        );
-
-        if (response.statusCode == 200) {
-          print("Notification sent to $token");
-        } else {
-          print("Failed to send notification: ${response.body}");
-        }
-      } catch (e) {
-        print("Error sending notification: $e");
-      }
-    }
-  }
-
-
-
   @override
   Widget build(BuildContext context) {
     int selectedIndex = 0;
@@ -526,19 +420,6 @@ class _RequestFormState extends State<RequestForm> {
                       ),
                       const SizedBox(
                         height: 10,
-                      ),
-                      Center(
-                        child: isLoading
-                            ? CircularProgressIndicator()
-                            : ElevatedButton(
-                          onPressed: () async {
-                            await findNearbyDonors();
-                            if (nearbyDonors.isNotEmpty) {
-                              await sendNotifications();
-                            }
-                          },
-                          child: Text("Send Notification"),
-                        ),
                       ),
                       const Align(
                         alignment: Alignment.centerLeft,
