@@ -61,7 +61,9 @@ dependencies:
   firebase_analytics: ^11.4.2
   flutter_local_notifications: ^17.2.4
   googleapis_auth: ^1.6.0
-
+  flutter_stripe: ^11.4.0
+  cloud_functions: ^5.3.2
+  permission_handler: ^11.3.1
 
 dev_dependencies:
   flutter_test:

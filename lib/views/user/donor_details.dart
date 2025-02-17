@@ -147,19 +147,6 @@ class DonorDetailsState extends State<DonorDetails> {
 
             const SizedBox(height: 30),
 
-            // Call & Message Buttons
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _actionButton(Icons.call, "Call", () {
-                  // Add Call functionality
-                }),
-                const SizedBox(width: 20),
-                _actionButton(Icons.message, "Message", () {
-                  // Add Message functionality
-                }),
-              ],
-            ),
           ],
         ),
       ),

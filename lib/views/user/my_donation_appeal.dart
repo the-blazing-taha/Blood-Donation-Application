@@ -12,6 +12,8 @@ import '../../controllers/auth_controller.dart';
 import '../../controllers/fireStoreDatabaseController.dart';
 import 'home.dart';
 import 'my_requests.dart';
+import 'nearby_donors.dart';
+import 'nearby_requestors.dart';
 
 class DonationAppeal extends StatefulWidget {
   const DonationAppeal({super.key});
@@ -243,6 +245,7 @@ class _HomeState extends State<DonationAppeal> {
         .where('userId', isEqualTo: auth.currentUser!.uid)
         .snapshots();
     final fireStoreDatabaseController firebaseDatabase = fireStoreDatabaseController();
+    final user=FirebaseFirestore.instance.collection('users').doc(auth.currentUser?.uid).get();
 
     return SizedBox(
       height: MediaQuery.of(context).size.height,
@@ -294,14 +297,72 @@ class _HomeState extends State<DonationAppeal> {
                   decoration: BoxDecoration(
                     color: Colors.red[900],
                   ),
-                  child: const Text(
-                    'Life Sync',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 30),
+                  child: Column(
+                    children: [
+                      const Text(
+                        'Life Sync',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 30),
+                      ),
+                      FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                        future: user,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const CircularProgressIndicator(); // Show a loading indicator
+                          } else if (snapshot.hasError) {
+                            return Text('Error: ${snapshot.error}'); // Handle errors
+                          } else if (snapshot.hasData && snapshot.data!.exists) {
+                            Map<String, dynamic>? userData = snapshot.data!.data();
+                            String? profileImageUrl = userData?['profileImage'];
+                            return Column(
+                              children: [
+                                CircleAvatar(
+                                  radius: 30, // Adjust size as needed
+                                  backgroundColor: Colors.grey[300], // Fallback color
+                                  child: ClipOval(
+                                    child: profileImageUrl != null && profileImageUrl.isNotEmpty
+                                        ? Image.network(
+                                      profileImageUrl,
+                                      width: 60, // 2 * radius
+                                      height: 60,
+                                      fit: BoxFit.cover,
+                                    )
+                                        : const Icon(Icons.person, size: 40), // Display default icon if no image
+                                  ),
+                                ),
+                              ],
+                            );
+                          } else {
+                            return const Text('No user data found.');
+                          }
+                        },
+                      ),
+                      FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                        future: user,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const CircularProgressIndicator(); // Show a loading indicator
+                          } else if (snapshot.hasError) {
+                            return Text('Error: ${snapshot.error}'); // Handle errors
+                          } else if (snapshot.hasData && snapshot.data!.exists) {
+                            Map<String, dynamic>? userData = snapshot.data!.data();
+                            String? userName = userData?['fullName'];
+                            return Column(
+                              children: [
+                                Text(userName as String, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold,fontFamily:'Pacifico' ),),
+                              ],
+                            );
+                          } else {
+                            return const Text('No user data found.');
+                          }
+                        },
+                      ),
+                    ],
                   ),
                 ),
+
                 ListTile(
                   leading: const Icon(
                     Icons.home,
@@ -352,7 +413,7 @@ class _HomeState extends State<DonationAppeal> {
                 ),
                 ListTile(
                   leading: const Icon(
-                    Icons.person,
+                    Icons.bloodtype_sharp,
                     color: Colors.white,
                   ),
                   title: const Text('Register as Donor',
@@ -374,10 +435,10 @@ class _HomeState extends State<DonationAppeal> {
                 ),
                 ListTile(
                   leading: const Icon(
-                    Icons.format_align_center,
+                    Icons.person,
                     color: Colors.white,
                   ),
-                    title: const Text('My Donor Registration',
+                  title: const Text('Your Donation Registration',
                       style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -433,7 +494,53 @@ class _HomeState extends State<DonationAppeal> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>  Profile(),
+                        builder: (context) => Profile(),
+                      ),
+                    );
+                  },
+                ),
+
+                ListTile(
+                  leading: const Icon(
+                    Icons.near_me,
+                    color: Colors.white,
+                  ),
+                  title: const Text('Nearby donors',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16)),
+                  selected: _selectedIndex == 7,
+                  onTap: () {
+                    _onItemTapped(7);
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const NearbyDonors(),
+                      ),
+                    );
+                  },
+                ),
+
+                ListTile(
+                  leading: const Icon(
+                    Icons.near_me_outlined,
+                    color: Colors.white,
+                  ),
+                  title: const Text('Nearby Requesters',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16)),
+                  selected: _selectedIndex == 8,
+                  onTap: () {
+                    _onItemTapped(8);
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const NearbyRequestors(),
                       ),
                     );
                   },
@@ -449,9 +556,9 @@ class _HomeState extends State<DonationAppeal> {
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                           fontSize: 16)),
-                  selected: _selectedIndex == 7,
+                  selected: _selectedIndex == 9,
                   onTap: () {
-                    _onItemTapped(7);
+                    _onItemTapped(9);
                     Navigator.pop(context);
                     _authController.signout();
                   },
@@ -461,7 +568,6 @@ class _HomeState extends State<DonationAppeal> {
             ),
           ),
         ),
-
 
         body: Column(
           children: [

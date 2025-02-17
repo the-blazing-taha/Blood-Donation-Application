@@ -175,19 +175,6 @@ class DetailsState extends State<Details> {
 
             const SizedBox(height: 30),
 
-            // Call & Message Buttons
-            // Row(
-            //   mainAxisAlignment: MainAxisAlignment.center,
-            //   children: [
-            //     _actionButton(Icons.call, "Call", Colors.red[900]!, () {
-            //       // Add Call functionality
-            //     }),
-            //     const SizedBox(width: 20),
-            //     _actionButton(Icons.message, "Message", Colors.black, () {
-            //       // Add Message functionality
-            //     }),
-            //   ],
-            // ),
           ],
         ),
       ),

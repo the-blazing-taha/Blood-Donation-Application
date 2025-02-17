@@ -23,7 +23,6 @@ class _NearbyDonorsState extends State<NearbyDonors> {
   List<Map<String, dynamic>> nearbyDonors = [];
   bool isLoading = false;
   String selectedBloodGroup = '';
-
   final List<String> bloodGroups = [
     'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'
   ];

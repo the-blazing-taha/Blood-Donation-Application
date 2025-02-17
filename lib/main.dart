@@ -1,8 +1,8 @@
 import 'dart:io';
-import 'package:blood/controllers/notificationController.dart';
 import 'package:blood/views/user/nearby_donors.dart';
 import 'package:blood/views/user/wrapper.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
@@ -13,9 +13,16 @@ void setLocale() {
   FirebaseAuth.instance
       .setLanguageCode('en'); // Set your desired locale, e.g., 'en' for English
 }
-// final navigatorKey = GlobalKey<NavigatorState>();
+
+void setUpNotifications()async{
+  final fcm = FirebaseMessaging.instance;
+  await fcm.requestPermission();
+  fcm.subscribeToTopic('requestNotifications');
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  if(Firebase.apps.isEmpty){
   Platform.isAndroid
       ? await Firebase.initializeApp(
           options: const FirebaseOptions(
@@ -26,7 +33,8 @@ void main() async {
               storageBucket: 'gs://blood-donation-applicati-30737.firebasestorage.app'),
         )
       : await Firebase.initializeApp();
-  await NotificationController.instance.initialize();
+  }
+  setUpNotifications();
   runApp(const MyApp());
 }
 
