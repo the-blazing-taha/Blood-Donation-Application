@@ -54,100 +54,104 @@ class DonorDetailsState extends State<DonorDetails> {
     final String profileImage = widget.profileImage ?? '';
     final String email = widget.email ?? 'No Email Provided';
 
-    return Scaffold(
-      backgroundColor: Colors.grey[100],
-      appBar: AppBar(
-        title: const Text(
-          'Donor Details',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+    return SizedBox(
+      height: MediaQuery.of(context).size.height,
+      width: MediaQuery.of(context).size.width,
+      child: Scaffold(
+        backgroundColor: Colors.grey[100],
+        appBar: AppBar(
+          title: const Text(
+            'Donor Details',
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+          ),
+          backgroundColor: Colors.red[900],
+          centerTitle: true,
         ),
-        backgroundColor: Colors.red[900],
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // Profile Section
-            Center(
-              child: Column(
-                children: [
-                  Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Container(
-                        width: 130,
-                        height: 130,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: LinearGradient(
-                            colors: [Colors.red.shade900, Colors.red.shade400],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.red.withOpacity(0.4),
-                              blurRadius: 15,
-                              spreadRadius: 5,
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Profile Section
+              Center(
+                child: Column(
+                  children: [
+                    Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Container(
+                          width: 130,
+                          height: 130,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: LinearGradient(
+                              colors: [Colors.red.shade900, Colors.red.shade400],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
                             ),
-                          ],
-                        ),
-                      ),
-                      CircleAvatar(
-                        radius: 60,
-                        backgroundColor: Colors.white,
-                        child: ClipOval(
-                          child: profileImage.isNotEmpty
-                              ? Image.network(
-                            profileImage,
-                            width: 120,
-                            height: 120,
-                            fit: BoxFit.cover,
-                          )
-                              : Container(
-                            width: 120,
-                            height: 120,
-                            decoration: BoxDecoration(
-                              color: Colors.grey[300],
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(Icons.person, size: 80),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.red.withOpacity(0.4),
+                                blurRadius: 15,
+                                spreadRadius: 5,
+                              ),
+                            ],
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  _buildEmailContainer(email), // Styled email container
-                ],
+                        CircleAvatar(
+                          radius: 60,
+                          backgroundColor: Colors.white,
+                          child: ClipOval(
+                            child: profileImage.isNotEmpty
+                                ? Image.network(
+                              profileImage,
+                              width: 120,
+                              height: 120,
+                              fit: BoxFit.cover,
+                            )
+                                : Container(
+                              width: 120,
+                              height: 120,
+                              decoration: BoxDecoration(
+                                color: Colors.grey[300],
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.person, size: 80),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    _buildEmailContainer(email), // Styled email container
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
+              const SizedBox(height: 20),
 
-            // Information Cards
-            _infoCard("Donor Name", widget.patient),
-            _infoCard("Gender", widget.gender),
-            _infoCard("Hospital", widget.hospital),
-            _infoCard("Location", widget.residence),
-            _infoCard("Blood Group", widget.bloodGroup, highlight: true),
-            _infoCard("Contact Number", widget.contact),
-            _infoCard("Weight (Kg)", widget.weight.toString()),
-            _infoCard("Age", widget.age.toString()),
-            _infoCard("Last Donated", widget.lastDonated),
-            _infoCard("Donation Frequency", widget.donationFrequency),
-            _infoCard("Highest Education", widget.highestEducation),
-            _infoCard("Current Occupation", widget.currentOccupation),
-            _infoCard("Living Arrangement", widget.currentLivingArrg),
-            _infoCard("Eligibility Test", widget.eligibilityTest),
-            _infoCard("Donations Made", widget.noOfDonations.toString()),
-            _infoCard(
-                "Future Donation Willingness", widget.futureDonationWillingness),
+              // Information Cards
+              _infoCard("Donor Name", widget.patient),
+              _infoCard("Gender", widget.gender),
+              _infoCard("Hospital", widget.hospital),
+              _infoCard("Location", widget.residence),
+              _infoCard("Blood Group", widget.bloodGroup, highlight: true),
+              _infoCard("Contact Number", widget.contact),
+              _infoCard("Weight (Kg)", widget.weight.toString()),
+              _infoCard("Age", widget.age.toString()),
+              _infoCard("Last Donated", widget.lastDonated),
+              _infoCard("Donation Frequency", widget.donationFrequency),
+              _infoCard("Highest Education", widget.highestEducation),
+              _infoCard("Current Occupation", widget.currentOccupation),
+              _infoCard("Living Arrangement", widget.currentLivingArrg),
+              _infoCard("Eligibility Test", widget.eligibilityTest),
+              _infoCard("Donations Made", widget.noOfDonations.toString()),
+              _infoCard(
+                  "Future Donation Willingness", widget.futureDonationWillingness),
 
-            const SizedBox(height: 30),
+              const SizedBox(height: 30),
 
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -234,39 +238,39 @@ class DonorDetailsState extends State<DonorDetails> {
   }
 
   // Styled Call & Message Buttons
-  Widget _actionButton(IconData icon, String label, VoidCallback onPressed) {
-    return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 30),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.red.shade900, Colors.red.shade400],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.red.withOpacity(0.3),
-              blurRadius: 8,
-              spreadRadius: 2,
-              offset: const Offset(2, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: Colors.white),
-            const SizedBox(width: 10),
-            Text(
-              label,
-              style: const TextStyle(color: Colors.white, fontSize: 16),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  // Widget _actionButton(IconData icon, String label, VoidCallback onPressed) {
+  //   return GestureDetector(
+  //     onTap: onPressed,
+  //     child: Container(
+  //       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 30),
+  //       decoration: BoxDecoration(
+  //         gradient: LinearGradient(
+  //           colors: [Colors.red.shade900, Colors.red.shade400],
+  //           begin: Alignment.topLeft,
+  //           end: Alignment.bottomRight,
+  //         ),
+  //         borderRadius: BorderRadius.circular(20),
+  //         boxShadow: [
+  //           BoxShadow(
+  //             color: Colors.red.withOpacity(0.3),
+  //             blurRadius: 8,
+  //             spreadRadius: 2,
+  //             offset: const Offset(2, 4),
+  //           ),
+  //         ],
+  //       ),
+  //       child: Row(
+  //         mainAxisSize: MainAxisSize.min,
+  //         children: [
+  //           Icon(icon, color: Colors.white),
+  //           const SizedBox(width: 10),
+  //           Text(
+  //             label,
+  //             style: const TextStyle(color: Colors.white, fontSize: 16),
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
 }

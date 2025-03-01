@@ -368,6 +368,7 @@ class _HomeState extends State<Home> {
           ),
         ),
 
+
         body: SizedBox(
           child: Column(
             children: [
@@ -392,6 +393,8 @@ class _HomeState extends State<Home> {
                   },
                 ),
               ),
+
+
               Expanded(
                 child: StreamBuilder<QuerySnapshot>(
                   stream: donationCollection,
@@ -406,12 +409,21 @@ class _HomeState extends State<Home> {
                       return const Center(child: Text('No donations found.'));
                     }
 
+                    // Filter and sort donors based on search query and createdAt timestamp
                     final donors = snapshot.data!.docs.where((doc) {
                       final data = doc.data() as Map<String, dynamic>;
                       final name = (data['name'] ?? '').toLowerCase();
                       final bloodGroup = (data['bloodGroup'] ?? '').toLowerCase();
                       return name.contains(searchQueryDonors) || bloodGroup.contains(searchQueryDonors);
                     }).toList();
+
+                    // Sort by createdAt in descending order (newest first)
+                    donors.sort((a, b) {
+                      final aTime = (a['createdAt'] as Timestamp?)?.toDate() ?? DateTime(0);
+                      final bTime = (b['createdAt'] as Timestamp?)?.toDate() ?? DateTime(0);
+                      return bTime.compareTo(aTime); // Descending order
+                    });
+
 
                     if (donors.isEmpty) {
                       return const Center(child: Text('No matching donors found.'));
@@ -422,30 +434,33 @@ class _HomeState extends State<Home> {
                       itemBuilder: (context, index) {
                         final donor = donors[index];
                         final data = donor.data() as Map<String, dynamic>;
+
+                        // Get createdAt timestamp
                         var createdAt = donor['createdAt'] != null
                             ? (donor['createdAt'] as Timestamp).toDate()
                             : DateTime.now();
                         var timeAgo = timeago.format(createdAt);
 
-                        // Calculate how "new" the donor is (highlight for the first 5 minutes)
-                        Duration difference = DateTime.now().difference(createdAt);
-                        bool isNew = difference.inMinutes < 5;
+                        // Calculate elapsed time in seconds
+                        int elapsedSeconds = DateTime.now().difference(createdAt).inSeconds;
+                        double glowIntensity = (300 - elapsedSeconds) / 30; // Fade over 5 mins (300 sec)
 
-                        // Define color transition from highlighted to normal
-                        Color highlightColor = isNew
-                            ? Colors.yellow.withOpacity(0.5) // Highlight effect
-                            : Colors.white; // Normal background
+                        // Ensure glow doesn't go negative
+                        glowIntensity = glowIntensity.clamp(0, 10);
 
                         return Center(
                           child: AnimatedContainer(
-                            duration: const Duration(seconds: 10), // Smooth fading effect
-                            curve: Curves.easeOut,
+                            duration: const Duration(seconds: 1),
                             margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                             decoration: BoxDecoration(
-                              color: highlightColor,
                               borderRadius: BorderRadius.circular(10),
                               boxShadow: [
-                                if (isNew) BoxShadow(color: Colors.yellow.withOpacity(0.5), blurRadius: 10)
+                                if (glowIntensity > 0) // Only apply glow if it's still active
+                                  BoxShadow(
+                                    color: Colors.yellow.withOpacity(glowIntensity / 10),
+                                    blurRadius: glowIntensity,
+                                    spreadRadius: glowIntensity / 2,
+                                  ),
                               ],
                             ),
                             child: Card(
@@ -610,177 +625,206 @@ class _HomeState extends State<Home> {
                 'All Requests',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
               ),
-              Expanded(
-                child: StreamBuilder<QuerySnapshot>(
-                  stream: requestsCollection.snapshots(),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    if (snapshot.hasError) {
-                      return Center(child: Text('Error: ${snapshot.error}'));
-                    }
-                    if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                      return const Center(child: Text('No requests found.'));
-                    }
+          Expanded(
+            child: StreamBuilder<QuerySnapshot>(
+              stream: requestsCollection.snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return const Center(child: Text('No requests found.'));
+                }
 
-                    // Filter requests based on search query
-                    final requests = snapshot.data!.docs.where((doc) {
-                      final data = doc.data() as Map<String, dynamic>;
-                      final name = (data['name'] ?? '').toLowerCase();
-                      final bloodGroup = (data['bloodGroup'] ?? '').toLowerCase();
-                      return name.contains(searchQueryRequests) || bloodGroup.contains(searchQueryRequests);
-                    }).toList();
+                // Filter and sort requests based on search query and createdAt timestamp
+                final requests = snapshot.data!.docs.where((doc) {
+                  final data = doc.data() as Map<String, dynamic>;
+                  final name = (data['name'] ?? '').toLowerCase();
+                  final bloodGroup = (data['bloodGroup'] ?? '').toLowerCase();
+                  return name.contains(searchQueryRequests) || bloodGroup.contains(searchQueryRequests);
+                }).toList();
 
-                    if (requests.isEmpty) {
-                      return const Center(child: Text('No matching requests found.'));
-                    }
+                // Sort by createdAt in descending order (newest first)
+                requests.sort((a, b) {
+                  final aTime = (a['createdAt'] as Timestamp?)?.toDate() ?? DateTime(0);
+                  final bTime = (b['createdAt'] as Timestamp?)?.toDate() ?? DateTime(0);
+                  return bTime.compareTo(aTime); // Descending order
+                });
+                if (requests.isEmpty) {
+                  return const Center(child: Text('No matching requests found.'));
+                }
 
-                    return ListView.builder(
-                      itemCount: requests.length,
-                      itemBuilder: (context, index) {
-                        final request = requests[index];
-                        final data = request.data() as Map<String, dynamic>;
-                        var createdAt = request['createdAt'] != null
-                            ? (request['createdAt'] as Timestamp).toDate()
-                            : DateTime.now();
-                        var timeAgo = timeago.format(createdAt);
-                        return Center(
-                          child: Card(
-                            margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                            elevation: 4,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                            child: Padding(
-                              padding: const EdgeInsets.all(10.0),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: <Widget>[
-                                  Text(
-                                    timeAgo,
-                                    style: const TextStyle(
-                                      fontSize: 18, // Adjusted for better fit
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.grey,
+                return ListView.builder(
+                  itemCount: requests.length,
+                  itemBuilder: (context, index) {
+                    final request = requests[index];
+                    final data = request.data() as Map<String, dynamic>;
+
+                    // Get createdAt timestamp
+                    var createdAt = request['createdAt'] != null
+                        ? (request['createdAt'] as Timestamp).toDate()
+                        : DateTime.now();
+                    var timeAgo = timeago.format(createdAt);
+
+                    // Calculate elapsed time in seconds
+                    int elapsedSeconds = DateTime.now().difference(createdAt).inSeconds;
+                    double glowIntensity = (600 - elapsedSeconds) / 60; // Fade over 10 mins (600 sec)
+
+                    // Ensure glow doesn't go negative
+                    glowIntensity = glowIntensity.clamp(0, 10);
+
+                    return Center(
+                      child: AnimatedContainer(
+                        duration: const Duration(seconds: 1),
+                        margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [
+                            if (glowIntensity > 0) // Only apply glow if it's still active
+                              BoxShadow(
+                                color: Colors.red.withOpacity(glowIntensity / 10),
+                                blurRadius: glowIntensity,
+                                spreadRadius: glowIntensity / 2,
+                              ),
+                          ],
+                        ),
+                        child: Card(
+                          elevation: 4,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          child: Padding(
+                            padding: const EdgeInsets.all(10.0),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                Text(
+                                  timeAgo,
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                                Align(
+                                  alignment: Alignment.topRight,
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.red[900],
+                                      shape: BoxShape.circle,
+                                    ),
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text(
+                                      data['bloodGroup'] ?? 'N/A',
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
                                     ),
                                   ),
-                                  Align(
-                                    alignment: Alignment.topRight,
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: Colors.red[900],
-                                        shape: BoxShape.circle,
-                                      ),
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Text(
-                                        data['bloodGroup'] ?? 'N/A',
-                                        style: const TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                        ),
-                                      ),
+                                ),
+                                const SizedBox(height: 5),
+                                ListTile(
+                                  contentPadding: EdgeInsets.zero,
+                                  leading: CircleAvatar(
+                                    radius: 30,
+                                    backgroundColor: Colors.grey[300],
+                                    child: ClipOval(
+                                      child: data['profileUrl'] != null &&
+                                          data['profileUrl'].isNotEmpty
+                                          ? Image.network(
+                                        data['profileUrl'],
+                                        width: 100,
+                                        height: 100,
+                                        fit: BoxFit.cover,
+                                      )
+                                          : const Icon(Icons.person, size: 40),
                                     ),
                                   ),
-                                  const SizedBox(height: 5),
-                                  ListTile(
-                                    contentPadding: EdgeInsets.zero,
-                                    leading: CircleAvatar(
-                                      radius: 30, // Adjust size as needed
-                                      backgroundColor: Colors.grey[300], // Fallback color
-                                      child: ClipOval(
-                                        child: data['profileUrl'] != null &&
-                                            data['profileUrl'].isNotEmpty
-                                            ? Image.network(
-                                          data['profileUrl'],
-                                          width: 100, // 2 * radius
-                                          height: 100,
-                                          fit: BoxFit.cover,
-                                        )
-                                            : const Icon(Icons.person,
-                                            size: 40), // Display default icon if no image
-                                      ),
-                                    ),
-                                    title: Text(
-                                      data['name'] ?? 'Unknown',
-                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                                      overflow: TextOverflow.ellipsis,
-                                      maxLines: 1,
-                                      softWrap: false,
-                                    ),
-                                    subtitle: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        const SizedBox(height: 4),
-                                        Row(
-                                          children: [
-                                            const Icon(Icons.location_on_rounded, size: 16),
-                                            const SizedBox(width: 4),
-                                            Expanded(
-                                              child: Text(
-                                                data['residence'] ?? 'Unknown',
-                                                style: const TextStyle(fontSize: 14),
-                                                overflow: TextOverflow.ellipsis,
-                                                maxLines: 1,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          "${data['bags'] ?? 'N/A'} Bags | ${data['case'] ?? 'N/A'}",
-                                          style: const TextStyle(color: Colors.grey, fontSize: 14),
-                                          overflow: TextOverflow.ellipsis,
-                                          maxLines: 1,
-                                        ),
-                                      ],
-                                    ),
+                                  title: Text(
+                                    data['name'] ?? 'Unknown',
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                    softWrap: false,
                                   ),
-                                  const SizedBox(height: 10),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
+                                  subtitle: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      ElevatedButton(
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.red[900],
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(8),
-                                          ),
-                                        ),
-                                        onPressed: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) => Details(
-                                                patient: data['name'],
-                                                contact: data['contact'],
-                                                hospital: data['hospital'],
-                                                residence: data['residence'],
-                                                case_: data['case'],
-                                                bags: data['bags'],
-                                                bloodGroup: data['bloodGroup'],
-                                                gender: data['gender'],
-                                                email: data['email'],
-                                                profileImage: data['profileUrl'],
-                                              ),
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        children: [
+                                          const Icon(Icons.location_on_rounded, size: 16),
+                                          const SizedBox(width: 4),
+                                          Expanded(
+                                            child: Text(
+                                              data['residence'] ?? 'Unknown',
+                                              style: const TextStyle(fontSize: 14),
+                                              overflow: TextOverflow.ellipsis,
+                                              maxLines: 1,
                                             ),
-                                          );
-                                        },
-                                        child: const Text('Details', style: TextStyle(color: Colors.white)),
+                                          ),
+                                        ],
                                       ),
-                                      const SizedBox(width: 8),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        "${data['bags'] ?? 'N/A'} ml needed | ${data['case'] ?? 'N/A'}",
+                                        style: const TextStyle(color: Colors.grey, fontSize: 14),
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 1,
+                                      ),
                                     ],
                                   ),
-                                ],
-                              ),
+                                ),
+                                const SizedBox(height: 10),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.red[900],
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                      ),
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => Details(
+                                              patient: data['name'],
+                                              contact: data['contact'],
+                                              hospital: data['hospital'],
+                                              residence: data['residence'],
+                                              case_: data['case'],
+                                              bags: data['bags'],
+                                              bloodGroup: data['bloodGroup'],
+                                              gender: data['gender'],
+                                              email: data['email'],
+                                              profileImage: data['profileUrl'],
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      child: const Text('Details', style: TextStyle(color: Colors.white)),
+                                    ),
+                                    const SizedBox(width: 8),
+                                  ],
+                                ),
+                              ],
                             ),
                           ),
-                        );
-                      },
+                        ),
+                      ),
                     );
                   },
-                ),
-              ),
+                );
+              },
+            ),
+          ),
             ],
           ),
         ),

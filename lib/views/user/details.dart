@@ -33,149 +33,151 @@ class Details extends StatefulWidget {
 class DetailsState extends State<Details> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[100],
-      appBar: AppBar(
-        title: const Text(
-          'Patient Details',
-          style: TextStyle(color: Colors.white),
+    return SizedBox(
+      height: MediaQuery.of(context).size.height,
+      width: MediaQuery.of(context).size.width,
+      child: Scaffold(
+        backgroundColor: Colors.grey[100],
+        appBar: AppBar(
+          title: const Text(
+            'Patient Details',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.red[900],
+          centerTitle: true,
+          iconTheme: const IconThemeData(color: Colors.white),
         ),
-        backgroundColor: Colors.red[900],
-        centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // Profile Section
-            Center(
-              child: Column(
-                children: [
-                  Center(
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        // Outer glowing circle
-                        Container(
-                          width: 130,
-                          height: 130,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: LinearGradient(
-                              colors: [
-                                Colors.red.shade900,
-                                Colors.red.shade400
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Profile Section
+              Center(
+                child: Column(
+                  children: [
+                    Center(
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          // Outer glowing circle
+                          Container(
+                            width: 130,
+                            height: 130,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.red.shade900,
+                                  Colors.red.shade400
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.red.withOpacity(0.4),
+                                  blurRadius: 15,
+                                  spreadRadius: 5,
+                                ),
                               ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
                             ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.red.withOpacity(0.4),
-                                blurRadius: 15,
-                                spreadRadius: 5,
-                              ),
-                            ],
                           ),
-                        ),
-                        // Profile picture
-                        CircleAvatar(
-                          radius: 60,
-                          backgroundColor: Colors.white,
-                          child: ClipOval(
-                            child: widget.profileImage != null &&
-                                widget.profileImage.isNotEmpty
-                                ? Image.network(
-                              widget.profileImage,
-                              width: 120,
-                              height: 120,
-                              fit: BoxFit.cover,
-                            )
-                                : Container(
-                              width: 120,
-                              height: 120,
-                              decoration: BoxDecoration(
-                                color: Colors.grey[300],
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.person,
-                                size: 80,
-                                // color: Colors.white,
+                          // Profile picture
+                          CircleAvatar(
+                            radius: 60,
+                            backgroundColor: Colors.white,
+                            child: ClipOval(
+                              child: widget.profileImage != null &&
+                                  widget.profileImage.isNotEmpty
+                                  ? Image.network(
+                                widget.profileImage,
+                                width: 120,
+                                height: 120,
+                                fit: BoxFit.cover,
+                              )
+                                  : Container(
+                                width: 120,
+                                height: 120,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[300],
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.person,
+                                  size: 80,
+                                  // color: Colors.white,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 10, horizontal: 15),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Colors.red.shade900, Colors.red.shade400],
-                        // Gradient effect
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
+                        ],
                       ),
-                      borderRadius: BorderRadius.circular(20),
-                      // Smooth rounded edges
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.red.withOpacity(0.3),
-                          blurRadius: 8,
-                          spreadRadius: 2,
-                          offset: const Offset(2, 4), // Subtle shadow effect
-                        ),
-                      ],
                     ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.email, color: Colors.white),
-                        // White email icon
-                        const SizedBox(width: 10),
-                        // Spacing
-                        Expanded(
-                          child: Text(
-                            widget.email,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white, // White text for contrast
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                            // Prevents overflow
-                            maxLines: 3,
-                            softWrap: false,
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 10, horizontal: 15),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Colors.red.shade900, Colors.red.shade400],
+                          // Gradient effect
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                        // Smooth rounded edges
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.red.withOpacity(0.3),
+                            blurRadius: 8,
+                            spreadRadius: 2,
+                            offset: const Offset(2, 4), // Subtle shadow effect
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.email, color: Colors.white),
+                          // White email icon
+                          const SizedBox(width: 10),
+                          // Spacing
+                          Expanded(
+                            child: Text(
+                              widget.email,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white, // White text for contrast
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              // Prevents overflow
+                              maxLines: 3,
+                              softWrap: false,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-
-                ],
+      
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
-
-            // Information Cards
-            _infoCard("Patient Name", widget.patient),
-            _infoCard("Gender", widget.gender),
-            _infoCard("Hospital", widget.hospital),
-            _infoCard("Location", widget.residence),
-            _infoCard("Blood Group", widget.bloodGroup, highlight: true),
-            _infoCard("Contact Number", widget.contact),
-            _infoCard("Case", widget.case_),
-            _infoCard("Bags Needed", widget.bags.toString(), highlight: true),
-            _infoCard("Urgency", "Needed Urgently", highlight: true),
-
-            const SizedBox(height: 30),
-
-          ],
+              const SizedBox(height: 20),
+      
+              // Information Cards
+              _infoCard("Patient Name", widget.patient),
+              _infoCard("Gender", widget.gender),
+              _infoCard("Hospital", widget.hospital),
+              _infoCard("Location", widget.residence),
+              _infoCard("Blood Group", widget.bloodGroup, highlight: true),
+              _infoCard("Contact Number", widget.contact),
+              _infoCard("Case", widget.case_),
+              _infoCard("Quantity Needed", widget.bags.toString(), highlight: true),
+              const SizedBox(height: 30),
+      
+            ],
+          ),
         ),
       ),
     );
@@ -224,45 +226,5 @@ class DetailsState extends State<Details> {
     );
   }
 
-// Action Button Widget with Matching Decoration
-  Widget _actionButton(IconData icon, String label, VoidCallback onPressed) {
-    return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 30),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.red.shade900, Colors.red.shade400],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.red.withOpacity(0.3),
-              blurRadius: 8,
-              spreadRadius: 2,
-              offset: const Offset(2, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: Colors.white),
-            const SizedBox(width: 10),
-            Text(
-              label,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
 

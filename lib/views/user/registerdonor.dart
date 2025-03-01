@@ -2,8 +2,10 @@ import 'dart:core';
 import 'package:blood/views/user/globals.dart';
 import 'package:blood/views/user/profile.dart';
 import 'package:blood/views/user/request_form.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
@@ -14,6 +16,8 @@ import '../../controllers/fireStoreDatabaseController.dart';
 import 'home.dart';
 import 'my_donation_appeal.dart';
 import 'my_requests.dart';
+import 'nearby_donors.dart';
+import 'nearby_requestors.dart';
 
 class RequestDonor extends StatefulWidget {
   const RequestDonor({super.key});
@@ -201,7 +205,6 @@ class _RequestDonorState extends State<RequestDonor> {
     }
   }
 
-// ✅ Utility function to show snackbars
   void _showSnackbar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
@@ -211,9 +214,13 @@ class _RequestDonorState extends State<RequestDonor> {
   TextEditingController otherOccupationController = TextEditingController();
   bool isOtherSelected = false;
 
+  final FirebaseAuth _auth= FirebaseAuth.instance;
 
   @override
   Widget build(BuildContext context) {
+    final user=FirebaseFirestore.instance.collection('users').doc(_auth.currentUser?.uid).get();
+    final AuthController _authController = AuthController();
+
     return SizedBox(
       height: MediaQuery.of(context).size.height,
       width: MediaQuery.of(context).size.width,
@@ -264,14 +271,72 @@ class _RequestDonorState extends State<RequestDonor> {
                   decoration: BoxDecoration(
                     color: Colors.red[900],
                   ),
-                  child: const Text(
-                    'Life Sync',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 30),
+                  child: Column(
+                    children: [
+                      const Text(
+                        'Life Sync',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 30),
+                      ),
+                      FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                        future: user,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const CircularProgressIndicator(); // Show a loading indicator
+                          } else if (snapshot.hasError) {
+                            return Text('Error: ${snapshot.error}'); // Handle errors
+                          } else if (snapshot.hasData && snapshot.data!.exists) {
+                            Map<String, dynamic>? userData = snapshot.data!.data();
+                            String? profileImageUrl = userData?['profileImage'];
+                            return Column(
+                              children: [
+                                CircleAvatar(
+                                  radius: 30, // Adjust size as needed
+                                  backgroundColor: Colors.grey[300], // Fallback color
+                                  child: ClipOval(
+                                    child: profileImageUrl != null && profileImageUrl.isNotEmpty
+                                        ? Image.network(
+                                      profileImageUrl,
+                                      width: 60, // 2 * radius
+                                      height: 60,
+                                      fit: BoxFit.cover,
+                                    )
+                                        : const Icon(Icons.person, size: 40), // Display default icon if no image
+                                  ),
+                                ),
+                              ],
+                            );
+                          } else {
+                            return const Text('No user data found.');
+                          }
+                        },
+                      ),
+                      FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                        future: user,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const CircularProgressIndicator(); // Show a loading indicator
+                          } else if (snapshot.hasError) {
+                            return Text('Error: ${snapshot.error}'); // Handle errors
+                          } else if (snapshot.hasData && snapshot.data!.exists) {
+                            Map<String, dynamic>? userData = snapshot.data!.data();
+                            String? userName = userData?['fullName'];
+                            return Column(
+                              children: [
+                                Text(userName as String, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold,fontFamily:'Pacifico' ),),
+                              ],
+                            );
+                          } else {
+                            return const Text('No user data found.');
+                          }
+                        },
+                      ),
+                    ],
                   ),
                 ),
+
                 ListTile(
                   leading: const Icon(
                     Icons.home,
@@ -322,7 +387,7 @@ class _RequestDonorState extends State<RequestDonor> {
                 ),
                 ListTile(
                   leading: const Icon(
-                    Icons.person,
+                    Icons.bloodtype_sharp,
                     color: Colors.white,
                   ),
                   title: const Text('Register as Donor',
@@ -344,10 +409,10 @@ class _RequestDonorState extends State<RequestDonor> {
                 ),
                 ListTile(
                   leading: const Icon(
-                    Icons.format_align_center,
+                    Icons.person,
                     color: Colors.white,
                   ),
-                  title: const Text('My Donation Appeal',
+                  title: const Text('Your Donation Registration',
                       style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -403,7 +468,53 @@ class _RequestDonorState extends State<RequestDonor> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>  Profile(),
+                        builder: (context) => Profile(),
+                      ),
+                    );
+                  },
+                ),
+
+                ListTile(
+                  leading: const Icon(
+                    Icons.near_me,
+                    color: Colors.white,
+                  ),
+                  title: const Text('Nearby donors',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16)),
+                  selected: _selectedIndex == 7,
+                  onTap: () {
+                    _onItemTapped(7);
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const NearbyDonors(),
+                      ),
+                    );
+                  },
+                ),
+
+                ListTile(
+                  leading: const Icon(
+                    Icons.near_me_outlined,
+                    color: Colors.white,
+                  ),
+                  title: const Text('Nearby Requesters',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16)),
+                  selected: _selectedIndex == 8,
+                  onTap: () {
+                    _onItemTapped(8);
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const NearbyRequestors(),
                       ),
                     );
                   },
@@ -419,14 +530,11 @@ class _RequestDonorState extends State<RequestDonor> {
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                           fontSize: 16)),
-                  selected: _selectedIndex == 7,
+                  selected: _selectedIndex == 9,
                   onTap: () {
-                    _onItemTapped(7);
+                    _onItemTapped(9);
                     Navigator.pop(context);
-                    authController.signout();
-                    setState(() {
-
-                    });
+                    _authController.signout();
                   },
                 ),
                 // Other ListTiles...
@@ -473,14 +581,25 @@ class _RequestDonorState extends State<RequestDonor> {
                           ),
                           TextFormField(
                             onChanged: (value) {
-                              name = value;
+                              setState(() {
+                                name = value;
+                              });
                             },
+                            textCapitalization: TextCapitalization.words, // Capitalize first letter of each word
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')), // Allow only letters and spaces
+                              TextInputFormatter.withFunction((oldValue, newValue) {
+                                if (newValue.text.isEmpty) return newValue;
+                                return newValue.copyWith(
+                                  text: newValue.text.substring(0, 1).toUpperCase() + newValue.text.substring(1),
+                                  selection: TextSelection.collapsed(offset: newValue.text.length),
+                                );
+                              }),
+                            ],
                             decoration: InputDecoration(
-                              // label: const Text('Number of Bags'),
-                              hintText: 'e.g Mohammad Aliar',
+                              hintText: 'e.g. Mohammad Aliar',
                               enabledBorder: OutlineInputBorder(
-                                borderSide:
-                                BorderSide(color: Colors.red[900]!, width: 2.5),
+                                borderSide: BorderSide(color: Colors.red[900]!, width: 2.5),
                                 borderRadius: BorderRadius.circular(5),
                               ),
                               focusedBorder: OutlineInputBorder(
@@ -521,16 +640,18 @@ class _RequestDonorState extends State<RequestDonor> {
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderSide: BorderSide(color: Colors.red[900]!),
-                                borderRadius: BorderRadius.circular(
-                                    10), // Red border color when focused
+                                borderRadius: BorderRadius.circular(10),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderSide: BorderSide(color: Colors.red[900]!),
-                                borderRadius: BorderRadius.circular(
-                                    10), // Red border color when enabled
+                                borderRadius: BorderRadius.circular(10),
                               ),
                             ),
                             initialCountryCode: 'PK',
+                            disableLengthCheck: true, // Prevents default length restriction
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly, // Allows only digits (0-9)
+                            ],
                             onChanged: (phone) {
                               setState(() {
                                 contact = phone.completeNumber;
@@ -653,6 +774,7 @@ class _RequestDonorState extends State<RequestDonor> {
                             onChanged: (value) {
                               details = value;
                             },
+                            textCapitalization: TextCapitalization.sentences, // Capitalizes first letter of each sentence
                             decoration: InputDecoration(
                               // label: const Text('Number of Bags'),
                               hintText: 'I really am a passionate donor',
@@ -826,7 +948,7 @@ class _RequestDonorState extends State<RequestDonor> {
                           ),
                           DropdownMenu<String>(
                             inputDecorationTheme: InputDecorationTheme(
-                              border: MaterialStateOutlineInputBorder.resolveWith(
+                              border: WidgetStateInputBorder.resolveWith(
                                     (states) =>
                                 states.contains(WidgetState.focused)
                                     ? const OutlineInputBorder(
@@ -869,7 +991,7 @@ class _RequestDonorState extends State<RequestDonor> {
                           ),
                           DropdownMenu<String>(
                             inputDecorationTheme: InputDecorationTheme(
-                              border: MaterialStateOutlineInputBorder.resolveWith(
+                              border: WidgetStateInputBorder.resolveWith(
                                     (states) =>
                                 states.contains(WidgetState.focused)
                                     ? const OutlineInputBorder(
@@ -911,7 +1033,7 @@ class _RequestDonorState extends State<RequestDonor> {
                           ),
                           DropdownMenu<String>(
                             inputDecorationTheme: InputDecorationTheme(
-                              border: MaterialStateOutlineInputBorder.resolveWith(
+                              border: WidgetStateInputBorder.resolveWith(
                                     (states) =>
                                 states.contains(WidgetState.focused)
                                     ? const OutlineInputBorder(
@@ -952,7 +1074,7 @@ class _RequestDonorState extends State<RequestDonor> {
                           ),
                           DropdownMenu<String>(
                             inputDecorationTheme: InputDecorationTheme(
-                              border: MaterialStateOutlineInputBorder.resolveWith(
+                              border: WidgetStateInputBorder.resolveWith(
                                     (states) => states.contains(WidgetState.focused)
                                     ? const OutlineInputBorder(
                                     borderSide: BorderSide(color: Colors.red))
@@ -1011,7 +1133,7 @@ class _RequestDonorState extends State<RequestDonor> {
                           ),
                           DropdownMenu<String>(
                             inputDecorationTheme: InputDecorationTheme(
-                              border: MaterialStateOutlineInputBorder.resolveWith(
+                              border: WidgetStateInputBorder.resolveWith(
                                     (states) =>
                                 states.contains(WidgetState.focused)
                                     ? const OutlineInputBorder(
@@ -1053,7 +1175,7 @@ class _RequestDonorState extends State<RequestDonor> {
                           ),
                           DropdownMenu<String>(
                             inputDecorationTheme: InputDecorationTheme(
-                              border: MaterialStateOutlineInputBorder.resolveWith(
+                              border: WidgetStateInputBorder.resolveWith(
                                     (states) =>
                                 states.contains(WidgetState.focused)
                                     ? const OutlineInputBorder(
@@ -1095,7 +1217,7 @@ class _RequestDonorState extends State<RequestDonor> {
                           ),
                           DropdownMenu<String>(
                             inputDecorationTheme: InputDecorationTheme(
-                              border: MaterialStateOutlineInputBorder.resolveWith(
+                              border: WidgetStateInputBorder.resolveWith(
                                     (states) =>
                                 states.contains(WidgetState.focused)
                                     ? const OutlineInputBorder(

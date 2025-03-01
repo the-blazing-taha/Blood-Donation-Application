@@ -1,7 +1,4 @@
-import 'dart:convert';
 import 'dart:core';
-import 'dart:io';
-import 'dart:math';
 import 'package:blood/controllers/fireStoreDatabaseController.dart';
 import 'package:blood/views/user/profile.dart';
 import 'package:blood/views/user/registerdonor.dart';
@@ -12,12 +9,13 @@ import 'package:flutter/services.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
-import '../admin/blood_appeal_admin.dart';
+import '../../controllers/auth_controller.dart';
 import 'home.dart';
+import 'my_donation_appeal.dart';
 import 'my_requests.dart';
-import 'package:http/http.dart' as http;
+import 'nearby_donors.dart';
+import 'nearby_requestors.dart';
 
 class RequestForm extends StatefulWidget {
   const RequestForm({super.key});
@@ -157,6 +155,7 @@ class _RequestFormState extends State<RequestForm> {
   String selectedBloodGroup = '';
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
   final String projectId = "blood-donation-applicati-30737";
+  final AuthController _authController = AuthController();
 
   final Map<String, List<String>> compatibleBloodGroups = {
     'A+': ['A+', 'A-', 'O+', 'O-'],
@@ -169,20 +168,21 @@ class _RequestFormState extends State<RequestForm> {
     'AB-': ['A-', 'B-', 'O-', 'AB-'],
   };
 
+  final FirebaseAuth _auth= FirebaseAuth.instance;
+  int _selectedIndex = 0;
+  bool isLoadingLocation = false; // State to track loading
 
-
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
   @override
   Widget build(BuildContext context) {
-    int selectedIndex = 0;
+    final user=FirebaseFirestore.instance.collection('users').doc(_auth.currentUser?.uid).get();
 
-    void onItemTapped(int index) {
-      setState(() {
-        selectedIndex = index;
-      });
-    }
-    signout() {
-      FirebaseAuth.instance.signOut();
-    }
+
+
     return SizedBox(
       height: MediaQuery.of(context).size.height,
       width: MediaQuery.of(context).size.width,
@@ -233,14 +233,72 @@ class _RequestFormState extends State<RequestForm> {
                   decoration: BoxDecoration(
                     color: Colors.red[900],
                   ),
-                  child: const Text(
-                    'Life Sync',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 30),
+                  child: Column(
+                    children: [
+                      const Text(
+                        'Life Sync',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 30),
+                      ),
+                      FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                        future: user,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const CircularProgressIndicator(); // Show a loading indicator
+                          } else if (snapshot.hasError) {
+                            return Text('Error: ${snapshot.error}'); // Handle errors
+                          } else if (snapshot.hasData && snapshot.data!.exists) {
+                            Map<String, dynamic>? userData = snapshot.data!.data();
+                            String? profileImageUrl = userData?['profileImage'];
+                            return Column(
+                              children: [
+                                CircleAvatar(
+                                  radius: 30, // Adjust size as needed
+                                  backgroundColor: Colors.grey[300], // Fallback color
+                                  child: ClipOval(
+                                    child: profileImageUrl != null && profileImageUrl.isNotEmpty
+                                        ? Image.network(
+                                      profileImageUrl,
+                                      width: 60, // 2 * radius
+                                      height: 60,
+                                      fit: BoxFit.cover,
+                                    )
+                                        : const Icon(Icons.person, size: 40), // Display default icon if no image
+                                  ),
+                                ),
+                              ],
+                            );
+                          } else {
+                            return const Text('No user data found.');
+                          }
+                        },
+                      ),
+                      FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                        future: user,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const CircularProgressIndicator(); // Show a loading indicator
+                          } else if (snapshot.hasError) {
+                            return Text('Error: ${snapshot.error}'); // Handle errors
+                          } else if (snapshot.hasData && snapshot.data!.exists) {
+                            Map<String, dynamic>? userData = snapshot.data!.data();
+                            String? userName = userData?['fullName'];
+                            return Column(
+                              children: [
+                                Text(userName as String, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold,fontFamily:'Pacifico' ),),
+                              ],
+                            );
+                          } else {
+                            return const Text('No user data found.');
+                          }
+                        },
+                      ),
+                    ],
                   ),
                 ),
+
                 ListTile(
                   leading: const Icon(
                     Icons.home,
@@ -253,9 +311,9 @@ class _RequestFormState extends State<RequestForm> {
                         fontWeight: FontWeight.bold,
                         fontSize: 16),
                   ),
-                  selected: selectedIndex == 0,
+                  selected: _selectedIndex == 0,
                   onTap: () {
-                    onItemTapped(0);
+                    _onItemTapped(0);
                     Navigator.pop(context);
                     Navigator.push(
                       context,
@@ -277,9 +335,9 @@ class _RequestFormState extends State<RequestForm> {
                         fontWeight: FontWeight.bold,
                         fontSize: 16),
                   ),
-                  selected: selectedIndex == 1,
+                  selected: _selectedIndex == 1,
                   onTap: () {
-                    onItemTapped(1);
+                    _onItemTapped(1);
                     Navigator.pop(context);
                     Navigator.push(
                       context,
@@ -291,24 +349,22 @@ class _RequestFormState extends State<RequestForm> {
                 ),
                 ListTile(
                   leading: const Icon(
-                    Icons.people,
+                    Icons.bloodtype_sharp,
                     color: Colors.white,
                   ),
-                  title: const Text(
-                    'All Donors',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16),
-                  ),
-                  selected: selectedIndex == 2,
+                  title: const Text('Register as Donor',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16)),
+                  selected: _selectedIndex == 3,
                   onTap: () {
-                    onItemTapped(2);
+                    _onItemTapped(3);
                     Navigator.pop(context);
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const DonorList(),
+                        builder: (context) => const RequestDonor(),
                       ),
                     );
                   },
@@ -318,19 +374,19 @@ class _RequestFormState extends State<RequestForm> {
                     Icons.person,
                     color: Colors.white,
                   ),
-                  title: const Text('Register as Donor',
+                  title: const Text('Your Donation Registration',
                       style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                           fontSize: 16)),
-                  selected: selectedIndex == 3,
+                  selected: _selectedIndex == 4,
                   onTap: () {
-                    onItemTapped(3);
+                    _onItemTapped(3);
                     Navigator.pop(context);
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const RequestDonor(),
+                        builder: (context) => const DonationAppeal(),
                       ),
                     );
                   },
@@ -345,9 +401,9 @@ class _RequestFormState extends State<RequestForm> {
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                           fontSize: 16)),
-                  selected: selectedIndex == 4,
+                  selected: _selectedIndex == 5,
                   onTap: () {
-                    onItemTapped(4);
+                    _onItemTapped(5);
                     Navigator.pop(context);
                     Navigator.push(
                       context,
@@ -367,14 +423,60 @@ class _RequestFormState extends State<RequestForm> {
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                           fontSize: 16)),
-                  selected: selectedIndex == 5,
+                  selected: _selectedIndex == 6,
                   onTap: () {
-                    onItemTapped(5);
+                    _onItemTapped(6);
                     Navigator.pop(context);
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => Profile(),
+                      ),
+                    );
+                  },
+                ),
+
+                ListTile(
+                  leading: const Icon(
+                    Icons.near_me,
+                    color: Colors.white,
+                  ),
+                  title: const Text('Nearby donors',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16)),
+                  selected: _selectedIndex == 7,
+                  onTap: () {
+                    _onItemTapped(7);
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const NearbyDonors(),
+                      ),
+                    );
+                  },
+                ),
+
+                ListTile(
+                  leading: const Icon(
+                    Icons.near_me_outlined,
+                    color: Colors.white,
+                  ),
+                  title: const Text('Nearby Requesters',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16)),
+                  selected: _selectedIndex == 8,
+                  onTap: () {
+                    _onItemTapped(8);
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const NearbyRequestors(),
                       ),
                     );
                   },
@@ -390,19 +492,19 @@ class _RequestFormState extends State<RequestForm> {
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                           fontSize: 16)),
-                  selected: selectedIndex == 6,
+                  selected: _selectedIndex == 9,
                   onTap: () {
-                    onItemTapped(6);
+                    _onItemTapped(9);
                     Navigator.pop(context);
-                    signout();
+                    _authController.signout();
                   },
                 ),
-
                 // Other ListTiles...
               ],
             ),
           ),
         ),
+
         body: SizedBox(
           height: MediaQuery.of(context).size.height,
           width: MediaQuery.of(context).size.width,
@@ -442,12 +544,21 @@ class _RequestFormState extends State<RequestForm> {
                             patient = value;
                           });
                         },
+                        textCapitalization: TextCapitalization.words, // Capitalize first letter of each word
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')), // Allow only letters and spaces
+                          TextInputFormatter.withFunction((oldValue, newValue) {
+                            if (newValue.text.isEmpty) return newValue;
+                            return newValue.copyWith(
+                              text: newValue.text.substring(0, 1).toUpperCase() + newValue.text.substring(1),
+                              selection: TextSelection.collapsed(offset: newValue.text.length),
+                            );
+                          }),
+                        ],
                         decoration: InputDecoration(
-                          // label: const Text('Number of Bags'),
-                          hintText: 'e.g Mohammad Aliar',
+                          hintText: 'e.g. Mohammad Aliar',
                           enabledBorder: OutlineInputBorder(
-                            borderSide:
-                                BorderSide(color: Colors.red[900]!, width: 2.5),
+                            borderSide: BorderSide(color: Colors.red[900]!, width: 2.5),
                             borderRadius: BorderRadius.circular(5),
                           ),
                           focusedBorder: OutlineInputBorder(
@@ -488,20 +599,21 @@ class _RequestFormState extends State<RequestForm> {
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderSide: BorderSide(color: Colors.red[900]!),
-                            borderRadius: BorderRadius.circular(
-                                10), // Red border color when focused
+                            borderRadius: BorderRadius.circular(10),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderSide: BorderSide(color: Colors.red[900]!),
-                            borderRadius: BorderRadius.circular(
-                                10), // Red border color when enabled
+                            borderRadius: BorderRadius.circular(10),
                           ),
                         ),
                         initialCountryCode: 'PK',
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly, // Allows only digits (0-9)
+                        ],
                         onChanged: (phone) {
                           setState(() {
                             contact = phone.completeNumber;
-                            });
+                          });
                         },
                       ),
                       const Align(
@@ -564,8 +676,7 @@ class _RequestFormState extends State<RequestForm> {
                           });
                         },
                         decoration: InputDecoration(
-                          hintText:
-                          'e.g House. 131, Street 2, Gulberg Sukh Chayn Gardens Lahore, District Kasur',
+                          hintText: 'e.g. House 131, Street 2, Gulberg Sukh Chayn Gardens, Lahore',
                           enabledBorder: OutlineInputBorder(
                             borderSide: BorderSide(
                               color: Colors.red[900]!,
@@ -588,20 +699,37 @@ class _RequestFormState extends State<RequestForm> {
                             borderRadius: BorderRadius.circular(10),
                           ),
                           suffixIcon: IconButton(
-                            icon: Icon(Icons.my_location, color: Colors.red[900]),
+                            icon: isLoadingLocation
+                                ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                color: Colors.red, // Loading indicator color
+                                strokeWidth: 2,
+                              ),
+                            )
+                                : Icon(Icons.my_location, color: Colors.red[900]),
                             onPressed: () async {
-                              await _getCurrentPosition(); // Ensure position is fetched first
+                              setState(() {
+                                isLoadingLocation = true; // Start loading
+                              });
+
+                              await _getCurrentPosition(); // Fetch location
+
                               if (_currentAddress.isNotEmpty) {
                                 setState(() {
                                   _locationController.text = _currentAddress;
                                   residence = _currentAddress;
                                 });
                               }
+
+                              setState(() {
+                                isLoadingLocation = false; // Stop loading
+                              });
                             },
                           ),
                         ),
                       ),
-
                       const SizedBox(
                         height: 10,
                       ),
@@ -652,7 +780,7 @@ class _RequestFormState extends State<RequestForm> {
                       const Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          'Quantity of blood needed',
+                          'Quantity of blood needed (ml)',
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ),
@@ -673,7 +801,7 @@ class _RequestFormState extends State<RequestForm> {
                           });
                         },
                         decoration: InputDecoration(
-                          hintText: 'e.g 3',
+                          hintText: 'e.g 154',
                           enabledBorder: OutlineInputBorder(
                             borderSide:
                                 BorderSide(color: Colors.red[900]!, width: 3),
@@ -711,6 +839,7 @@ class _RequestFormState extends State<RequestForm> {
                             details = value;
                           });
                         },
+                        textCapitalization: TextCapitalization.sentences, // Capitalizes first letter of each sentence
                         decoration: InputDecoration(
                           hintText:
                               'e.g I have been suffering a lot so kindly give me the blood.',
@@ -856,60 +985,85 @@ class _RequestFormState extends State<RequestForm> {
                       const SizedBox(
                         height: 30,
                       ),
-                      Container(
-                        alignment: Alignment.center,
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            if (donationCase != "None") {
-                              try {
-                                _firebaseDatabase.addRequest(
-                                    patient,
-                                    contact,
-                                    hospital,
-                                    residence,
-                                    donationCase,
-                                    bags,
-                                    bloodGroup,
-                                    gender,
-                                    details);
-                              }
-                              catch(e){
-                                Get.snackbar('Warning:', e.toString(),
-                                    backgroundColor: Colors.red,
-                                    colorText: Colors.white,
-                                    margin: const EdgeInsets.all(
-                                      15,
-                                    ),
-                                    icon: const Icon(
-                                      Icons.message,
-                                      color: Colors.white,
-                                    ));
-                              }
-                            } else {
-                              print("ERROR: Case of donation not selected!");
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            foregroundColor: Colors.white,
-                            backgroundColor: Colors.red[900], // Background color
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 30, vertical: 10), // Padding
-                            shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(10), // Rounded corners
+
+                Container(
+                alignment: Alignment.center,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      if (donationCase != "None") {
+                        try {
+                          setState(() {
+                            isLoading = true;
+                          });
+
+                          await _firebaseDatabase.addRequest(
+                            patient,
+                            contact,
+                            hospital,
+                            residence,
+                            donationCase,
+                            bags,
+                            bloodGroup,
+                            gender,
+                            details,
+                          );
+                          Get.snackbar('Success', 'Request added successfully!',
+                              backgroundColor: Colors.green,
+                              colorText: Colors.white,
+                              margin: const EdgeInsets.all(15),
+                              icon: const Icon(Icons.check, color: Colors.white));
+                          setState(() {
+                            isLoading = false;
+                          });
+                        } catch (e) {
+                          setState(() {
+                            isLoading = false;
+                          });
+
+                          Get.snackbar(
+                            'Warning:',
+                            e.toString(),
+                            backgroundColor: Colors.red,
+                            colorText: Colors.white,
+                            margin: const EdgeInsets.all(15),
+                            icon: const Icon(
+                              Icons.message,
+                              color: Colors.white,
                             ),
-                            elevation: 5, // Shadow elevation
-                          ),
-                          child: const Text(
-                            'Submit',
-                            style: TextStyle(
-                              fontSize: 18, // Font size
-                              fontWeight: FontWeight.bold, // Font weight
-                            ),
-                          ),
-                        ),
+                          );
+                        }
+                      } else {
+                        print("ERROR: Case of donation not selected!");
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor: Colors.red[900], // Background color
+                      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                    ],
+                      elevation: 5,
+                    ),
+                    child: isLoading
+                        ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                        : const Text(
+                      'Submit',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                )
+                ],
                   ),
                 ),
               ),

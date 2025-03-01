@@ -184,29 +184,34 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     TextFormField(
                       onChanged: (value) {
-                        fullName = value;
+                        if (value.isNotEmpty) {
+                          fullName = value[0].toUpperCase() + value.substring(1);
+                        } else {
+                          fullName = value;
+                        }
                       },
                       validator: (value) {
-                        if (value!.isEmpty) {
+                        if (value == null || value.isEmpty) {
                           return 'Name field must not be empty!';
-                        } else {
-                          return null;
+                        } else if (value[0] != value[0].toUpperCase()) {
+                          return 'Name must start with a capital letter!';
                         }
+                        return null;
                       },
                       decoration: InputDecoration(
                         labelText: 'Full Name',
                         hintText: 'Enter Full Name',
-                        hintStyle:
-                            Theme.of(context).textTheme.labelMedium!.copyWith(
-                                  color: Colors.black38,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                        hintStyle: Theme.of(context).textTheme.labelMedium!.copyWith(
+                          color: Colors.black38,
+                          fontWeight: FontWeight.w600,
+                        ),
                         prefixIcon: Icon(
                           Icons.person,
                           color: Colors.red[900],
                         ),
                       ),
                     ),
+
                     const SizedBox(
                       height: 20,
                     ),

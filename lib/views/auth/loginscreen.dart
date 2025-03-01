@@ -1,3 +1,4 @@
+import 'package:blood/views/admin/dashboard.dart';
 import 'package:blood/views/auth/forgotpassword.dart';
 import 'package:blood/views/auth/registerscreen.dart';
 import 'package:blood/views/user/home.dart';
@@ -30,7 +31,12 @@ class _LoginScreenState extends State<LoginScreen> {
         isLoading = false;
       });
       if (res == 'success') {
-        Get.to(Home());
+        if(email == 'ahmad.taaha2002@gmail.com'){
+          Get.offAll(Dashboard());
+        }
+        else{
+          Get.offAll(Home());
+        }
         setState(() {
           isLoading = false;
         });

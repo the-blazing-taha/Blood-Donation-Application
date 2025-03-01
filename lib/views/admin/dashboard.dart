@@ -122,122 +122,126 @@ class _DashboardState extends State<Dashboard> {
 
 
 
-      body:  Column(
-        children: [
-          Card(
-            color: Colors.red[900],
-            child: InkWell(
-              onTap: () {
-                // Handle card tap event (e.g., navigate to a donors list screen)
-                // Get.to(const DonorList());
-              },
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  FutureBuilder<int?>(
-                    future: databaseService.noOfDonors(), // Call the async function
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        // While the future is resolving, show a loading indicator or placeholder text
-                        return const ListTile(
-                          title: Text("Loading...", style: TextStyle(fontSize: 50, color: Colors.white)),
-                          subtitle: Text('Total Donors', style: TextStyle(fontSize: 20, color: Colors.white)),
-                        );
-                      } else if (snapshot.hasError) {
-                        // Handle errors gracefully
-                        return const ListTile(
-                          title: Text("Error", style: TextStyle(fontSize: 50, color: Colors.white)),
-                          subtitle: Text('Could not fetch requests', style: TextStyle(fontSize: 20, color: Colors.white)),
-                        );
-                      } else {
-                        // Display the result when the future completes
-                        final count = snapshot.data ?? 0;
-                        return ListTile(
-                          title: Text(count.toString(), style: const TextStyle(fontSize: 50, color: Colors.white)),
-                          subtitle: const Text('Total Donors', style: TextStyle(fontSize: 20, color: Colors.white)),
-                        );
-                      }
-                    },
-                  ),
-                ],
+      body:  SizedBox(
+        height: MediaQuery.of(context).size.height,
+        width: MediaQuery.of(context).size.width,
+        child: Column(
+          children: [
+            Card(
+              color: Colors.red[900],
+              child: InkWell(
+                onTap: () {
+                  // Handle card tap event (e.g., navigate to a donors list screen)
+                  // Get.to(const DonorList());
+                },
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    FutureBuilder<int?>(
+                      future: databaseService.noOfDonors(), // Call the async function
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          // While the future is resolving, show a loading indicator or placeholder text
+                          return const ListTile(
+                            title: Text("Loading...", style: TextStyle(fontSize: 50, color: Colors.white)),
+                            subtitle: Text('Total Donors', style: TextStyle(fontSize: 20, color: Colors.white)),
+                          );
+                        } else if (snapshot.hasError) {
+                          // Handle errors gracefully
+                          return const ListTile(
+                            title: Text("Error", style: TextStyle(fontSize: 50, color: Colors.white)),
+                            subtitle: Text('Could not fetch requests', style: TextStyle(fontSize: 20, color: Colors.white)),
+                          );
+                        } else {
+                          // Display the result when the future completes
+                          final count = snapshot.data ?? 0;
+                          return ListTile(
+                            title: Text(count.toString(), style: const TextStyle(fontSize: 50, color: Colors.white)),
+                            subtitle: const Text('Total Donors', style: TextStyle(fontSize: 20, color: Colors.white)),
+                          );
+                        }
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-      Card(
-        color: Colors.blue[900],
-        child: InkWell(
-          onTap: () {
-            // Handle card tap event (e.g., navigate to a donors list screen)
-            Get.to(const BloodRequestsAdmin());
-          },
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              FutureBuilder<int?>(
-                future: databaseService.noOfRequests(), // Call the async function
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    // While the future is resolving, show a loading indicator or placeholder text
-                    return const ListTile(
-                      title: Text("Loading...", style: TextStyle(fontSize: 50, color: Colors.white)),
-                      subtitle: Text('Total Blood Requests', style: TextStyle(fontSize: 20, color: Colors.white)),
-                    );
-                  } else if (snapshot.hasError) {
-                    // Handle errors gracefully
-                    return const ListTile(
-                      title: Text("Error", style: TextStyle(fontSize: 50, color: Colors.white)),
-                      subtitle: Text('Could not fetch requests', style: TextStyle(fontSize: 20, color: Colors.white)),
-                    );
-                  } else {
-                    // Display the result when the future completes
-                    final count = snapshot.data ?? 0;
-                    return ListTile(
-                      title: Text(count.toString(), style: const TextStyle(fontSize: 50, color: Colors.white)),
-                      subtitle: const Text('Total Blood Requests', style: TextStyle(fontSize: 20, color: Colors.white)),
-                    );
-                  }
-                },
-              ),
-            ],
+        Card(
+          color: Colors.blue[900],
+          child: InkWell(
+            onTap: () {
+              // Handle card tap event (e.g., navigate to a donors list screen)
+              Get.to(const BloodRequestsAdmin());
+            },
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                FutureBuilder<int?>(
+                  future: databaseService.noOfRequests(), // Call the async function
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      // While the future is resolving, show a loading indicator or placeholder text
+                      return const ListTile(
+                        title: Text("Loading...", style: TextStyle(fontSize: 50, color: Colors.white)),
+                        subtitle: Text('Total Blood Requests', style: TextStyle(fontSize: 20, color: Colors.white)),
+                      );
+                    } else if (snapshot.hasError) {
+                      // Handle errors gracefully
+                      return const ListTile(
+                        title: Text("Error", style: TextStyle(fontSize: 50, color: Colors.white)),
+                        subtitle: Text('Could not fetch requests', style: TextStyle(fontSize: 20, color: Colors.white)),
+                      );
+                    } else {
+                      // Display the result when the future completes
+                      final count = snapshot.data ?? 0;
+                      return ListTile(
+                        title: Text(count.toString(), style: const TextStyle(fontSize: 50, color: Colors.white)),
+                        subtitle: const Text('Total Blood Requests', style: TextStyle(fontSize: 20, color: Colors.white)),
+                      );
+                    }
+                  },
+                ),
+              ],
+            ),
           ),
         ),
-      ),
 
 
-      Card(
-            color: Colors.yellow[900],
-            child: const Column(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  ListTile(
-                    title: Text('28', style: TextStyle(fontSize: 50,color: Colors.white),),
-                    subtitle: Text('Total Appointments Booked',style: TextStyle(fontSize: 20,color: Colors.white),),
-                  ),
-                ]),
-          ),
-          Card(
-            color: Colors.green[600],
-            child: const Column(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  ListTile(
-                    title: Text('59', style: TextStyle(fontSize: 50,color: Colors.white),),
-                    subtitle: Text('Active Donors',style: TextStyle(fontSize: 20,color: Colors.white),),
-                  ),
-                ]),
-          ),
-          Card(
-            color: Colors.brown[400],
-            child: const Column(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  ListTile(
-                    title: Text('100', style: TextStyle(fontSize: 50,color: Colors.white),),
-                    subtitle: Text('Total Accounts',style: TextStyle(fontSize: 20,color: Colors.white),),
-                  ),
-                ]),
-          ),
-        ],
+        Card(
+              color: Colors.yellow[900],
+              child: const Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    ListTile(
+                      title: Text('28', style: TextStyle(fontSize: 50,color: Colors.white),),
+                      subtitle: Text('Total Appointments Booked',style: TextStyle(fontSize: 20,color: Colors.white),),
+                    ),
+                  ]),
+            ),
+            Card(
+              color: Colors.green[600],
+              child: const Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    ListTile(
+                      title: Text('59', style: TextStyle(fontSize: 50,color: Colors.white),),
+                      subtitle: Text('Active Donors',style: TextStyle(fontSize: 20,color: Colors.white),),
+                    ),
+                  ]),
+            ),
+            Card(
+              color: Colors.brown[400],
+              child: const Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    ListTile(
+                      title: Text('100', style: TextStyle(fontSize: 50,color: Colors.white),),
+                      subtitle: Text('Total Accounts',style: TextStyle(fontSize: 20,color: Colors.white),),
+                    ),
+                  ]),
+            ),
+          ],
+        ),
       ),
 
 

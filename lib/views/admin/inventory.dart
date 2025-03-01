@@ -221,149 +221,153 @@ class InventoryState extends State<Inventory> {
   Widget build(BuildContext context) {
     final DatabaseService databaseService = DatabaseService.instance;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Inventory',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        actions: [
-          IconButton(
-            splashRadius: 10,
-            padding: const EdgeInsets.all(1.0),
-            onPressed: () {
-
-            },
-            icon: const Icon(
-              Icons.person,
+    return SizedBox(
+      height: MediaQuery.of(context).size.height,
+      width: MediaQuery.of(context).size.width,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text(
+            'Inventory',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
-          )
-        ],
-        leading: Builder(
-          builder: (BuildContext context) {
-            return IconButton(
+          ),
+          actions: [
+            IconButton(
+              splashRadius: 10,
+              padding: const EdgeInsets.all(1.0),
+              onPressed: () {
+
+              },
               icon: const Icon(
-                Icons.menu,
+                Icons.person,
                 color: Colors.white,
               ),
-              onPressed: () {
-                Scaffold.of(context).openDrawer();  // This will now work correctly
-              },
-            );
-          },
-        ),
-        backgroundColor: Colors.red[900],
-        centerTitle: true,
-      ),
-
-      drawer: Opacity(
-        opacity: 0.6,
-        child: Drawer(
-          backgroundColor: Colors.red[900],
-
-          child: ListView(
-            padding: EdgeInsets.zero,
-            children: [
-              DrawerHeader(
-                decoration: BoxDecoration(
-                  color: Colors.red[900],
+            )
+          ],
+          leading: Builder(
+            builder: (BuildContext context) {
+              return IconButton(
+                icon: const Icon(
+                  Icons.menu,
+                  color: Colors.white,
                 ),
-                child: const Text('Drawer Header',style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 30),),
-              ),
-
-              ListTile(
-                leading: const Icon(Icons.home, color: Colors.white,),
-                title: const Text('Dashboard',style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold, fontSize: 16),),
-                selected: _selectedIndex == 0,
-                onTap: () {
-                  onItemTapped(0);
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const Dashboard(),
-                    ),
-                  );
+                onPressed: () {
+                  Scaffold.of(context).openDrawer();  // This will now work correctly
                 },
-              ),
+              );
+            },
+          ),
+          backgroundColor: Colors.red[900],
+          centerTitle: true,
+        ),
 
-              ListTile(
-                leading: const Icon(Icons.inventory_2_sharp, color: Colors.white,),
-                title: const Text('Inventory', style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold, fontSize: 16),),
-                selected: _selectedIndex == 1,
-                onTap: () {
-                  onItemTapped(1);
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const Inventory(),
-                    ),
-                  );
-                },
-              ),
-            ],
+        drawer: Opacity(
+          opacity: 0.6,
+          child: Drawer(
+            backgroundColor: Colors.red[900],
+
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                DrawerHeader(
+                  decoration: BoxDecoration(
+                    color: Colors.red[900],
+                  ),
+                  child: const Text('Drawer Header',style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 30),),
+                ),
+
+                ListTile(
+                  leading: const Icon(Icons.home, color: Colors.white,),
+                  title: const Text('Dashboard',style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold, fontSize: 16),),
+                  selected: _selectedIndex == 0,
+                  onTap: () {
+                    onItemTapped(0);
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const Dashboard(),
+                      ),
+                    );
+                  },
+                ),
+
+                ListTile(
+                  leading: const Icon(Icons.inventory_2_sharp, color: Colors.white,),
+                  title: const Text('Inventory', style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold, fontSize: 16),),
+                  selected: _selectedIndex == 1,
+                  onTap: () {
+                    onItemTapped(1);
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const Inventory(),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
         ),
-      ),
 
 
 
-      body: FutureBuilder(
-        future: databaseService.getInventory(),
-        builder:  (context,snapshot){
-          return ListView.builder(
-              itemCount: snapshot.data?.length ?? 0,
-              itemBuilder: (BuildContext context, int index) {
-                BloodInventory inventory = snapshot.data![index];
-                handleInventoryExpiration(inventory);
-                return Center(
-                  child: Card(
-                    color: Colors.grey[700],
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Text(inventory.bloodgroup,style: const TextStyle(color: Colors.white),),
-                            const SizedBox(width: 120,),
-                            Text("${inventory.concentration}",style: const TextStyle(color: Colors.white),),
-                          ],
-                        ),
-                        Text('Inventory Number: ${inventory.number} ',style: const TextStyle(color: Colors.white,fontWeight: FontWeight.bold, fontSize: 20),),
-                        Text('Haemoglobin: ${inventory.hemoglobin} g/dL',style: const TextStyle(color: Colors.white,fontWeight: FontWeight.bold, fontSize: 20),),
-                        Text('Concentration: ${inventory.concentration} mL',style: const TextStyle(color: Colors.white,fontWeight: FontWeight.bold, fontSize: 20),),
-                        Text('Blood Type: ${inventory.bloodgroup} ',style: const TextStyle(color: Colors.white,fontWeight: FontWeight.bold, fontSize: 20),),
-                        Text('Blood Rh: ${inventory.rh} ',style: const TextStyle(color: Colors.white,fontWeight: FontWeight.bold, fontSize: 20),),
-                        const SizedBox(height: 5,),
-                        OutlinedButton(
-                          style: OutlinedButton.styleFrom(
-                            disabledBackgroundColor:Colors.white,
+        body: FutureBuilder(
+          future: databaseService.getInventory(),
+          builder:  (context,snapshot){
+            return ListView.builder(
+                itemCount: snapshot.data?.length ?? 0,
+                itemBuilder: (BuildContext context, int index) {
+                  BloodInventory inventory = snapshot.data![index];
+                  handleInventoryExpiration(inventory);
+                  return Center(
+                    child: Card(
+                      color: Colors.grey[700],
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Text(inventory.bloodgroup,style: const TextStyle(color: Colors.white),),
+                              const SizedBox(width: 120,),
+                              Text("${inventory.concentration}",style: const TextStyle(color: Colors.white),),
+                            ],
                           ),
-                          onPressed: () {
-                            databaseService.deleteInventory(inventory.id);
-                            setState(() {});
-                          },
-                          child: Text('Delete', style: TextStyle(color: Colors.red[900])),
-                        ),
-                      ],
+                          Text('Inventory Number: ${inventory.number} ',style: const TextStyle(color: Colors.white,fontWeight: FontWeight.bold, fontSize: 20),),
+                          Text('Haemoglobin: ${inventory.hemoglobin} g/dL',style: const TextStyle(color: Colors.white,fontWeight: FontWeight.bold, fontSize: 20),),
+                          Text('Concentration: ${inventory.concentration} mL',style: const TextStyle(color: Colors.white,fontWeight: FontWeight.bold, fontSize: 20),),
+                          Text('Blood Type: ${inventory.bloodgroup} ',style: const TextStyle(color: Colors.white,fontWeight: FontWeight.bold, fontSize: 20),),
+                          Text('Blood Rh: ${inventory.rh} ',style: const TextStyle(color: Colors.white,fontWeight: FontWeight.bold, fontSize: 20),),
+                          const SizedBox(height: 5,),
+                          OutlinedButton(
+                            style: OutlinedButton.styleFrom(
+                              disabledBackgroundColor:Colors.white,
+                            ),
+                            onPressed: () {
+                              databaseService.deleteInventory(inventory.id);
+                              setState(() {});
+                            },
+                            child: Text('Delete', style: TextStyle(color: Colors.red[900])),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
 
 
-                );
-              });},
+                  );
+                });},
+        ),
+        floatingActionButton: FloatingActionButton(onPressed: (){
+          setState(() {
+            addButton();
+          });
+        },child: const Icon(Icons.add),),
       ),
-      floatingActionButton: FloatingActionButton(onPressed: (){
-        setState(() {
-          addButton();
-        });
-      },child: const Icon(Icons.add),),
     );
   }
 }
