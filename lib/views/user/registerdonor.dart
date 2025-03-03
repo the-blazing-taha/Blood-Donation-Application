@@ -30,7 +30,6 @@ class _RequestDonorState extends State<RequestDonor> {
   final GlobalKey<FormState> formkey = GlobalKey<FormState>();
 
   late String name ;
-  late String hospital ;
   late String residence;
   late String contact;
   late int noOfDonation;
@@ -233,17 +232,6 @@ class _RequestDonorState extends State<RequestDonor> {
               color: Colors.white,
             ),
           ),
-          actions: [
-            IconButton(
-              splashRadius: 10,
-              padding: const EdgeInsets.all(1.0),
-              onPressed: () {},
-              icon: const Icon(
-                Icons.person,
-                color: Colors.white,
-              ),
-            )
-          ],
           leading: Builder(
             builder: (BuildContext context) {
               return IconButton(
@@ -572,7 +560,7 @@ class _RequestDonorState extends State<RequestDonor> {
                           const Align(
                             alignment: Alignment.centerLeft,
                             child: Text(
-                              'Patient Name',
+                              'Donor Name',
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
                           ),
@@ -653,50 +641,8 @@ class _RequestDonorState extends State<RequestDonor> {
                               FilteringTextInputFormatter.digitsOnly, // Allows only digits (0-9)
                             ],
                             onChanged: (phone) {
-                              setState(() {
                                 contact = phone.completeNumber;
-                              });
                             },
-                          ),
-                          const Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              'Hospital Name',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                          const SizedBox(
-                            height: 10,
-                          ),
-                          TextFormField(
-                            onChanged: (value) {
-                              hospital = value;
-                            },
-                            decoration: InputDecoration(
-                              // label: const Text('Number of Bags'),
-                              hintText: 'e.g Lahore Children Hospital',
-                              enabledBorder: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: Colors.red[900]!,
-                                  width: 3,
-                                ),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: Colors.red[900]!,
-                                  width: 3,
-                                ),
-                                borderRadius: BorderRadius.circular(15),
-                              ),
-                              errorBorder: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: Colors.red[900]!,
-                                  width: 2,
-                                ),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
                           ),
                           const SizedBox(
                             height: 15,
@@ -963,8 +909,6 @@ class _RequestDonorState extends State<RequestDonor> {
                               ),
                             ),
                             width: 325,
-
-
                             onSelected: (value) {
                               setState(() {
                                 lastDonated = value!;
@@ -1383,7 +1327,7 @@ class _RequestDonorState extends State<RequestDonor> {
                                       : () async {
                                     try {
                                       await _firebaseDatabase.addDonor(
-                                          name, contact, hospital, residence, noOfDonation, bloodGroup,
+                                          name, contact, residence, noOfDonation, bloodGroup,
                                           gender, details, weight, age, lastDonated, donationFrequency,
                                           highestEducation, currentOccupation!, currentLivingArrg,
                                           eligibilityTest, futureDonationWillingness

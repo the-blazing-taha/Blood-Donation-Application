@@ -58,17 +58,6 @@ class _HomeState extends State<Home> {
               color: Colors.white,
             ),
           ),
-          actions: [
-            IconButton(
-              splashRadius: 10,
-              padding: const EdgeInsets.all(1.0),
-              onPressed: () {},
-              icon: const Icon(
-                Icons.person,
-                color: Colors.white,
-              ),
-            )
-          ],
           leading: Builder(
             builder: (BuildContext context) {
               return IconButton(
@@ -567,7 +556,6 @@ class _HomeState extends State<Home> {
                                                 builder: (context) => DonorDetails(
                                                   patient: data['name'],
                                                   contact: data['contact'],
-                                                  hospital: data['hospital'],
                                                   residence: data['residence'],
                                                   bloodGroup: data['bloodGroup'],
                                                   gender: data['gender'],

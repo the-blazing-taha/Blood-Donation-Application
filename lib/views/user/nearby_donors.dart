@@ -89,7 +89,7 @@ class _NearbyDonorsState extends State<NearbyDonors> {
     FirebaseFirestore firestore = FirebaseFirestore.instance;
     double lat = currentPosition!.latitude;
     double lon = currentPosition!.longitude;
-    double searchRadiusKm = 0.9; // 100 meters
+    double searchRadiusKm = 15; // 100 meters
     double latChange = searchRadiusKm / 111.12;
     double lonChange = searchRadiusKm / (111.12 * cos(lat * pi / 180));
 
@@ -288,7 +288,6 @@ class _NearbyDonorsState extends State<NearbyDonors> {
                                       builder: (context) => DonorDetails(
                                         patient: donor['name'],
                                         contact: donor['contact'],
-                                        hospital: donor['hospital'],
                                         residence: donor['residence'],
                                         bloodGroup: donor['bloodGroup'],
                                         gender: donor['gender'],

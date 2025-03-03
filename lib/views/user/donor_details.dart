@@ -1,9 +1,10 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class DonorDetails extends StatefulWidget {
   final dynamic patient;
   final dynamic contact;
-  final dynamic hospital;
   final dynamic residence;
   final dynamic noOfDonations;
   final dynamic bloodGroup;
@@ -25,7 +26,6 @@ class DonorDetails extends StatefulWidget {
     super.key,
     required this.patient,
     required this.contact,
-    required this.hospital,
     required this.residence,
     required this.noOfDonations,
     required this.bloodGroup,
@@ -51,8 +51,10 @@ class DonorDetails extends StatefulWidget {
 class DonorDetailsState extends State<DonorDetails> {
   @override
   Widget build(BuildContext context) {
+    final FirebaseAuth auth = FirebaseAuth.instance;
+
     final String profileImage = widget.profileImage ?? '';
-    final String email = widget.email ?? 'No Email Provided';
+    final String email = widget.email ?? auth.currentUser?.email;
 
     return SizedBox(
       height: MediaQuery.of(context).size.height,
@@ -132,10 +134,9 @@ class DonorDetailsState extends State<DonorDetails> {
               // Information Cards
               _infoCard("Donor Name", widget.patient),
               _infoCard("Gender", widget.gender),
-              _infoCard("Hospital", widget.hospital),
               _infoCard("Location", widget.residence),
               _infoCard("Blood Group", widget.bloodGroup, highlight: true),
-              _infoCard("Contact Number", widget.contact),
+              _infoCard("Contact Number", widget.contact, copyable: true),
               _infoCard("Weight (Kg)", widget.weight.toString()),
               _infoCard("Age", widget.age.toString()),
               _infoCard("Last Donated", widget.lastDonated),
@@ -199,8 +200,8 @@ class DonorDetailsState extends State<DonorDetails> {
     );
   }
 
-  // Styled Information Card
-  Widget _infoCard(String title, String value, {bool highlight = false}) {
+
+  Widget _infoCard(String title, String value, {bool highlight = false, bool copyable = false}) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -219,16 +220,29 @@ class DonorDetailsState extends State<DonorDetails> {
             ),
             const SizedBox(width: 10),
             Expanded(
-              child: Text(
-                value,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: highlight ? Colors.red[900] : Colors.black,
+              child: GestureDetector(
+                onTap: copyable
+                    ? () {
+                  Clipboard.setData(ClipboardData(text: value));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('$title copied to clipboard!'),
+                      duration: const Duration(seconds: 1),
+                    ),
+                  );
+                }
+                    : null,
+                child: Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: highlight ? Colors.red[900] : Colors.black,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 10,
+                  softWrap: true,
                 ),
-                overflow: TextOverflow.ellipsis,
-                maxLines: 10,
-                softWrap: true,
               ),
             ),
           ],

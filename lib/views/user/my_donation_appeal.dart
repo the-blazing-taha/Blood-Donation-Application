@@ -6,7 +6,9 @@ import 'package:blood/views/user/registerdonor.dart';
 import 'package:blood/views/user/request_form.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../../controllers/auth_controller.dart';
 import '../../controllers/fireStoreDatabaseController.dart';
@@ -44,15 +46,70 @@ class _HomeState extends State<DonationAppeal> {
 
   static List<String> bloodTypes = <String>['None','A+', 'B+', 'AB+', 'O+','A-', 'B-', 'AB-', 'O-'];
   static List<String> genders = <String>['None','Male','Female'];
+  static List<String> last_donated = <String>[
+    'None',
+    'Within last month',
+    'Within Last 3 months',
+    'Within Last 6 months',
+    'Last year'
+  ];
+
+  static List<String> donation_frequency = <String>[
+    'None',
+    'Once every 3 months',
+    'Once every 6 months',
+    'Once a year',
+    'Less than once a year'
+  ];
+
+  static List<String> highest_education = <String>[
+    'None',
+    'Less than Matriculation',
+    'Matriculation',
+    'High School',
+    'Bachelors Degree',
+    'Masters Degree',
+    'PhD'
+  ];
+
+  static List<String> ocupation = <String>[
+    'Student',
+    'Soldier',
+    'Public functionary',
+    'Medical staff',
+    'Industrial',
+    'Farmer',
+    'Clerk',
+    'Teacher',
+    'Other'
+  ];
+
+  static List<String> living_arrangement = <String>[
+    'Registered Residence',
+    'Non-registered Residence'
+  ];
+
   String bloodGroup='';
   String gender='' ;
-
   String hospital='';
-  String patient='';
+  String donor='';
   String residence='';
   int numberOfDonations=-1;
   String contact='';
   String details='';
+
+  String donationFrequency = '';
+  String currentOccupation = '';
+  String livingArrangement = '';
+  String eligibilityTest = '';
+  String highestEducation = '';
+  String lastDonated = '';
+  int age = -1;
+  String futureDonationWill = '';
+  bool isOtherSelected = false;
+  TextEditingController otherOccupationController = TextEditingController();
+  int weight = -1;
+
 
   void updateButton(String id) {
     showDialog(
@@ -69,19 +126,15 @@ class _HomeState extends State<DonationAppeal> {
               children: [
                 TextField(
                   onChanged: (value){
-                    setState(() {
-                      patient=value;
-                    });
+                      donor=value;
                   },
                   controller: _nameController,
-                  decoration: const InputDecoration(hintText: "Patient Name"),
+                  decoration: const InputDecoration(hintText: "Donor Name"),
                 ),
                 const SizedBox(height: 4,),
                 TextField(
                   onChanged: (value){
-                    setState(() {
                       residence=value;
-                    });
                   },
                   controller: _locationController,
                   decoration: const InputDecoration(hintText: "Location"),
@@ -90,9 +143,7 @@ class _HomeState extends State<DonationAppeal> {
                 TextField(
                   keyboardType: TextInputType.number,
                   onChanged: (value){
-                    setState(() {
                       numberOfDonations = int.tryParse(value) ?? 0; // If parsing fails, it will default to 0
-                    });
                   },
                   controller: _donationsNumberController,
                   decoration: const InputDecoration(hintText: "No of donations done:"),
@@ -101,9 +152,7 @@ class _HomeState extends State<DonationAppeal> {
                 const SizedBox(height: 4,),
                 TextField(
                   onChanged: (value){
-                    setState(() {
                       hospital=value;
-                    });
                   },
                   controller: _hospitalController,
                   decoration: const InputDecoration(hintText: "Hospital"),
@@ -111,9 +160,7 @@ class _HomeState extends State<DonationAppeal> {
                 const SizedBox(height: 4,),
                 TextField(
                   onChanged: (value){
-                    setState(() {
                       details=value;
-                    });
                   },
                   controller: _detailsController,
                   decoration: const InputDecoration(hintText: "Details"),
@@ -123,7 +170,7 @@ class _HomeState extends State<DonationAppeal> {
                   hintText: "Blood Group",
                   controller: _bloodGroupController,
                   inputDecorationTheme: InputDecorationTheme(
-                    border: MaterialStateOutlineInputBorder.resolveWith(
+                    border: WidgetStateInputBorder.resolveWith(
                           (states) => states.contains(WidgetState.focused)
                           ?  const OutlineInputBorder(borderSide: BorderSide(color: Colors.red))
                           :  const OutlineInputBorder(
@@ -134,11 +181,8 @@ class _HomeState extends State<DonationAppeal> {
                     ),
                   ),
                   width: 325,
-                  initialSelection: bloodTypes.first,
                   onSelected: (String? value) {
-                    setState(() {
                       bloodGroup=value!;
-                    });
                   },
                   dropdownMenuEntries: bloodTypes.map<DropdownMenuEntry<String>>((String value) {
                     return DropdownMenuEntry<String>(value: value, label: value);
@@ -149,7 +193,7 @@ class _HomeState extends State<DonationAppeal> {
                   hintText: "Gender",
                   controller: _genderController,
                   inputDecorationTheme: InputDecorationTheme(
-                    border: MaterialStateOutlineInputBorder.resolveWith(
+                    border: WidgetStateInputBorder.resolveWith(
                           (states) => states.contains(WidgetState.focused)
                           ?  const OutlineInputBorder(borderSide: BorderSide(color: Colors.red))
                           :  const OutlineInputBorder(
@@ -160,7 +204,6 @@ class _HomeState extends State<DonationAppeal> {
                     ),
                   ),
                   width: 325,
-                  initialSelection: genders.first,
                   onSelected: (String? value) {
                     setState(() {
 
@@ -170,52 +213,282 @@ class _HomeState extends State<DonationAppeal> {
                     return DropdownMenuEntry<String>(value: value, label: value);
                   }).toList(),
                 ),
+
+                DropdownMenu<String>(
+                  hintText: "Highest Education",
+                  inputDecorationTheme: InputDecorationTheme(
+                    border: WidgetStateInputBorder.resolveWith(
+                          (states) =>
+                      states.contains(WidgetState.focused)
+                          ? const OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.red))
+                          : const OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: Colors.red,
+                            width: 3,
+                          ),
+                          borderRadius:
+                          BorderRadius.all(Radius.circular(10.0))),
+                    ),
+                  ),
+                  width: 325,
+                  onSelected: (value) {
+                    setState(() {
+                      highestEducation = value!;
+                    });
+                  },
+                  dropdownMenuEntries: highest_education
+                      .map<DropdownMenuEntry<String>>((String value) {
+                    return DropdownMenuEntry<String>(
+                        value: value, label: value);
+                  }).toList(),
+                ),
+                IntlPhoneField(
+                  decoration: InputDecoration(
+                    hintText: '3221040476',
+                    border: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.red[900]!),
+                      borderRadius: BorderRadius.circular(100),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.red[900]!),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.red[900]!),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  initialCountryCode: 'PK',
+                  disableLengthCheck: true, // Prevents default length restriction
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly, // Allows only digits (0-9)
+                  ],
+                  onChanged: (phone) {
+                      contact = phone.completeNumber;
+                  },
+                ),
+                DropdownMenu<String>(
+                  hintText: "Frequency of donation",
+                  inputDecorationTheme: InputDecorationTheme(
+                    border: WidgetStateInputBorder.resolveWith(
+                          (states) =>
+                      states.contains(WidgetState.focused)
+                          ? const OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.red))
+                          : const OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: Colors.red,
+                            width: 3,
+                          ),
+                          borderRadius:
+                          BorderRadius.all(Radius.circular(10.0))),
+                    ),
+                  ),
+                  width: 325,
+                  onSelected: (value) {
+                      donationFrequency = value!;
+                  },
+                  dropdownMenuEntries: donation_frequency
+                      .map<DropdownMenuEntry<String>>((String value) {
+                    return DropdownMenuEntry<String>(
+                        value: value, label: value);
+                  }).toList(),
+                ),
+                DropdownMenu<String>(
+                  hintText: "Last Donated",
+                  inputDecorationTheme: InputDecorationTheme(
+                    border: WidgetStateInputBorder.resolveWith(
+                          (states) =>
+                      states.contains(WidgetState.focused)
+                          ? const OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.red))
+                          : const OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: Colors.red,
+                            width: 3,
+                          ),
+                          borderRadius:
+                          BorderRadius.all(Radius.circular(10.0))),
+                    ),
+                  ),
+                  width: 325,
+                  onSelected: (value) {
+                      lastDonated = value!;
+                  },
+                  dropdownMenuEntries: last_donated
+                      .map<DropdownMenuEntry<String>>((String value) {
+                    return DropdownMenuEntry<String>(
+                        value: value, label: value);
+                  }).toList(),
+                ),
+                DropdownMenu<String>(
+                  hintText: "Current Occupation",
+                  inputDecorationTheme: InputDecorationTheme(
+                    border: WidgetStateInputBorder.resolveWith(
+                          (states) => states.contains(WidgetState.focused)
+                          ? const OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.red))
+                          : const OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: Colors.red,
+                            width: 3,
+                          ),
+                          borderRadius: BorderRadius.all(Radius.circular(10.0))),
+                    ),
+                  ),
+                  width: 325,
+                  onSelected: (value) {
+                      currentOccupation = value!;
+                      isOtherSelected = value == 'Other';
+                  },
+                  dropdownMenuEntries: ocupation
+                      .map<DropdownMenuEntry<String>>((String value) {
+                    return DropdownMenuEntry<String>(value: value, label: value);
+                  }).toList(),
+                ),
+                if (isOtherSelected)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10),
+                    child: TextField(
+                      controller: otherOccupationController,
+                      decoration: InputDecoration(
+                        labelText: "Enter your occupation",
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      onChanged: (value) {
+                          currentOccupation = value;
+                      },
+                    ),
+                  ),
+                DropdownMenu<String>(
+                  hintText: "Current Living Arrangement",
+                  inputDecorationTheme: InputDecorationTheme(
+                    border: WidgetStateInputBorder.resolveWith(
+                          (states) =>
+                      states.contains(WidgetState.focused)
+                          ? const OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.red))
+                          : const OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: Colors.red,
+                            width: 3,
+                          ),
+                          borderRadius:
+                          BorderRadius.all(Radius.circular(10.0))),
+                    ),
+                  ),
+                  width: 325,
+
+                  onSelected: (value) {
+                      livingArrangement = value!;
+                  },
+                  dropdownMenuEntries: living_arrangement
+                      .map<DropdownMenuEntry<String>>((String value) {
+                    return DropdownMenuEntry<String>(
+                        value: value, label: value);
+                  }).toList(),
+                ),
               ],
             ),
             actions: [
               TextButton(
                 onPressed: () {
-                  if(patient!=''){
-                    _firebaseDatabase.updateDonationAppeal(docId: id, name: patient);
-                    Navigator.of(context).pop();
-                  }
-                  if(bloodGroup!=''){
-                    _firebaseDatabase.updateDonationAppeal(docId: id, bloodGroup: bloodGroup);
-                    Navigator.of(context).pop();
-                  }
-                  if(gender!=''){
-                    _firebaseDatabase.updateDonationAppeal(docId: id, gender: gender);
-                    Navigator.of(context).pop();
-                  }
-                  if(residence!=''){
-                    _firebaseDatabase.updateDonationAppeal(docId: id, residence: residence);
-                    Navigator.of(context).pop();
-                  }
-                  if(contact!=''){
-                    _firebaseDatabase.updateDonationAppeal(docId: id, contact: contact);
-                    Navigator.of(context).pop();
-                  }
-                  if(numberOfDonations!=-1){
-                    _firebaseDatabase.updateDonationAppeal(docId: id, donationsDone: numberOfDonations);
-                    Navigator.of(context).pop();
-                  }
-                  if(details!=''){
-                    _firebaseDatabase.updateDonationAppeal(docId: id, details: details);
-                    Navigator.of(context).pop();
-                  }
-                  _genderController.clear();
-                  _nameController.clear();
-                  _bloodGroupController.clear();
-                  _locationController.clear();
-                  _detailsController.clear();
-                  _genderController.clear();
-                  _donationsNumberController.clear();
-                  _hospitalController.clear();
-                  setState(() {
+                  try {
+                    if (donor != '') {
+                      _firebaseDatabase.updateDonationAppeal(
+                          docId: id, name: donor.trim());
+                    }
+                    if (bloodGroup != '') {
+                      _firebaseDatabase.updateDonationAppeal(
+                          docId: id, bloodGroup: bloodGroup.trim());
+                    }
+                    if (gender != '') {
+                      _firebaseDatabase.updateDonationAppeal(
+                          docId: id, gender: gender.trim());
+                    }
+                    if (residence != '') {
+                      _firebaseDatabase.updateDonationAppeal(
+                          docId: id, residence: residence.trim());
+                    }
+                    if (contact != '') {
+                      _firebaseDatabase.updateDonationAppeal(
+                          docId: id, contact: contact.trim());
+                    }
+                    if (numberOfDonations != -1) {
+                      _firebaseDatabase.updateDonationAppeal(
+                          docId: id, donationsDone: numberOfDonations);
+                    }
+                    if (details != '') {
+                      _firebaseDatabase.updateDonationAppeal(
+                          docId: id, details: details.trim());
+                    }
+                    if (currentOccupation != '') {
+                      _firebaseDatabase.updateDonationAppeal(
+                          docId: id, currentOccupation: currentOccupation.trim());
+                    }
+                    if (donationFrequency != '') {
+                      _firebaseDatabase.updateDonationAppeal(
+                          docId: id, donationFrequency: donationFrequency.trim());
+                    }
+                    if (highestEducation != '') {
+                      _firebaseDatabase.updateDonationAppeal(
+                          docId: id, highestEducation: highestEducation.trim());
+                    }
+                    if (age != -1) {
+                      _firebaseDatabase.updateDonationAppeal(
+                          docId: id, age: age);
+                    }
+                    if (futureDonationWill != '') {
+                      _firebaseDatabase.updateDonationAppeal(
+                          docId: id, futureDonationWillingness: futureDonationWill);
+                    }
+                    if (weight != -1) {
+                      _firebaseDatabase.updateDonationAppeal(
+                          docId: id, weight: weight);
+                    }
+                    if (livingArrangement != '') {
+                      _firebaseDatabase.updateDonationAppeal(
+                          docId: id, currentLivingArrg: livingArrangement);
+                    }
 
-                  });
+                      _nameController.clear();
+                      _bloodGroupController.clear();
+                      _locationController.clear();
+                      _detailsController.clear();
+                      _genderController.clear();
+                      _donationsNumberController.clear();
+                      _hospitalController.clear();
+                    Navigator.of(context).pop();
+                    Get.snackbar("Success: ", "Donor registration updated successfully!",
+                        backgroundColor: Colors.red,
+                        colorText: Colors.white,
+                        margin: const EdgeInsets.all(
+                          15,
+                        ),
+                        snackPosition: SnackPosition.BOTTOM,
+                        icon: const Icon(
+                          Icons.message,
+                          color: Colors.white,
+                        ));
+                  }
+                  catch(e){
+                    Get.snackbar("Error updating the donor registration: ", e.toString(),
+                        backgroundColor: Colors.red,
+                        colorText: Colors.white,
+                        margin: const EdgeInsets.all(
+                          15,
+                        ),
+                        snackPosition: SnackPosition.BOTTOM,
+                        icon: const Icon(
+                          Icons.message,
+                          color: Colors.white,
+                        ));
+                  }
                 },
-                child: const Text('Update Donation Appeal'),
+                child: const Text('Update Donor Registration'),
               ),
               TextButton(
                 onPressed: () {
@@ -237,6 +510,7 @@ class _HomeState extends State<DonationAppeal> {
       ),
     );
   }
+
   @override
   Widget build(BuildContext context) {
     final FirebaseAuth auth = FirebaseAuth.instance;
@@ -708,37 +982,12 @@ class _HomeState extends State<DonationAppeal> {
                                         ),
                                       ),
                                       onPressed: () {
-                                        try {
                                           updateButton(data['docId']);
                                           setState(() {});
-                                          Get.snackbar("Success: ", 'Donation appeal updated successfully',
-                                              backgroundColor: Colors.red,
-                                              colorText: Colors.white,
-                                              margin: const EdgeInsets.all(
-                                                15,
-                                              ),
-                                              snackPosition: SnackPosition.BOTTOM,
-                                              icon: const Icon(
-                                                Icons.message,
-                                                color: Colors.white,
-                                              ));
-                                        }
-                                        catch(e){
-                                          Get.snackbar("Error: ", e.toString(),
-                                              backgroundColor: Colors.red,
-                                              colorText: Colors.white,
-                                              margin: const EdgeInsets.all(
-                                                15,
-                                              ),
-                                              snackPosition: SnackPosition.BOTTOM,
-                                              icon: const Icon(
-                                                Icons.message,
-                                                color: Colors.white,
-                                              ));
-                                        }
                                       },
                                       child: const Text('Update'),
                                     ),
+
                                     const SizedBox(width: 6),
                                     OutlinedButton(
                                       style: OutlinedButton.styleFrom(
@@ -794,7 +1043,6 @@ class _HomeState extends State<DonationAppeal> {
                                             builder: (context) => DonorDetails(
                                               patient: data['name'],
                                               contact: data['contact'],
-                                              hospital: data['hospital'],
                                               residence: data['residence'],
                                               bloodGroup: data['bloodGroup'],
                                               gender: data['gender'],

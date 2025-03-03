@@ -81,7 +81,7 @@ class _RequestsState extends State<Requests> {
                       bags = int.tryParse(value) ?? 0; // If parsing fails, it will default to 0
                   },
                   controller: _bagsController,
-                  decoration: const InputDecoration(hintText: "Bags"),
+                  decoration: const InputDecoration(hintText: "Blood quantity needed"),
                 ),
 
                 const SizedBox(height: 4,),
@@ -105,7 +105,7 @@ class _RequestsState extends State<Requests> {
                   hintText: "Blood Group",
                   controller: _bloodGroupController,
                   inputDecorationTheme: InputDecorationTheme(
-                    border: MaterialStateOutlineInputBorder.resolveWith(
+                    border: WidgetStateInputBorder.resolveWith(
                           (states) => states.contains(WidgetState.focused)
                           ?  const OutlineInputBorder(borderSide: BorderSide(color: Colors.red))
                           :  const OutlineInputBorder(
@@ -129,7 +129,7 @@ class _RequestsState extends State<Requests> {
                   hintText: "Donation Case",
                   controller: _caseController,
                   inputDecorationTheme: InputDecorationTheme(
-                    border: MaterialStateOutlineInputBorder.resolveWith(
+                    border: WidgetStateInputBorder.resolveWith(
                           (states) => states.contains(WidgetState.focused)
                           ?  const OutlineInputBorder(borderSide: BorderSide(color: Colors.red))
                           :  const OutlineInputBorder(
@@ -153,7 +153,7 @@ class _RequestsState extends State<Requests> {
                   hintText: "Gender",
                   controller: _genderController,
                   inputDecorationTheme: InputDecorationTheme(
-                    border: MaterialStateOutlineInputBorder.resolveWith(
+                    border: WidgetStateInputBorder.resolveWith(
                           (states) => states.contains(WidgetState.focused)
                           ?  const OutlineInputBorder(borderSide: BorderSide(color: Colors.red))
                           :  const OutlineInputBorder(
@@ -181,6 +181,10 @@ class _RequestsState extends State<Requests> {
                   try {
                     if (patient != '') {
                       firebaseDatabase.updateRequest(docId: id, name: patient);
+                      Navigator.of(context).pop();
+                    }
+                    if (bags != -1) {
+                      firebaseDatabase.updateRequest(docId: id, bags: bags);
                       Navigator.of(context).pop();
                     }
                     if (bloodGroup != '') {
@@ -223,6 +227,7 @@ class _RequestsState extends State<Requests> {
                       _genderController.clear();
                       _caseController.clear();
                       _hospitalController.clear();
+
                     });
                     Get.snackbar("Success: ","Request updated successfully!",
                         backgroundColor: Colors.red,

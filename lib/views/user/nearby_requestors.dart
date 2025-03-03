@@ -1,42 +1,41 @@
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:timeago/timeago.dart' as timeago;
+import '../../controllers/fireStoreDatabaseController.dart';
+import 'details.dart';
 
 class NearbyRequestors extends StatefulWidget {
   const NearbyRequestors({super.key});
-  static const route = '/nearby-requestors';
+  static const route = '/nearby-donors';
 
   @override
   State<NearbyRequestors> createState() => _NearbyRequestorsState();
 }
 
 class _NearbyRequestorsState extends State<NearbyRequestors> {
-
-
-
   final FirebaseAuth auth = FirebaseAuth.instance;
+  final fireStoreDatabaseController firebaseDatabase =
+  fireStoreDatabaseController();
   Position? currentPosition;
-  List<Map<String, dynamic>> nearbyRequestors = [];
+  List<Map<String, dynamic>> nearbyRequesters = [];
   bool isLoading = false;
   String selectedBloodGroup = '';
-
   final List<String> bloodGroups = [
     'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'
   ];
 
   final Map<String, List<String>> compatibleBloodGroups = {
     'A+': ['A+', 'AB+'],
-    'A-': ['A+', 'A-', 'AB+', 'AB-'],
+    'A-': ['A-', 'AB-','A+','AB+'],
     'B+': ['B+', 'AB+'],
-    'B-': ['B+', 'B-', 'AB+', 'AB-'],
-    'O+': ['O+', 'A+', 'B+', 'AB+'],
-    'O-': ['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'],
+    'B-': ['B-', 'B+', 'AB+', 'AB-'],
+    'O+': ['A+', 'B+', 'O+', 'AB+'],
+    'O-': ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'],
     'AB+': ['AB+'],
-    'AB-': ['AB+', 'AB-']
+    'AB-': ['AB+', 'AB-'],
   };
 
   Future<void> startLocationTracking() async {
@@ -48,14 +47,27 @@ class _NearbyRequestorsState extends State<NearbyRequestors> {
         isLoading = true;
       });
 
-      await findNearbyRequestors();
+      if (await doesUserExist()) {
+        await firebaseDatabase.updateDonorPosition(
+            position.longitude, position.latitude);
+      }
+
+      await findNearbyRequesters();
     } catch (e) {
       print("Error getting location: $e");
     }
   }
 
+  Future<bool> doesUserExist() async {
+    final doc = await FirebaseFirestore.instance
+        .collection('requests')
+        .doc(auth.currentUser?.uid)
+        .get();
+    return doc.exists;
+  }
+
   double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
-    const double R = 6371;
+    const double R = 6371; // Earth radius in km
     double dLat = (lat2 - lat1) * pi / 180;
     double dLon = (lon2 - lon1) * pi / 180;
     double a = sin(dLat / 2) * sin(dLat / 2) +
@@ -64,10 +76,10 @@ class _NearbyRequestorsState extends State<NearbyRequestors> {
             sin(dLon / 2) *
             sin(dLon / 2);
     double c = 2 * atan2(sqrt(a), sqrt(1 - a));
-    return R * c;
+    return R * c; // Distance in km
   }
 
-  Future<void> findNearbyRequestors() async {
+  Future<void> findNearbyRequesters() async {
     if (currentPosition == null || selectedBloodGroup.isEmpty) return;
 
     setState(() {
@@ -77,12 +89,13 @@ class _NearbyRequestorsState extends State<NearbyRequestors> {
     FirebaseFirestore firestore = FirebaseFirestore.instance;
     double lat = currentPosition!.latitude;
     double lon = currentPosition!.longitude;
-    double searchRadiusKm = 5;
+    double searchRadiusKm = 15; // 100 meters
     double latChange = searchRadiusKm / 111.12;
     double lonChange = searchRadiusKm / (111.12 * cos(lat * pi / 180));
 
     try {
       List<String> validBloodGroups = compatibleBloodGroups[selectedBloodGroup]!;
+
       QuerySnapshot snapshot = await firestore
           .collection('requests')
           .where('latitude', isGreaterThanOrEqualTo: lat - latChange)
@@ -90,9 +103,10 @@ class _NearbyRequestorsState extends State<NearbyRequestors> {
           .where('longitude', isGreaterThanOrEqualTo: lon - lonChange)
           .where('longitude', isLessThanOrEqualTo: lon + lonChange)
           .where('bloodGroup', whereIn: validBloodGroups)
+          .where('userId', isNotEqualTo: auth.currentUser?.uid)
           .get();
 
-      List<Map<String, dynamic>> requestorsNearby = snapshot.docs
+      List<Map<String, dynamic>> usersNearby = snapshot.docs
           .map((doc) => doc.data() as Map<String, dynamic>)
           .where((data) {
         double userLat = data['latitude'];
@@ -101,18 +115,16 @@ class _NearbyRequestorsState extends State<NearbyRequestors> {
       }).toList();
 
       setState(() {
-        nearbyRequestors = requestorsNearby;
+        nearbyRequesters = usersNearby;
         isLoading = false;
       });
     } catch (e) {
-      print("Error finding requestors: $e");
+      print("Error finding requesters: $e");
       setState(() {
         isLoading = false;
       });
     }
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -121,7 +133,7 @@ class _NearbyRequestorsState extends State<NearbyRequestors> {
       width: MediaQuery.of(context).size.width,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text("Nearby Blood Requestors",
+          title: const Text("Nearby Requesters",
               style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
           backgroundColor: Colors.red[900],
           centerTitle: true,
@@ -156,27 +168,143 @@ class _NearbyRequestorsState extends State<NearbyRequestors> {
               ),
               child: isLoading
                   ? const CircularProgressIndicator(color: Colors.white)
-                  : const Text("Find Nearby Requestors", style: TextStyle(color: Colors.white)),
+                  : const Text("Find Nearby Requesters", style: TextStyle(color: Colors.white)),
             ),
             Expanded(
-              child: nearbyRequestors.isEmpty
-                  ? const Center(child: Text("No nearby requestors found"))
+              child: nearbyRequesters.isEmpty
+                  ? const Center(child: Text("No nearby requests found"))
                   : ListView.builder(
-                itemCount: nearbyRequestors.length,
+                itemCount: nearbyRequesters.length,
                 itemBuilder: (context, index) {
-                  final requestor = nearbyRequestors[index];
-                  var createdAt = requestor['createdAt'] != null
-                      ? (requestor['createdAt'] as Timestamp).toDate()
+                  final request = nearbyRequesters[index];
+                  var createdAt = request['createdAt'] != null
+                      ? (request['createdAt'] as Timestamp).toDate()
                       : DateTime.now();
                   var timeAgo = timeago.format(createdAt);
                   return Card(
                     margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     elevation: 4,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    child: ListTile(
-                      title: Text(requestor['name'] ?? 'Unknown',
-                          style: const TextStyle(fontWeight: FontWeight.bold)),
-                      subtitle: Text("Requested ${requestor['bloodGroup']} blood $timeAgo"),
+                    child: Padding(
+                      padding: const EdgeInsets.all(10.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            timeAgo,
+                            style: const TextStyle(
+                              fontSize: 18, // Adjusted for better fit
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey,
+                            ),
+                          ),
+                          Align(
+                            alignment: Alignment.topRight,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.red[900],
+                                shape: BoxShape.circle,
+                              ),
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text(
+                                nearbyRequesters[index]['bloodGroup'] ?? 'N/A',
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 5),
+                          ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: CircleAvatar(
+                              radius: 30, // Adjust size as needed
+                              backgroundColor: Colors.black, // Fallback color
+                              child: ClipOval(
+                                child: request['profileUrl'] != null &&
+                                    request['profileUrl'].isNotEmpty
+                                    ? Image.network(
+                                  nearbyRequesters[index]['profileUrl'],
+                                  width: 100, // 2 * radius
+                                  height: 100,
+                                  fit: BoxFit.cover,
+                                )
+                                    : const Icon(Icons.person,color: Colors.white,
+                                    size: 40), // Display default icon if no image
+                              ),
+                            ),
+                            title: Text(
+                              nearbyRequesters[index]['name'] ?? 'Unknown',
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                              softWrap: false,
+                            ),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    const Icon(Icons.location_on_rounded, size: 16),
+                                    const SizedBox(width: 4),
+                                    Expanded(
+                                      child: Text(
+                                        nearbyRequesters[index]['residence'] ?? 'Unknown',
+                                        style: const TextStyle(fontSize: 14),
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 1,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  "${request['bags'] ?? 'N/A'} ml needed | ${request['case'] ?? 'N/A'}",
+                                  style: const TextStyle(color: Colors.grey, fontSize: 14),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.red[900],
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => Details(
+                                        patient: request['name'],
+                                        contact: request['contact'],
+                                        hospital: request['hospital'],
+                                        residence: request['residence'],
+                                        case_: request['case'],
+                                        bags: request['bags'],
+                                        bloodGroup: request['bloodGroup'],
+                                        gender: request['gender'],
+                                        email: request['email'],
+                                        profileImage: request['profileUrl'],
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: const Text('Details', style: TextStyle(color: Colors.white)),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   );
                 },

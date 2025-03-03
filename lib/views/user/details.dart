@@ -1,4 +1,6 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class Details extends StatefulWidget {
   final dynamic patient;
@@ -33,6 +35,8 @@ class Details extends StatefulWidget {
 class DetailsState extends State<Details> {
   @override
   Widget build(BuildContext context) {
+    final FirebaseAuth auth = FirebaseAuth.instance;
+
     return SizedBox(
       height: MediaQuery.of(context).size.height,
       width: MediaQuery.of(context).size.width,
@@ -144,7 +148,7 @@ class DetailsState extends State<Details> {
                           // Spacing
                           Expanded(
                             child: Text(
-                              widget.email,
+                              widget.email ?? auth.currentUser?.email,
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -171,7 +175,7 @@ class DetailsState extends State<Details> {
               _infoCard("Hospital", widget.hospital),
               _infoCard("Location", widget.residence),
               _infoCard("Blood Group", widget.bloodGroup, highlight: true),
-              _infoCard("Contact Number", widget.contact),
+              _infoCard("Contact Number", widget.contact, copyable: true),
               _infoCard("Case", widget.case_),
               _infoCard("Quantity Needed", widget.bags.toString(), highlight: true),
               const SizedBox(height: 30),
@@ -183,8 +187,7 @@ class DetailsState extends State<Details> {
     );
   }
 
-  // Widget for displaying information inside a Card
-  Widget _infoCard(String title, String value, {bool highlight = false}) {
+  Widget _infoCard(String title, String value, {bool highlight = false, bool copyable = false}) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -193,31 +196,39 @@ class DetailsState extends State<Details> {
         padding: const EdgeInsets.all(15.0),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
-          // Aligns long text correctly
           children: [
-            // Title (Fixed width to prevent shifting)
             SizedBox(
-              width: 120, // Adjust as needed
+              width: 120,
               child: Text(
                 title,
                 style: const TextStyle(fontSize: 16, color: Colors.black54),
               ),
             ),
-
-            const SizedBox(width: 10), // Adds spacing
-
-            // Expanded Text to handle long content
+            const SizedBox(width: 10),
             Expanded(
-              child: Text(
-                value,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: highlight ? Colors.red[900] : Colors.black,
+              child: GestureDetector(
+                onTap: copyable
+                    ? () {
+                  Clipboard.setData(ClipboardData(text: value));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('$title copied to clipboard!'),
+                      duration: const Duration(seconds: 1),
+                    ),
+                  );
+                }
+                    : null,
+                child: Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: highlight ? Colors.red[900] : Colors.black,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 10,
+                  softWrap: true,
                 ),
-                overflow: TextOverflow.ellipsis, // Truncates if needed
-                maxLines: 10, // Limits height
-                softWrap: true, // Allows wrapping
               ),
             ),
           ],

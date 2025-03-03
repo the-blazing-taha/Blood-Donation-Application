@@ -122,7 +122,6 @@ class fireStoreDatabaseController {
   Future<String> addDonor(
       String name,
       String contact,
-      String hospital,
       String residence,
       int donationNumber,
       String bloodGroup,
@@ -148,7 +147,6 @@ class fireStoreDatabaseController {
         'userId': _auth.currentUser?.uid,
         'name': name,
         'contact': contact,
-        'hospital': hospital,
         'residence': residence,
         'donations_done': donationNumber,
         'bloodGroup': bloodGroup,
@@ -382,7 +380,7 @@ class fireStoreDatabaseController {
         firestore.collection('donors')
             .doc(docId)
             .update({
-          'residence': residence,
+          'bloodGroup': bloodGroup,
         });
       }
       if (gender != '') {

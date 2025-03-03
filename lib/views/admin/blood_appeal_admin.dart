@@ -256,7 +256,6 @@ class _DonorListState extends State<DonorList> {
                                   builder: (context) => DonorDetails(
                                     patient: donation.name,
                                     contact: donation.contact,
-                                    hospital: donation.hospital,
                                     residence: donation.residence,
                                     bloodGroup: donation.bloodGroup,
                                     gender: donation.gender,
