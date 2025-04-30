@@ -75,7 +75,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               color: Colors.white,
             ));
       }
-
   }
 
   selectGalleryImage() async {
@@ -138,16 +137,43 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 radius: 65,
                                 backgroundImage: MemoryImage(_image!),
                               ),
+
                         Positioned(
                           right: 0,
                           top: -11,
                           child: IconButton(
                             onPressed: () {
-                              selectGalleryImage();
+                              showModalBottomSheet(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return SafeArea(
+                                    child: Wrap(
+                                      children: <Widget>[
+                                        ListTile(
+                                          leading: Icon(CupertinoIcons.photo),
+                                          title: Text('Choose from Gallery'),
+                                          onTap: () {
+                                            Navigator.of(context).pop();
+                                            selectGalleryImage(); // your method to pick from gallery
+                                          },
+                                        ),
+                                        ListTile(
+                                          leading: Icon(CupertinoIcons.camera),
+                                          title: Text('Take a Photo'),
+                                          onTap: () {
+                                            Navigator.of(context).pop();
+                                            captureImage(); // your method to pick from camera
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              );
                             },
                             icon: const Icon(CupertinoIcons.photo),
                           ),
-                        )
+                        ),
                       ],
                     ),
                     const SizedBox(

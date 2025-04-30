@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:blood/views/user/nearby_donors.dart';
+import 'package:blood/views/user/allrequests.dart';
 import 'package:blood/views/user/wrapper.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -22,6 +22,22 @@ Future<void> initializeFirebase() async {
         : null,
   );
 }
+void _handleMessage(RemoteMessage message) {
+  final docId = message.data['docId'];
+  if (docId != null) {
+    navigatorKey.currentState?.pushNamed('/requestDetails', arguments: {'docId': docId});
+  }
+}
+
+Future<void> setupInteractedMessage() async {
+  // Handle the case when the app is terminated
+  RemoteMessage? initialMessage = await FirebaseMessaging.instance.getInitialMessage();
+  if (initialMessage != null) {
+    _handleMessage(initialMessage);
+  }
+  // Foreground and background message click
+  FirebaseMessaging.onMessageOpenedApp.listen(_handleMessage);
+}
 
 /// Setup FCM Notifications
 Future<void> setUpNotifications() async {
@@ -33,16 +49,16 @@ Future<void> setUpNotifications() async {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  /// Start showing the app immediately
-  runApp(const SplashScreen());
-
-  /// Initialize Firebase and other background tasks
   await initializeFirebase();
   await setUpNotifications();
 
-  /// Start the main app
-  runApp(const MyApp());
+  // Check if the app was opened via a notification
+  RemoteMessage? initialMessage = await FirebaseMessaging.instance.getInitialMessage();
+
+
+  runApp(MyApp(initialMessage: initialMessage));
 }
+
 
 /// Splash screen to show while initializing
 class SplashScreen extends StatelessWidget {
@@ -53,6 +69,7 @@ class SplashScreen extends StatelessWidget {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
       home: Scaffold(
+        resizeToAvoidBottomInset: true, // or false if you want to prevent resizing
         backgroundColor: Colors.white,
         body: Center(
           child: CircularProgressIndicator(color: Colors.red),
@@ -63,18 +80,34 @@ class SplashScreen extends StatelessWidget {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final RemoteMessage? initialMessage;
+
+  const MyApp({super.key, this.initialMessage});
 
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Blood Donation App',
       navigatorKey: navigatorKey,
-      home: Wrapper(),
+      title: 'Blood Donation App',
+      initialRoute: _getInitialRoute(),
       routes: {
-        NearbyDonors.route: (context) => const NearbyDonors(),
+        '/': (context) => const Wrapper(), // Default route (shows splash inside)
+        '/requestDetails': (context) => AllRequests(),
       },
     );
+  }
+
+  String _getInitialRoute() {
+    if (initialMessage?.data['docId'] != null) {
+      // Store the docId somewhere if needed
+      Future.microtask(() {
+        navigatorKey.currentState?.pushNamed(
+          '/requestDetails',
+          arguments: {'docId': initialMessage!.data['docId']},
+        );
+      });
+    }
+    return '/'; // Return to Wrapper, but redirect above will fire if needed
   }
 }

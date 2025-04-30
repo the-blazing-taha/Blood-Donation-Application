@@ -1,2 +1,3 @@
-late bool donorMode; // No default value, will be fetched from Firestore
+bool donorMode=false; // No default value, will be fetched from Firestore
+int notificationCount = 0; // Change this based on your logic
 

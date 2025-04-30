@@ -2,6 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'appbar.dart';
+
 class Details extends StatefulWidget {
   final dynamic patient;
   final dynamic contact;
@@ -13,6 +15,8 @@ class Details extends StatefulWidget {
   final dynamic gender;
   final dynamic email;
   final dynamic profileImage;
+  final dynamic details;
+
 
   const Details({
     super.key,
@@ -25,6 +29,7 @@ class Details extends StatefulWidget {
     required this.bloodGroup,
     required this.gender,
     required this.email,
+    required this.details,
     this.profileImage,
   });
 
@@ -42,15 +47,7 @@ class DetailsState extends State<Details> {
       width: MediaQuery.of(context).size.width,
       child: Scaffold(
         backgroundColor: Colors.grey[100],
-        appBar: AppBar(
-          title: const Text(
-            'Patient Details',
-            style: TextStyle(color: Colors.white),
-          ),
-          backgroundColor: Colors.red[900],
-          centerTitle: true,
-          iconTheme: const IconThemeData(color: Colors.white),
-        ),
+        appBar: CustomAppBar(title: 'Patient Details'),
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -177,6 +174,7 @@ class DetailsState extends State<Details> {
               _infoCard("Blood Group", widget.bloodGroup, highlight: true),
               _infoCard("Contact Number", widget.contact, copyable: true),
               _infoCard("Case", widget.case_),
+              _infoCard("Details", widget.details),
               _infoCard("Quantity Needed", widget.bags.toString(), highlight: true),
               const SizedBox(height: 30),
       

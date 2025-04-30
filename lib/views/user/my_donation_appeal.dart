@@ -1,9 +1,6 @@
 import 'package:blood/views/user/globals.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:blood/views/user/donor_details.dart';
-import 'package:blood/views/user/profile.dart';
-import 'package:blood/views/user/registerdonor.dart';
-import 'package:blood/views/user/request_form.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,10 +9,7 @@ import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../../controllers/auth_controller.dart';
 import '../../controllers/fireStoreDatabaseController.dart';
-import 'home.dart';
-import 'my_requests.dart';
-import 'nearby_donors.dart';
-import 'nearby_requestors.dart';
+import 'drawer.dart';
 
 class DonationAppeal extends StatefulWidget {
   const DonationAppeal({super.key});
@@ -25,14 +19,11 @@ class DonationAppeal extends StatefulWidget {
 }
 
 class _HomeState extends State<DonationAppeal> {
-  int _selectedIndex = 0;
-  final AuthController _authController = AuthController();
+  int selectedIndex = 0;
 
-
-
-  void _onItemTapped(int index) {
+  void onItemTapped(int index) {
     setState(() {
-      _selectedIndex = index;
+      selectedIndex = index;
     });
   }
   final TextEditingController _nameController = TextEditingController();
@@ -109,7 +100,7 @@ class _HomeState extends State<DonationAppeal> {
   bool isOtherSelected = false;
   TextEditingController otherOccupationController = TextEditingController();
   int weight = -1;
-
+  final FocusNode _focusNode = FocusNode();
 
   void updateButton(String id) {
     showDialog(
@@ -165,19 +156,13 @@ class _HomeState extends State<DonationAppeal> {
                   controller: _detailsController,
                   decoration: const InputDecoration(hintText: "Details"),
                 ),
-                const SizedBox(height: 4,),
-                DropdownMenu<String>(
+                const SizedBox(height: 4,), DropdownMenu<String>(
                   hintText: "Blood Group",
                   controller: _bloodGroupController,
                   inputDecorationTheme: InputDecorationTheme(
-                    border: WidgetStateInputBorder.resolveWith(
-                          (states) => states.contains(WidgetState.focused)
-                          ?  const OutlineInputBorder(borderSide: BorderSide(color: Colors.red))
-                          :  const OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.red,width: 3,),
-                          borderRadius:BorderRadius.all(Radius.circular(10.0))
-                      ),
-
+                    border:const OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.red,width: 3,),
+                        borderRadius:BorderRadius.all(Radius.circular(10.0))
                     ),
                   ),
                   width: 325,
@@ -193,14 +178,9 @@ class _HomeState extends State<DonationAppeal> {
                   hintText: "Gender",
                   controller: _genderController,
                   inputDecorationTheme: InputDecorationTheme(
-                    border: WidgetStateInputBorder.resolveWith(
-                          (states) => states.contains(WidgetState.focused)
-                          ?  const OutlineInputBorder(borderSide: BorderSide(color: Colors.red))
-                          :  const OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.red,width: 3,),
-                          borderRadius:BorderRadius.all(Radius.circular(10.0))
-                      ),
-
+                    border: const OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.red,width: 3,),
+                        borderRadius:BorderRadius.all(Radius.circular(10.0))
                     ),
                   ),
                   width: 325,
@@ -217,18 +197,9 @@ class _HomeState extends State<DonationAppeal> {
                 DropdownMenu<String>(
                   hintText: "Highest Education",
                   inputDecorationTheme: InputDecorationTheme(
-                    border: WidgetStateInputBorder.resolveWith(
-                          (states) =>
-                      states.contains(WidgetState.focused)
-                          ? const OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.red))
-                          : const OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Colors.red,
-                            width: 3,
-                          ),
-                          borderRadius:
-                          BorderRadius.all(Radius.circular(10.0))),
+                    border:const OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.red,width: 3,),
+                        borderRadius:BorderRadius.all(Radius.circular(10.0))
                     ),
                   ),
                   width: 325,
@@ -271,18 +242,9 @@ class _HomeState extends State<DonationAppeal> {
                 DropdownMenu<String>(
                   hintText: "Frequency of donation",
                   inputDecorationTheme: InputDecorationTheme(
-                    border: WidgetStateInputBorder.resolveWith(
-                          (states) =>
-                      states.contains(WidgetState.focused)
-                          ? const OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.red))
-                          : const OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Colors.red,
-                            width: 3,
-                          ),
-                          borderRadius:
-                          BorderRadius.all(Radius.circular(10.0))),
+                    border: const OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.red,width: 3,),
+                        borderRadius:BorderRadius.all(Radius.circular(10.0))
                     ),
                   ),
                   width: 325,
@@ -298,18 +260,9 @@ class _HomeState extends State<DonationAppeal> {
                 DropdownMenu<String>(
                   hintText: "Last Donated",
                   inputDecorationTheme: InputDecorationTheme(
-                    border: WidgetStateInputBorder.resolveWith(
-                          (states) =>
-                      states.contains(WidgetState.focused)
-                          ? const OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.red))
-                          : const OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Colors.red,
-                            width: 3,
-                          ),
-                          borderRadius:
-                          BorderRadius.all(Radius.circular(10.0))),
+                    border: const OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.red,width: 3,),
+                        borderRadius:BorderRadius.all(Radius.circular(10.0))
                     ),
                   ),
                   width: 325,
@@ -325,16 +278,9 @@ class _HomeState extends State<DonationAppeal> {
                 DropdownMenu<String>(
                   hintText: "Current Occupation",
                   inputDecorationTheme: InputDecorationTheme(
-                    border: WidgetStateInputBorder.resolveWith(
-                          (states) => states.contains(WidgetState.focused)
-                          ? const OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.red))
-                          : const OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Colors.red,
-                            width: 3,
-                          ),
-                          borderRadius: BorderRadius.all(Radius.circular(10.0))),
+                    border: const OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.red,width: 3,),
+                        borderRadius:BorderRadius.all(Radius.circular(10.0))
                     ),
                   ),
                   width: 325,
@@ -366,18 +312,9 @@ class _HomeState extends State<DonationAppeal> {
                 DropdownMenu<String>(
                   hintText: "Current Living Arrangement",
                   inputDecorationTheme: InputDecorationTheme(
-                    border: WidgetStateInputBorder.resolveWith(
-                          (states) =>
-                      states.contains(WidgetState.focused)
-                          ? const OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.red))
-                          : const OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Colors.red,
-                            width: 3,
-                          ),
-                          borderRadius:
-                          BorderRadius.all(Radius.circular(10.0))),
+                    border:const OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.red,width: 3,),
+                        borderRadius:BorderRadius.all(Radius.circular(10.0))
                     ),
                   ),
                   width: 325,
@@ -519,7 +456,6 @@ class _HomeState extends State<DonationAppeal> {
         .where('userId', isEqualTo: auth.currentUser!.uid)
         .snapshots();
     final fireStoreDatabaseController firebaseDatabase = fireStoreDatabaseController();
-    final user=FirebaseFirestore.instance.collection('users').doc(auth.currentUser?.uid).get();
 
     return SizedBox(
       height: MediaQuery.of(context).size.height,
@@ -560,288 +496,7 @@ class _HomeState extends State<DonationAppeal> {
           backgroundColor: Colors.red[900],
           centerTitle: true,
         ),
-        drawer: Opacity(
-          opacity: 0.6,
-          child: Drawer(
-            backgroundColor: Colors.red[900],
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: [
-                DrawerHeader(
-                  decoration: BoxDecoration(
-                    color: Colors.red[900],
-                  ),
-                  child: Column(
-                    children: [
-                      const Text(
-                        'Life Sync',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 30),
-                      ),
-                      FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-                        future: user,
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting) {
-                            return const CircularProgressIndicator(); // Show a loading indicator
-                          } else if (snapshot.hasError) {
-                            return Text('Error: ${snapshot.error}'); // Handle errors
-                          } else if (snapshot.hasData && snapshot.data!.exists) {
-                            Map<String, dynamic>? userData = snapshot.data!.data();
-                            String? profileImageUrl = userData?['profileImage'];
-                            return Column(
-                              children: [
-                                CircleAvatar(
-                                  radius: 30, // Adjust size as needed
-                                  backgroundColor: Colors.grey[300], // Fallback color
-                                  child: ClipOval(
-                                    child: profileImageUrl != null && profileImageUrl.isNotEmpty
-                                        ? Image.network(
-                                      profileImageUrl,
-                                      width: 60, // 2 * radius
-                                      height: 60,
-                                      fit: BoxFit.cover,
-                                    )
-                                        : const Icon(Icons.person, size: 40), // Display default icon if no image
-                                  ),
-                                ),
-                              ],
-                            );
-                          } else {
-                            return const Text('No user data found.');
-                          }
-                        },
-                      ),
-                      FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-                        future: user,
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting) {
-                            return const CircularProgressIndicator(); // Show a loading indicator
-                          } else if (snapshot.hasError) {
-                            return Text('Error: ${snapshot.error}'); // Handle errors
-                          } else if (snapshot.hasData && snapshot.data!.exists) {
-                            Map<String, dynamic>? userData = snapshot.data!.data();
-                            String? userName = userData?['fullName'];
-                            return Column(
-                              children: [
-                                Text(userName as String, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold,fontFamily:'Pacifico' ),),
-                              ],
-                            );
-                          } else {
-                            return const Text('No user data found.');
-                          }
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-
-                ListTile(
-                  leading: const Icon(
-                    Icons.home,
-                    color: Colors.white,
-                  ),
-                  title: const Text(
-                    'Home',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16),
-                  ),
-                  selected: _selectedIndex == 0,
-                  onTap: () {
-                    _onItemTapped(0);
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const Home(),
-                      ),
-                    );
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(
-                    Icons.bloodtype_sharp,
-                    color: Colors.white,
-                  ),
-                  title: const Text(
-                    'Your Requests',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16),
-                  ),
-                  selected: _selectedIndex == 1,
-                  onTap: () {
-                    _onItemTapped(1);
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const Requests(),
-                      ),
-                    );
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(
-                    Icons.bloodtype_sharp,
-                    color: Colors.white,
-                  ),
-                  title: const Text('Register as Donor',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16)),
-                  selected: _selectedIndex == 3,
-                  onTap: () {
-                    _onItemTapped(3);
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const RequestDonor(),
-                      ),
-                    );
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(
-                    Icons.person,
-                    color: Colors.white,
-                  ),
-                  title: const Text('Your Donation Registration',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16)),
-                  selected: _selectedIndex == 4,
-                  onTap: () {
-                    _onItemTapped(3);
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const DonationAppeal(),
-                      ),
-                    );
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(
-                    Icons.request_page,
-                    color: Colors.white,
-                  ),
-                  title: const Text('Add Blood Request',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16)),
-                  selected: _selectedIndex == 5,
-                  onTap: () {
-                    _onItemTapped(5);
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const RequestForm(),
-                      ),
-                    );
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(
-                    Icons.request_page,
-                    color: Colors.white,
-                  ),
-                  title: const Text('Profile',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16)),
-                  selected: _selectedIndex == 6,
-                  onTap: () {
-                    _onItemTapped(6);
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => Profile(),
-                      ),
-                    );
-                  },
-                ),
-
-                ListTile(
-                  leading: const Icon(
-                    Icons.near_me,
-                    color: Colors.white,
-                  ),
-                  title: const Text('Nearby donors',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16)),
-                  selected: _selectedIndex == 7,
-                  onTap: () {
-                    _onItemTapped(7);
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const NearbyDonors(),
-                      ),
-                    );
-                  },
-                ),
-
-                ListTile(
-                  leading: const Icon(
-                    Icons.near_me_outlined,
-                    color: Colors.white,
-                  ),
-                  title: const Text('Nearby Requesters',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16)),
-                  selected: _selectedIndex == 8,
-                  onTap: () {
-                    _onItemTapped(8);
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const NearbyRequestors(),
-                      ),
-                    );
-                  },
-                ),
-
-                ListTile(
-                  leading: const Icon(
-                    Icons.logout,
-                    color: Colors.white,
-                  ),
-                  title: const Text('Log Out',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16)),
-                  selected: _selectedIndex == 9,
-                  onTap: () {
-                    _onItemTapped(9);
-                    Navigator.pop(context);
-                    _authController.signout();
-                  },
-                ),
-                // Other ListTiles...
-              ],
-            ),
-          ),
-        ),
+        drawer: SideDrawer(),
 
         body: Column(
           children: [

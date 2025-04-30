@@ -1,6 +1,7 @@
+import 'dart:developer';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
@@ -10,6 +11,30 @@ import 'package:get/get.dart';
 class fireStoreDatabaseController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+
+  Future<String> addInventory(String name, String bloodGroup, int number, double concentration,String gender,double hemoglobin)async{
+    DocumentReference inventory = firestore.collection('inventory').doc();
+    String res;
+   try {
+     await inventory.set({
+       'inventoryId': inventory.id,
+       'inventoryName': name,
+       'bloodGroup': bloodGroup,
+       'inventoryNumber': number,
+       'concentration': concentration,
+       'gender': gender,
+       'haemoglobin': hemoglobin,
+       'createdAt':Timestamp.now(),
+       'isExpired': false
+     });
+      res = "Inventory added successfully!";
+   }
+   catch(e){
+     res = e.toString();
+   }
+   return res;
+  }
 
   Future<String> addRequest(
       String name,
@@ -30,8 +55,8 @@ class fireStoreDatabaseController {
       Position position = await Geolocator.getCurrentPosition(locationSettings: locationSettings);
       String? profileUrl = await getProfileUrl();
       // Get the FCM token
-      String? fcmToken = await FirebaseMessaging.instance.getToken();
-      print("User FCM Token: $fcmToken");
+      // String? fcmToken = await FirebaseMessaging.instance.getToken();
+      // print("User FCM Token: $fcmToken");
       DocumentReference requestRef = firestore.collection('requests').doc();
       await requestRef.set({
         'docId': requestRef.id,
@@ -207,6 +232,7 @@ class fireStoreDatabaseController {
 
   Future<void> deleteRequest(String docId)async {
     try {
+
       firestore
           .collection('requests')
           .where(
@@ -491,6 +517,31 @@ class fireStoreDatabaseController {
         .limit(1)
         .snapshots()
         .map((snapshot) => snapshot.docs.isNotEmpty); // Convert to true/false
+  }
+
+  Future<void> deleteInventory(String docId)async {
+    try {
+      firestore
+          .collection('inventory')
+          .where(
+          'inventoryId', isEqualTo: docId) // Query documents where docId matches
+          .get()
+          .then((querySnapshot) {
+        for (var doc in querySnapshot.docs) {
+          doc.reference.delete(); // Delete each matching document
+        }
+      });
+    }
+    catch(e){
+      print("ERROR: $e");
+    }
+  }
+  Future<void> removeInventoryColor(String docId)async {
+    firestore.collection('inventory')
+        .doc(docId)
+        .update({
+      'isExpired': true,
+    });
   }
 }
 

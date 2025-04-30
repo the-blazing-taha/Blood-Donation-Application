@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../../controllers/fireStoreDatabaseController.dart';
+import 'chat_screen.dart';
 import 'donor_details.dart';
 
 class NearbyDonors extends StatefulWidget {
@@ -39,9 +40,35 @@ class _NearbyDonorsState extends State<NearbyDonors> {
   };
 
   Future<void> startLocationTracking() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    // Check if location services are enabled
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      await Geolocator.openLocationSettings();
+      return;
+    }
+
+    // Check location permission status
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        print("Location permission denied.");
+        return;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      print("Location permission permanently denied.");
+      return;
+    }
+
     try {
       Position position = await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.high);
+
       setState(() {
         currentPosition = position;
         isLoading = true;
@@ -57,6 +84,7 @@ class _NearbyDonorsState extends State<NearbyDonors> {
       print("Error getting location: $e");
     }
   }
+
 
   Future<bool> doesUserExist() async {
     final doc = await FirebaseFirestore.instance
@@ -114,7 +142,11 @@ class _NearbyDonorsState extends State<NearbyDonors> {
         double userLon = data['longitude'];
         return calculateDistance(lat, lon, userLat, userLon) <= searchRadiusKm;
       }).toList();
-
+      usersNearby.sort((a, b) {
+        Timestamp aTime = a['createdAt'] ?? Timestamp.now();
+        Timestamp bTime = b['createdAt'] ?? Timestamp.now();
+        return aTime.compareTo(bTime);
+      });
       setState(() {
         nearbyDonors = usersNearby;
         isLoading = false;
@@ -138,6 +170,9 @@ class _NearbyDonorsState extends State<NearbyDonors> {
               style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
           backgroundColor: Colors.red[900],
           centerTitle: true,
+          iconTheme: IconThemeData(
+            color: Colors.white,
+          ),
         ),
         body: Column(
           children: [
@@ -274,6 +309,19 @@ class _NearbyDonorsState extends State<NearbyDonors> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
+                              donor['userId'] != auth.currentUser!.uid
+                                  ? IconButton(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => ChatScreen(receiverId: donor['userId'], receiverName: donor['name']),
+                                    ),
+                                  );
+                                },
+                                icon: const Icon(Icons.message_outlined),
+                              )
+                                  : const SizedBox.shrink(),
                               ElevatedButton(
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.red[900],

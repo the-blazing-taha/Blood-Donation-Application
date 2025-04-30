@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../../controllers/fireStoreDatabaseController.dart';
+import 'chat_screen.dart';
 import 'details.dart';
 
 class NearbyRequestors extends StatefulWidget {
@@ -39,9 +40,35 @@ class _NearbyRequestorsState extends State<NearbyRequestors> {
   };
 
   Future<void> startLocationTracking() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    // Check if location services are enabled
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      await Geolocator.openLocationSettings();
+      return;
+    }
+
+    // Check location permission status
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        print("Location permission denied.");
+        return;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      print("Location permission permanently denied.");
+      return;
+    }
+
     try {
       Position position = await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.high);
+
       setState(() {
         currentPosition = position;
         isLoading = true;
@@ -57,6 +84,7 @@ class _NearbyRequestorsState extends State<NearbyRequestors> {
       print("Error getting location: $e");
     }
   }
+
 
   Future<bool> doesUserExist() async {
     final doc = await FirebaseFirestore.instance
@@ -112,7 +140,15 @@ class _NearbyRequestorsState extends State<NearbyRequestors> {
         double userLat = data['latitude'];
         double userLon = data['longitude'];
         return calculateDistance(lat, lon, userLat, userLon) <= searchRadiusKm;
-      }).toList();
+      })
+          .toList();
+
+// Sort by createdAt timestamp in ascending order
+      usersNearby.sort((a, b) {
+        Timestamp aTime = a['createdAt'] ?? Timestamp.now();
+        Timestamp bTime = b['createdAt'] ?? Timestamp.now();
+        return aTime.compareTo(bTime);
+      });
 
       setState(() {
         nearbyRequesters = usersNearby;
@@ -137,6 +173,9 @@ class _NearbyRequestorsState extends State<NearbyRequestors> {
               style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
           backgroundColor: Colors.red[900],
           centerTitle: true,
+          iconTheme: IconThemeData(
+            color: Colors.white,
+          ),
         ),
         body: Column(
           children: [
@@ -181,6 +220,7 @@ class _NearbyRequestorsState extends State<NearbyRequestors> {
                       ? (request['createdAt'] as Timestamp).toDate()
                       : DateTime.now();
                   var timeAgo = timeago.format(createdAt);
+
                   return Card(
                     margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     elevation: 4,
@@ -273,6 +313,19 @@ class _NearbyRequestorsState extends State<NearbyRequestors> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
+                              request['userId'] != auth.currentUser!.uid
+                                  ? IconButton(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => ChatScreen(receiverId: request['userId'], receiverName: request['name']),
+                                    ),
+                                  );
+                                },
+                                icon: const Icon(Icons.message_outlined),
+                              )
+                                  : const SizedBox.shrink(),
                               ElevatedButton(
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.red[900],
@@ -295,6 +348,7 @@ class _NearbyRequestorsState extends State<NearbyRequestors> {
                                         gender: request['gender'],
                                         email: request['email'],
                                         profileImage: request['profileUrl'],
+                                        details: request['details'],
                                       ),
                                     ),
                                   );

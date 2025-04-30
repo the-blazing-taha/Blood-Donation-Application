@@ -1,10 +1,8 @@
 import 'dart:core';
-import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:image_picker/image_picker.dart';
 import '../../controllers/auth_controller.dart';
 import '../../controllers/fireStoreDatabaseController.dart';
 import 'globals.dart';
@@ -157,28 +155,27 @@ class Settings extends StatefulWidget {
 }
 
 class _SettingsState extends State<Settings> {
-  final AuthController _authController = AuthController();
-  Uint8List? _image;
+  // Uint8List? _image;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
 
-  selectGalleryImage() async {
-    Uint8List im = await _authController.pickProfileImage(ImageSource.gallery);
-    if (mounted) {
-      setState(() {
-        _image = im;
-      });
-    }
-  }
-
-  captureImage() async {
-    Uint8List im = await _authController.pickProfileImage(ImageSource.camera);
-    if (mounted) {
-      setState(() {
-        _image = im;
-      });
-    }
-  }
+  // selectGalleryImage() async {
+  //   Uint8List im = await _authController.pickProfileImage(ImageSource.gallery);
+  //   if (mounted) {
+  //     setState(() {
+  //       _image = im;
+  //     });
+  //   }
+  // }
+  //
+  // captureImage() async {
+  //   Uint8List im = await _authController.pickProfileImage(ImageSource.camera);
+  //   if (mounted) {
+  //     setState(() {
+  //       _image = im;
+  //     });
+  //   }
+  // }
 
   @override
   void initState() {
@@ -242,22 +239,23 @@ class _SettingsState extends State<Settings> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Profile Image Selection
-            GestureDetector(
-              onTap: () {
-                showModalBottomSheet(
-                  context: context,
-                  builder: (context) => buildBottomSheet(),
-                );
-              },
-              child: CircleAvatar(
-                radius: 50,
-                backgroundColor: Colors.grey[300],
-                backgroundImage: _image != null ? MemoryImage(_image!) : null,
-                child: _image == null
-                    ? Icon(Icons.camera_alt, color: Colors.white, size: 30)
-                    : null,
-              ),
-            ),
+            // GestureDetector(
+            //   onTap: () {
+            //     showModalBottomSheet(
+            //       context: context,
+            //       builder: (context) => buildBottomSheet(),
+            //     );
+            //   },
+            //   child: CircleAvatar(
+            //     radius: 50,
+            //     backgroundColor: Colors.grey[300],
+            //     backgroundImage: _image != null ? MemoryImage(_image!) : null,
+            //     child: _image == null
+            //         ? Icon(Icons.person, color: Colors.white, size: 30)
+            //         : null,
+            //   ),
+            // ),
+
             SizedBox(height: 20),
 
             // Styled Switches
@@ -318,7 +316,7 @@ class _SettingsState extends State<Settings> {
 
   // Custom Switch Widget
   Widget buildCustomSwitch({
-    required String title, 
+    required String title,
     required bool value,
     required ValueChanged<bool> onChanged,
     required Color activeColor,
@@ -338,41 +336,41 @@ class _SettingsState extends State<Settings> {
     );
   }
 
-  // Bottom Sheet for Image Selection
-  Widget buildBottomSheet() {
-    return Container(
-      padding: EdgeInsets.all(20),
-      height: 150,
-      child: Column(
-        children: [
-          Text("Choose Profile Picture",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          SizedBox(height: 15),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              ElevatedButton.icon(
-                onPressed: selectGalleryImage,
-                icon: Icon(Icons.photo),
-                label: Text("Gallery"),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
-                ),
-              ),
-              ElevatedButton.icon(
-                onPressed: captureImage,
-                icon: Icon(Icons.camera),
-                label: Text("Camera"),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  foregroundColor: Colors.white,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+   // Bottom Sheet for Image Selection
+  // Widget buildBottomSheet() {
+  //   return Container(
+  //     padding: EdgeInsets.all(20),
+  //     height: 150,
+  //     child: Column(
+  //       children: [
+  //         Text("Choose Profile Picture",
+  //             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+  //         SizedBox(height: 15),
+  //         Row(
+  //           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+  //           children: [
+  //             ElevatedButton.icon(
+  //               onPressed: selectGalleryImage,
+  //               icon: Icon(Icons.photo),
+  //               label: Text("Gallery"),
+  //               style: ElevatedButton.styleFrom(
+  //                 backgroundColor: Colors.blue,
+  //                 foregroundColor: Colors.white,
+  //               ),
+  //             ),
+  //             ElevatedButton.icon(
+  //               onPressed: captureImage,
+  //               icon: Icon(Icons.camera),
+  //               label: Text("Camera"),
+  //               style: ElevatedButton.styleFrom(
+  //                 backgroundColor: Colors.orange,
+  //                 foregroundColor: Colors.white,
+  //               ),
+  //             ),
+  //           ],
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 }

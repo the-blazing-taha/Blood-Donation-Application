@@ -2,6 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'appbar.dart';
+
 class DonorDetails extends StatefulWidget {
   final dynamic patient;
   final dynamic contact;
@@ -61,14 +63,7 @@ class DonorDetailsState extends State<DonorDetails> {
       width: MediaQuery.of(context).size.width,
       child: Scaffold(
         backgroundColor: Colors.grey[100],
-        appBar: AppBar(
-          title: const Text(
-            'Donor Details',
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-          ),
-          backgroundColor: Colors.red[900],
-          centerTitle: true,
-        ),
+        appBar: CustomAppBar(title: 'Donor Details'),
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -139,6 +134,7 @@ class DonorDetailsState extends State<DonorDetails> {
               _infoCard("Contact Number", widget.contact, copyable: true),
               _infoCard("Weight (Kg)", widget.weight.toString()),
               _infoCard("Age", widget.age.toString()),
+              _infoCard("Details", widget.details),
               _infoCard("Last Donated", widget.lastDonated),
               _infoCard("Donation Frequency", widget.donationFrequency),
               _infoCard("Highest Education", widget.highestEducation),
@@ -146,8 +142,7 @@ class DonorDetailsState extends State<DonorDetails> {
               _infoCard("Living Arrangement", widget.currentLivingArrg),
               _infoCard("Eligibility Test", widget.eligibilityTest),
               _infoCard("Donations Made", widget.noOfDonations.toString()),
-              _infoCard(
-                  "Future Donation Willingness", widget.futureDonationWillingness),
+              _infoCard("Future Donation Willingness", widget.futureDonationWillingness),
 
               const SizedBox(height: 30),
 
@@ -240,7 +235,7 @@ class DonorDetailsState extends State<DonorDetails> {
                     color: highlight ? Colors.red[900] : Colors.black,
                   ),
                   overflow: TextOverflow.ellipsis,
-                  maxLines: 10,
+                  maxLines: 40,
                   softWrap: true,
                 ),
               ),
