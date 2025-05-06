@@ -70,6 +70,8 @@ dependencies:
   provider: ^6.1.2
   flutter_screenutil: ^5.9.3
   flutter_svg: ^2.1.0
+  google_fonts: ^6.2.1
+  badges: ^3.1.2
 
 dev_dependencies:
   flutter_test:
@@ -109,7 +111,7 @@ flutter_launcher_icons:
 flutter:
   assets:
     - assets/drop.jpg
-    - assets/bloodbag.jpg
+    - assets/bloodbag.png
     - assets/list.png
     - assets/bag.png
     - assets/form.png

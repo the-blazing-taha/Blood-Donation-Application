@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:blood/views/user/allrequests.dart';
 import 'package:blood/views/user/wrapper.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -55,10 +57,39 @@ void main() async {
   // Check if the app was opened via a notification
   RemoteMessage? initialMessage = await FirebaseMessaging.instance.getInitialMessage();
 
-
+  FirebaseAuth.instance.authStateChanges().listen((user) {
+    if (user != null) {
+      _listenTokenRefresh(); // Only start listening if user is logged in
+      _saveInitialToken();   // Save the current token at startup
+    }
+  });
   runApp(MyApp(initialMessage: initialMessage));
 }
 
+void _listenTokenRefresh() {
+  FirebaseMessaging.instance.onTokenRefresh.listen((newToken) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+        'fcmToken': newToken,
+      });
+      print("🔄 Token refreshed and updated.");
+    }
+  });
+}
+
+void _saveInitialToken() async {
+  final user = FirebaseAuth.instance.currentUser;
+  if (user != null) {
+    final token = await FirebaseMessaging.instance.getToken();
+    if (token != null) {
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+        'fcmToken': token,
+      });
+      print("✅ Initial token saved.");
+    }
+  }
+}
 
 /// Splash screen to show while initializing
 class SplashScreen extends StatelessWidget {

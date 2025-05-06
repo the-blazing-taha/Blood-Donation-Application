@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -38,14 +36,13 @@ class fireStoreDatabaseController {
 
   Future<String> addRequest(
       String name,
-      String contact,
-      String hospital,
-      String residence,
+      String? contact,
+      String? hospital,
       String case_,
       int bags,
       String bloodGroup,
       String gender,
-      String details) async {
+      String? details) async {
     String res = "Something went wrong while uploading the request!";
     try {
       final LocationSettings locationSettings = LocationSettings(
@@ -63,13 +60,12 @@ class fireStoreDatabaseController {
         'userId': _auth.currentUser?.uid,
         'name': name,
         'contact': contact,
-        'hospital': hospital,
-        'residence': residence,
+        'hospital': hospital?.trim(),
         'case': case_,
         'bags': bags,
         'bloodGroup': bloodGroup,
         'gender': gender,
-        'details': details,
+        'details': details?.trim(),
         'longitude': position.longitude,
         'latitude': position.latitude,
         'createdAt': Timestamp.now(),
@@ -146,15 +142,16 @@ class fireStoreDatabaseController {
 
   Future<String> addDonor(
       String name,
-      String contact,
-      String residence,
+      String? contact,
+      String? residence,
       int donationNumber,
       String bloodGroup,
       String gender,
-      String details,
+      String? details,
       int weight,
       int age,
       String lastDonated,
+      String firstDonated,
       String donationFrequency,
       String highestEducation,
       String currentOccupation,
@@ -180,12 +177,13 @@ class fireStoreDatabaseController {
         'weight': weight,
         'age': age,
         'lastDonated': lastDonated,
-        'donationFrequency':  donationFrequency,
-        'highestEducation':  highestEducation,
-        'currentOccupation':  currentOccupation,
-        'currentLivingArrg':  currentLivingArrg,
-        'eligibilityTest':  eligibilityTest,
-        'futureDonationWillingness':  futureDonationWillingness,
+        'firstDonated': firstDonated,
+        'donationFrequency': donationFrequency,
+        'highestEducation': highestEducation,
+        'currentOccupation': currentOccupation,
+        'currentLivingArrg': currentLivingArrg,
+        'eligibilityTest': eligibilityTest,
+        'futureDonationWillingness': futureDonationWillingness,
         'latitude':position.latitude,
         'longitude': position.longitude,
         'createdAt': Timestamp.now(),
@@ -363,8 +361,9 @@ class fireStoreDatabaseController {
         String gender = '',
         String details='',
         int weight=-1,
+        String firstDonation = '',
+        String lastDonation = '',
         int age=-1,
-        String lastDonated='',
         String donationFrequency='',
         String highestEducation='',
         String currentOccupation='',
@@ -432,14 +431,20 @@ class fireStoreDatabaseController {
         });
       }
 
-      if (lastDonated != '') {
+      if (lastDonation != '') {
         firestore.collection('donors')
             .doc(docId)
             .update({
-          'lastDonated': lastDonated,
+          'lastDonated': lastDonation,
         });
       }
-
+      if (firstDonation != '') {
+        firestore.collection('donors')
+            .doc(docId)
+            .update({
+          'firstDonated': firstDonation,
+        });
+      }
       if (age != -1) {
         firestore.collection('donors')
             .doc(docId)

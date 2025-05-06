@@ -341,7 +341,6 @@ class _NearbyRequestorsState extends State<NearbyRequestors> {
                                         patient: request['name'],
                                         contact: request['contact'],
                                         hospital: request['hospital'],
-                                        residence: request['residence'],
                                         case_: request['case'],
                                         bags: request['bags'],
                                         bloodGroup: request['bloodGroup'],

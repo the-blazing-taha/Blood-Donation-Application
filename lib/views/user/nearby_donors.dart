@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -7,6 +8,7 @@ import 'package:timeago/timeago.dart' as timeago;
 import '../../controllers/fireStoreDatabaseController.dart';
 import 'chat_screen.dart';
 import 'donor_details.dart';
+import 'package:http/http.dart' as http;
 
 class NearbyDonors extends StatefulWidget {
   const NearbyDonors({super.key});
@@ -107,6 +109,7 @@ class _NearbyDonorsState extends State<NearbyDonors> {
     return R * c; // Distance in km
   }
 
+
   Future<void> findNearbyDonors() async {
     if (currentPosition == null || selectedBloodGroup.isEmpty) return;
 
@@ -117,7 +120,7 @@ class _NearbyDonorsState extends State<NearbyDonors> {
     FirebaseFirestore firestore = FirebaseFirestore.instance;
     double lat = currentPosition!.latitude;
     double lon = currentPosition!.longitude;
-    double searchRadiusKm = 15; // 100 meters
+    double searchRadiusKm = 15;
     double latChange = searchRadiusKm / 111.12;
     double lonChange = searchRadiusKm / (111.12 * cos(lat * pi / 180));
 
@@ -141,12 +144,68 @@ class _NearbyDonorsState extends State<NearbyDonors> {
         double userLat = data['latitude'];
         double userLon = data['longitude'];
         return calculateDistance(lat, lon, userLat, userLon) <= searchRadiusKm;
+      })
+          .toList();
+
+      // Date parsing helper
+      DateTime? parseDate(dynamic value) {
+        if (value is Timestamp) {
+          return value.toDate();
+        } else if (value is String) {
+          return DateTime.tryParse(value);
+        } else {
+          return null;
+        }
+      }
+
+      // Prepare data for API
+      List<Map<String, dynamic>> modelInput = usersNearby.map((donor) {
+        final now = DateTime.now();
+        DateTime? lastDonated = parseDate(donor['lastDonated']);
+        DateTime? firstDonated = parseDate(donor['firstDonated']);
+        double numDonations = double.tryParse(donor['donations_done']?.toString() ?? '0') ?? 0;
+
+        int monthsSinceLast = lastDonated != null
+            ? ((now.difference(lastDonated).inDays) / 30).floor()
+            : 0;
+        int monthsSinceFirst = firstDonated != null
+            ? ((now.difference(firstDonated).inDays) / 30).floor()
+            : 0;
+
+        return {
+          "id": donor['userId'] ?? '',
+          "last_donation": monthsSinceLast.toDouble(),
+          "months_since_first": monthsSinceFirst.toDouble(),
+          "num_donations": numDonations,
+        };
       }).toList();
-      usersNearby.sort((a, b) {
-        Timestamp aTime = a['createdAt'] ?? Timestamp.now();
-        Timestamp bTime = b['createdAt'] ?? Timestamp.now();
-        return aTime.compareTo(bTime);
-      });
+
+      // Send to prediction API
+      final url = Uri.parse('https://web-production-5141f.up.railway.app//predict');
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"data": modelInput}),
+      );
+
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        final predictions = List<Map<String, dynamic>>.from(decoded['predictions']);
+
+        for (var donor in usersNearby) {
+          final matching = predictions.firstWhere(
+                (pred) => pred['id'] == donor['userId'],
+            orElse: () => {"donation_probability": 0.0},
+          );
+          donor['donation_probability'] = matching['donation_probability'];
+        }
+
+        usersNearby.sort((a, b) =>
+            (b['donation_probability'] ?? 0.0).compareTo(a['donation_probability'] ?? 0.0));
+      } else {
+        throw Exception("Prediction API failed with status ${response.statusCode}");
+      }
+
       setState(() {
         nearbyDonors = usersNearby;
         isLoading = false;
@@ -158,6 +217,7 @@ class _NearbyDonorsState extends State<NearbyDonors> {
       });
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -306,6 +366,10 @@ class _NearbyDonorsState extends State<NearbyDonors> {
                             ),
                           ),
                           const SizedBox(height: 10),
+                          Text(
+                            "Predicted Willingness: ${(donor['donation_probability'] * 100).toStringAsFixed(1)}%",
+                            style: const TextStyle(color: Colors.green, fontSize: 14),
+                          ),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
@@ -343,6 +407,7 @@ class _NearbyDonorsState extends State<NearbyDonors> {
                                         details: donor['details'],
                                         weight: donor['weight'],
                                         age: donor['age'],
+                                        firstDonated: donor['firstDonated'],
                                         lastDonated: donor['lastDonated'],
                                         donationFrequency: donor['donationFrequency'],
                                         highestEducation: donor['highestEducation'],
@@ -350,7 +415,8 @@ class _NearbyDonorsState extends State<NearbyDonors> {
                                         currentLivingArrg: donor['currentLivingArrg'],
                                         eligibilityTest: donor['eligibilityTest'],
                                         futureDonationWillingness: donor['futureDonationWillingness'],
-                                        email: donor['profileUrl'],
+                                        email: donor['email'],
+                                        profileImage: donor['profileUrl'],
 
                                       ),
                                     ),

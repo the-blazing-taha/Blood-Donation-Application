@@ -124,28 +124,4 @@ class ChatService {
       return null;
     }
   }
-
-  Future<void> deleteMessage({required String receiverId, required String messageId}) async {
-    String currentUserId = FirebaseAuth.instance.currentUser!.uid;
-
-    try {
-      await FirebaseFirestore.instance
-          .collection('chats')
-          .doc(currentUserId)
-          .collection(receiverId)
-          .doc(messageId)
-          .delete();
-
-      // Optional: Delete from receiver’s chat list too
-      await FirebaseFirestore.instance
-          .collection('chats')
-          .doc(receiverId)
-          .collection(currentUserId)
-          .doc(messageId)
-          .delete();
-    } catch (e) {
-      print("Failed to delete message: $e");
-    }
-  }
-
 }

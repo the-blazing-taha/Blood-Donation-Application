@@ -8,7 +8,6 @@ class Details extends StatefulWidget {
   final dynamic patient;
   final dynamic contact;
   final dynamic hospital;
-  final dynamic residence;
   final dynamic case_;
   final dynamic bags;
   final dynamic bloodGroup;
@@ -23,7 +22,6 @@ class Details extends StatefulWidget {
     required this.patient,
     required this.contact,
     required this.hospital,
-    required this.residence,
     required this.case_,
     required this.bags,
     required this.bloodGroup,
@@ -169,13 +167,12 @@ class DetailsState extends State<Details> {
               // Information Cards
               _infoCard("Patient Name", widget.patient),
               _infoCard("Gender", widget.gender),
-              _infoCard("Hospital", widget.hospital),
-              _infoCard("Location", widget.residence),
+              _infoCard("Hospital", widget.hospital ?? "null"),
               _infoCard("Blood Group", widget.bloodGroup, highlight: true),
-              _infoCard("Contact Number", widget.contact, copyable: true),
+              _infoCard("Contact Number", widget.contact ?? "null", copyable: true),
               _infoCard("Case", widget.case_),
-              _infoCard("Details", widget.details),
-              _infoCard("Quantity Needed", widget.bags.toString(), highlight: true),
+              _infoCard("Details", widget.details ?? "null"),
+              _infoCard("Quantity Needed (pints) (1 pint = 500ml)", widget.bags.toString(), highlight: true),
               const SizedBox(height: 30),
       
             ],

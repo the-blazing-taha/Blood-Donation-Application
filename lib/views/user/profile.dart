@@ -6,7 +6,9 @@ import 'package:get/get.dart';
 import '../../controllers/auth_controller.dart';
 import '../../controllers/fireStoreDatabaseController.dart';
 import 'globals.dart';
-
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
@@ -136,9 +138,82 @@ class _ProfileState extends State<Profile> {
               leading: Icon(Icons.logout, color: Colors.red),
               title: Text('Logout'),
               onTap: () {
-                authController.signout();
+                // Show confirmation dialog when logout is pressed
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      backgroundColor: Colors.white,
+                      title: Text(
+                        'Confirm Logout',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                          color: Colors.red[900],
+                        ),
+                      ),
+                      content: Text(
+                        'Are you sure you want to log out?',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      actions: <Widget>[
+                        TextButton(
+                          onPressed: () {
+                            // If user presses "No", close the dialog
+                            Navigator.of(context).pop();
+                          },
+                          child: Text(
+                            'No',
+                            style: TextStyle(
+                              color: Colors.red[900],
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            foregroundColor: Colors.white, backgroundColor: Colors.red[900], // White text color
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          onPressed: () {
+                            // If user presses "Yes", log out and show snackbar
+                            try {
+                              authController.signout(); // Call signout function
+                              Navigator.of(context).pop(); // Close the dialog
+
+                            } catch (e) {
+                              Navigator.of(context).pop(); // Close the dialog
+                              Get.snackbar(
+                                "Error:",
+                                e.toString(),
+                                backgroundColor: Colors.red,
+                                colorText: Colors.white,
+                                margin: const EdgeInsets.all(15),
+                                snackPosition: SnackPosition.BOTTOM,
+                                icon: const Icon(
+                                  Icons.error,
+                                  color: Colors.white,
+                                ),
+                              );
+                            }
+                          },
+                          child: const Text('Yes'),
+                        ),
+                      ],
+                    );
+                  },
+                );
               },
             ),
+
           ],
         ),
       ),
@@ -154,54 +229,114 @@ class Settings extends StatefulWidget {
   State<Settings> createState() => _SettingsState();
 }
 
+
+
 class _SettingsState extends State<Settings> {
-  // Uint8List? _image;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final fireStoreDatabaseController _firebaseDatabase = fireStoreDatabaseController();
+  final FirebaseAuth auth = FirebaseAuth.instance;
+  bool donorMode = false;
+  File? _profileImage;
+  String? _fullName;
 
-
-  // selectGalleryImage() async {
-  //   Uint8List im = await _authController.pickProfileImage(ImageSource.gallery);
-  //   if (mounted) {
-  //     setState(() {
-  //       _image = im;
-  //     });
-  //   }
-  // }
-  //
-  // captureImage() async {
-  //   Uint8List im = await _authController.pickProfileImage(ImageSource.camera);
-  //   if (mounted) {
-  //     setState(() {
-  //       _image = im;
-  //     });
-  //   }
-  // }
+  final TextEditingController _nameController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    fetchDonorMode(); // Fetch donor mode asynchronously
+    fetchDonorMode();
+    fetchUserInfo();
   }
 
   void fetchDonorMode() async {
     bool? mode = await _firebaseDatabase.getProfileDonorMode();
-    if (mounted) { // Prevent calling setState on an unmounted widget
+    if (mounted) {
       setState(() {
-        donorMode = mode; // Set donorMode from Firestore
+        donorMode = mode ?? false;
       });
     }
   }
 
-  Future<bool?> getProfileDonorMode() async {
+  void fetchUserInfo() async {
     var userDoc = await FirebaseFirestore.instance
-        .collection('donors')
+        .collection('users')
         .doc(_auth.currentUser?.uid)
         .get();
 
     if (userDoc.exists) {
-      return userDoc.data()?['activity']; // Return Firestore value
+      var data = userDoc.data();
+      setState(() {
+        _fullName = data?['fullName'];
+        _nameController.text = _fullName ?? '';
+      });
     }
-    return null; // Return null if no document found
+  }
+
+  Future<void> updateUserInfo() async {
+    String? downloadUrl;
+
+    // Upload profile image if new one is selected
+    if (_profileImage != null) {
+      String fileName = "${_auth.currentUser!.uid}_profile.jpg";
+      UploadTask uploadTask = FirebaseStorage.instance
+          .ref('profileImages/$fileName')
+          .putFile(_profileImage!);
+      TaskSnapshot snapshot = await uploadTask;
+      downloadUrl = await snapshot.ref.getDownloadURL();
+    }
+
+    String? uid = _auth.currentUser?.uid;
+    if (uid == null) return;
+
+    // Update name in 'users' collection and 'profileImage' if new one is provided
+    await FirebaseFirestore.instance.collection('users').doc(uid).update({
+      'fullName': _nameController.text.trim(),
+      if (downloadUrl != null) 'profileImage': downloadUrl,
+    });
+
+    // Prepare updates for other collections
+    final otherCollectionUpdates = {
+      'fullName': _nameController.text.trim(),
+      if (downloadUrl != null) 'profileUrl': downloadUrl,
+    };
+
+    // Update 'donors' collection documents where userId == uid
+    var donorSnapshot = await FirebaseFirestore.instance
+        .collection('donors')
+        .where('userId', isEqualTo: uid)
+        .get();
+
+    for (var doc in donorSnapshot.docs) {
+      await doc.reference.update(otherCollectionUpdates);
+    }
+
+    // Update 'requests' collection documents where userId == uid
+    var requestSnapshot = await FirebaseFirestore.instance
+        .collection('requests')
+        .where('userId', isEqualTo: uid)
+        .get();
+
+    for (var doc in requestSnapshot.docs) {
+      await doc.reference.update(otherCollectionUpdates);
+    }
+
+    // Show confirmation
+    Get.snackbar(
+      'Success',
+      'Profile updated successfully',
+      backgroundColor: Colors.green,
+      colorText: Colors.white,
+      duration: Duration(seconds: 4),
+    );
+  }
+
+  Future<void> pickImage() async {
+    final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (picked != null) {
+      setState(() {
+        _profileImage = File(picked.path);
+      });
+    }
   }
 
   Future<String?> getDocIDByName() async {
@@ -210,100 +345,153 @@ class _SettingsState extends State<Settings> {
         .where('userId', isEqualTo: auth.currentUser?.uid)
         .get();
     if (querySnapshot.docs.isNotEmpty) {
-      return querySnapshot.docs.first.id; // Return first document ID
+      return querySnapshot.docs.first.id;
     }
-    return null; // Return null if no document found
+    return null;
   }
-
-  bool light1 = true;
-  final fireStoreDatabaseController _firebaseDatabase =
-      fireStoreDatabaseController();
-  final FirebaseAuth auth = FirebaseAuth.instance;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
         title: Text(
           'Settings',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
         ),
         centerTitle: true,
         backgroundColor: Colors.white,
-        elevation: 0,
-        iconTheme: IconThemeData(color: Colors.black),
+        elevation: 1,
+        iconTheme: IconThemeData(color: Colors.black87),
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Profile Image Selection
-            // GestureDetector(
-            //   onTap: () {
-            //     showModalBottomSheet(
-            //       context: context,
-            //       builder: (context) => buildBottomSheet(),
-            //     );
-            //   },
-            //   child: CircleAvatar(
-            //     radius: 50,
-            //     backgroundColor: Colors.grey[300],
-            //     backgroundImage: _image != null ? MemoryImage(_image!) : null,
-            //     child: _image == null
-            //         ? Icon(Icons.person, color: Colors.white, size: 30)
-            //         : null,
-            //   ),
-            // ),
+
+            /// --- Profile Card ---
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.red.shade200, Colors.red.shade400],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              padding: EdgeInsets.symmetric(vertical: 24),
+              child: Column(
+                children: [
+                  GestureDetector(
+                    onTap: pickImage,
+                    child: CircleAvatar(
+                      radius: 55,
+                      backgroundColor: Colors.white,
+                      child: CircleAvatar(
+                        radius: 50,
+                        backgroundImage: _profileImage != null
+                            ? FileImage(_profileImage!)
+                            : null,
+                        child: _profileImage == null
+                            ? Icon(Icons.camera_alt, size: 35, color: Colors.grey)
+                            : null,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 12),
+                  Text(
+                    _fullName ?? 'Your Name',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            SizedBox(height: 30),
+
+            /// --- Name Input Field ---
+            TextField(
+              controller: _nameController,
+              decoration: InputDecoration(
+                labelText: "Full Name",
+                prefixIcon: Icon(Icons.person_outline),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
 
             SizedBox(height: 20),
 
-            // Styled Switches
+            /// --- Update Profile Button ---
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.redAccent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                icon: Icon(Icons.save),
+                label: Text("Update Profile", style: TextStyle(fontSize: 16)),
+                onPressed: updateUserInfo,
+              ),
+            ),
+
+            SizedBox(height: 30),
+
+            /// --- Donor Mode Switch ---
             buildCustomSwitch(
               title: "Donor Mode",
               value: donorMode,
               onChanged: (bool value) async {
-                // Make the function async
-                String? docID = await getDocIDByName(); // Await the document ID
+                String? docID = await getDocIDByName();
                 if (docID != null) {
                   setState(() {
                     donorMode = value;
                   });
-                  await _firebaseDatabase.updateDonorMode(
-                      docID, donorMode); // Call update function
-                 donorMode ? Get.snackbar('Donor mode enabled', 'You will be shown as donor to everyone!',
-                      backgroundColor: Colors.red,
-                      colorText: Colors.white,
-                      duration: Duration(seconds: 6),
-                      margin: const EdgeInsets.all(
-                        15,
-                      ),
-                      icon: const Icon(
-                        Icons.message,
-                        color: Colors.white,
-                      )): Get.snackbar('Donor mode disabled', 'You will not be shown as donor to everyone!',
-                     backgroundColor: Colors.red,
-                     colorText: Colors.white,
-                     duration: Duration(seconds: 6),
-                     margin: const EdgeInsets.all(
-                       15,
-                     ),
-                     icon: const Icon(
-                       Icons.message,
-                       color: Colors.white,
-                     ));
+                  await _firebaseDatabase.updateDonorMode(docID, donorMode);
+                  donorMode
+                      ? Get.snackbar(
+                    'Donor mode enabled',
+                    'You will be shown as donor to everyone!',
+                    backgroundColor: Colors.red,
+                    colorText: Colors.white,
+                    duration: Duration(seconds: 6),
+                    margin: const EdgeInsets.all(15),
+                    icon: const Icon(Icons.message, color: Colors.white),
+                  )
+                      : Get.snackbar(
+                    'Donor mode disabled',
+                    'You will not be shown as donor to everyone!',
+                    backgroundColor: Colors.red,
+                    colorText: Colors.white,
+                    duration: Duration(seconds: 6),
+                    margin: const EdgeInsets.all(15),
+                    icon: const Icon(Icons.message, color: Colors.white),
+                  );
                 } else {
-                  Get.snackbar('Donation Form not filled', 'To turn the donor mode on, fill the donation form!',
-                      backgroundColor: Colors.red,
-                      colorText: Colors.white,
-                      duration: Duration(seconds: 6),
-                      margin: const EdgeInsets.all(
-                        15,
-                      ),
-                      icon: const Icon(
-                        Icons.message,
-                        color: Colors.white,
-                      ));
+                  Get.snackbar(
+                    'Donation Form not filled',
+                    'To turn the donor mode on, fill the donation form!',
+                    backgroundColor: Colors.red,
+                    colorText: Colors.white,
+                    duration: Duration(seconds: 6),
+                    margin: const EdgeInsets.all(15),
+                    icon: const Icon(Icons.message, color: Colors.white),
+                  );
                 }
               },
               activeColor: Colors.green,
@@ -314,7 +502,6 @@ class _SettingsState extends State<Settings> {
     );
   }
 
-  // Custom Switch Widget
   Widget buildCustomSwitch({
     required String title,
     required bool value,
@@ -335,42 +522,4 @@ class _SettingsState extends State<Settings> {
       ),
     );
   }
-
-   // Bottom Sheet for Image Selection
-  // Widget buildBottomSheet() {
-  //   return Container(
-  //     padding: EdgeInsets.all(20),
-  //     height: 150,
-  //     child: Column(
-  //       children: [
-  //         Text("Choose Profile Picture",
-  //             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-  //         SizedBox(height: 15),
-  //         Row(
-  //           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-  //           children: [
-  //             ElevatedButton.icon(
-  //               onPressed: selectGalleryImage,
-  //               icon: Icon(Icons.photo),
-  //               label: Text("Gallery"),
-  //               style: ElevatedButton.styleFrom(
-  //                 backgroundColor: Colors.blue,
-  //                 foregroundColor: Colors.white,
-  //               ),
-  //             ),
-  //             ElevatedButton.icon(
-  //               onPressed: captureImage,
-  //               icon: Icon(Icons.camera),
-  //               label: Text("Camera"),
-  //               style: ElevatedButton.styleFrom(
-  //                 backgroundColor: Colors.orange,
-  //                 foregroundColor: Colors.white,
-  //               ),
-  //             ),
-  //           ],
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
 }

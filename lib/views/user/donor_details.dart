@@ -15,6 +15,7 @@ class DonorDetails extends StatefulWidget {
   final dynamic weight;
   final dynamic age;
   final dynamic lastDonated;
+  final dynamic firstDonated;
   final dynamic donationFrequency;
   final dynamic highestEducation;
   final dynamic currentOccupation;
@@ -36,6 +37,7 @@ class DonorDetails extends StatefulWidget {
     required this.weight,
     required this.age,
     required this.lastDonated,
+    required this.firstDonated,
     required this.donationFrequency,
     required this.highestEducation,
     required this.currentOccupation,
@@ -129,12 +131,13 @@ class DonorDetailsState extends State<DonorDetails> {
               // Information Cards
               _infoCard("Donor Name", widget.patient),
               _infoCard("Gender", widget.gender),
-              _infoCard("Location", widget.residence),
+              _infoCard("Location", widget.residence ?? "null"),
               _infoCard("Blood Group", widget.bloodGroup, highlight: true),
-              _infoCard("Contact Number", widget.contact, copyable: true),
+              _infoCard("Contact Number", widget.contact ?? "null", copyable: true),
               _infoCard("Weight (Kg)", widget.weight.toString()),
               _infoCard("Age", widget.age.toString()),
-              _infoCard("Details", widget.details),
+              _infoCard("Details", widget.details ?? "null"),
+              _infoCard("First Donated", widget.firstDonated),
               _infoCard("Last Donated", widget.lastDonated),
               _infoCard("Donation Frequency", widget.donationFrequency),
               _infoCard("Highest Education", widget.highestEducation),

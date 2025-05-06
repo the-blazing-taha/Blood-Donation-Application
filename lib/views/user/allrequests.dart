@@ -208,7 +208,7 @@ class _AllRequestsState extends State<AllRequests> {
                                               const SizedBox(width: 4),
                                               Expanded(
                                                 child: Text(
-                                                  data['residence'] ?? 'Unknown',
+                                                  data['hospital'] ?? 'Unknown',
                                                   style: const TextStyle(fontSize: 14),
                                                   overflow: TextOverflow.ellipsis,
                                                   maxLines: 1,
@@ -260,7 +260,6 @@ class _AllRequestsState extends State<AllRequests> {
                                                   patient: data['name'],
                                                   contact: data['contact'],
                                                   hospital: data['hospital'],
-                                                  residence: data['residence'],
                                                   case_: data['case'],
                                                   bags: data['bags'],
                                                   bloodGroup: data['bloodGroup'],

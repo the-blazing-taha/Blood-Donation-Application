@@ -22,8 +22,8 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _isLoading = true;
 
   void sendMessage() {
-    if (_messageController.text.isNotEmpty) {
-      _chatService.sendMessage(widget.receiverId, _messageController.text);
+    if (_messageController.text.trim().isNotEmpty) {
+      _chatService.sendMessage(widget.receiverId, _messageController.text.trim());
       _messageController.clear();
     }
   }
@@ -42,7 +42,7 @@ class _ChatScreenState extends State<ChatScreen> {
           .get();
 
       setState(() {
-        _receiverProfilePicUrl = userSnapshot.data()?['profilePic'];
+        _receiverProfilePicUrl = userSnapshot.data()?['profileImage'];
         _isLoading = false;
       });
     } catch (e) {
@@ -59,6 +59,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
@@ -80,14 +82,16 @@ class _ChatScreenState extends State<ChatScreen> {
               radius: 20,
               backgroundColor: Colors.deepPurple[200],
               child: ClipOval(
-                child: _receiverProfilePicUrl != null && _receiverProfilePicUrl!.isNotEmpty
+                child: _receiverProfilePicUrl != null &&
+                    _receiverProfilePicUrl!.isNotEmpty
                     ? CachedNetworkImage(
                   imageUrl: _receiverProfilePicUrl!,
                   width: 40,
                   height: 40,
                   fit: BoxFit.cover,
                   placeholder: (context, url) =>
-                  const CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                  const CircularProgressIndicator(
+                      color: Colors.white, strokeWidth: 2),
                   errorWidget: (context, url, error) =>
                   const Icon(Icons.person, color: Colors.white),
                 )
@@ -98,7 +102,8 @@ class _ChatScreenState extends State<ChatScreen> {
             Expanded(
               child: Text(
                 widget.receiverName,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold, fontSize: 18),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -118,25 +123,35 @@ class _ChatScreenState extends State<ChatScreen> {
                 var messages = snapshot.data!.docs;
 
                 return ListView.builder(
-                  padding: const EdgeInsets.all(10),
+                  padding: EdgeInsets.symmetric(
+                      horizontal: screenWidth * 0.04, vertical: 10),
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
                     var message = messages[index];
-                    bool isSender = message['senderId'] == _auth.currentUser!.uid;
+                    bool isSender =
+                        message['senderId'] == _auth.currentUser!.uid;
 
                     return Align(
-                      alignment: isSender ? Alignment.centerRight : Alignment.centerLeft,
+                      alignment: isSender
+                          ? Alignment.centerRight
+                          : Alignment.centerLeft,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                        margin: const EdgeInsets.symmetric(vertical: 5),
-                        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 10),
+                        margin: const EdgeInsets.symmetric(vertical: 6),
+                        constraints: BoxConstraints(
+                            maxWidth: screenWidth * 0.75),
                         decoration: BoxDecoration(
-                          color: isSender ? Colors.deepPurple[400] : Colors.white,
+                          color: isSender
+                              ? Colors.deepPurple[400]
+                              : Colors.white,
                           borderRadius: BorderRadius.only(
                             topLeft: const Radius.circular(16),
                             topRight: const Radius.circular(16),
-                            bottomLeft: Radius.circular(isSender ? 16 : 0),
-                            bottomRight: Radius.circular(isSender ? 0 : 16),
+                            bottomLeft:
+                            Radius.circular(isSender ? 16 : 0),
+                            bottomRight:
+                            Radius.circular(isSender ? 0 : 16),
                           ),
                           boxShadow: [
                             BoxShadow(
@@ -147,21 +162,25 @@ class _ChatScreenState extends State<ChatScreen> {
                           ],
                         ),
                         child: Column(
-                          crossAxisAlignment: isSender ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                          crossAxisAlignment: isSender
+                              ? CrossAxisAlignment.end
+                              : CrossAxisAlignment.start,
                           children: [
                             Text(
                               message['message'],
                               style: TextStyle(
-                                color: isSender ? Colors.white : Colors.black87,
-                                fontSize: 15,
+                                color:
+                                isSender ? Colors.white : Colors.black87,
+                                fontSize: screenWidth * 0.04,
                               ),
                             ),
                             const SizedBox(height: 4),
                             Text(
                               _formatTimestamp(message['timestamp']),
                               style: TextStyle(
-                                color: isSender ? Colors.white70 : Colors.black54,
-                                fontSize: 11,
+                                color:
+                                isSender ? Colors.white70 : Colors.black54,
+                                fontSize: screenWidth * 0.03,
                               ),
                             ),
                           ],
@@ -174,7 +193,8 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: EdgeInsets.symmetric(
+                horizontal: screenWidth * 0.03, vertical: 10),
             decoration: BoxDecoration(
               color: Colors.white,
               boxShadow: [
@@ -196,16 +216,19 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                     child: TextField(
                       controller: _messageController,
+                      textCapitalization: TextCapitalization.sentences,
                       decoration: const InputDecoration(
                         hintText: "Type a message...",
                         border: InputBorder.none,
                       ),
+                      onSubmitted: (_) => sendMessage(),
                     ),
                   ),
                 ),
                 const SizedBox(width: 8),
                 CircleAvatar(
                   backgroundColor: Colors.deepPurple,
+                  radius: 24,
                   child: IconButton(
                     icon: const Icon(Icons.send, color: Colors.white),
                     onPressed: sendMessage,

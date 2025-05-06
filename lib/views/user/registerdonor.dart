@@ -23,15 +23,14 @@ class _RequestDonorState extends State<RequestDonor> {
   final GlobalKey<FormState> formkey = GlobalKey<FormState>();
 
   late String name;
-  late String residence;
-  late String contact;
+  late String? residence = null;
+  late String? contact = null;
   late int noOfDonation;
   late String bloodGroup;
   late String gender;
-  late String details;
+  late String? details = null;
   late int weight;
   late int age;
-  late String lastDonated;
   late String donationFrequency;
   late String highestEducation;
   late String? currentOccupation;
@@ -100,7 +99,10 @@ class _RequestDonorState extends State<RequestDonor> {
   bool isOtherSelected = false;
   TextEditingController otherOccupationController = TextEditingController();
   TextEditingController _dateController = TextEditingController();
+  TextEditingController _dateController2 = TextEditingController();
+
   DateTime? _selectedDate;
+  DateTime? _selectedDate2;
 
   final fireStoreDatabaseController _firebaseDatabase = fireStoreDatabaseController();
   final AuthController authController = AuthController();
@@ -173,6 +175,22 @@ class _RequestDonorState extends State<RequestDonor> {
     }
   }
 
+  Future<void> _selectDate2(BuildContext context) async {
+    DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now(),
+    );
+
+    if (picked != null) {
+      setState(() {
+        _selectedDate2 = picked;
+        _dateController2.text = "${picked.year}-${picked.month}-${picked.day}";
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -212,13 +230,15 @@ class _RequestDonorState extends State<RequestDonor> {
                     _buildPhoneField(),
                     _buildLocationField(),
                     const SizedBox(height: 15),
-                    _buildTextFieldDetails('Details', 'Serving humanity is my passion', (value) => details = value),
+                    _buildTextFieldDetails('Details (Optional)', 'Serving humanity is my passion', (value) => details = value),
                     const SizedBox(height: 15),
                     _buildTextField('Number of donations done:', 'e.g 5', (value) => noOfDonation = int.tryParse(value) ?? 0, keyboardType: TextInputType.number),
                     const SizedBox(height: 15),
                     _buildTextField('Your Weight (KG):', 'e.g 70', (value) => weight = int.tryParse(value) ?? 0, keyboardType: TextInputType.number),
                     const SizedBox(height: 15),
                     _buildTextField('Your age (Years):', 'e.g 22', (value) => age = int.tryParse(value) ?? 0, keyboardType: TextInputType.number),
+                    const SizedBox(height: 15),
+                    _buildDateField2(),
                     const SizedBox(height: 15),
                     _buildDateField(),
                     const SizedBox(height: 15),
@@ -243,6 +263,7 @@ class _RequestDonorState extends State<RequestDonor> {
                     _buildGenderChips(),
                     const SizedBox(height: 30),
                     _buildSubmitButton(),
+                    const SizedBox(height: 50),
                   ],
                 ),
               ),
@@ -335,12 +356,11 @@ class _RequestDonorState extends State<RequestDonor> {
   }
 
 
-
   Widget _buildPhoneField() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Contact', style: TextStyle(fontWeight: FontWeight.bold)),
+        const Text('Contact (Optional)', style: TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 10),
         IntlPhoneField(
           decoration: InputDecoration(
@@ -363,7 +383,7 @@ class _RequestDonorState extends State<RequestDonor> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Residence', style: TextStyle(fontWeight: FontWeight.bold)),
+        const Text('Residence (Optional)', style: TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 10),
         TextFormField(
           controller: _locationController,
@@ -395,7 +415,7 @@ class _RequestDonorState extends State<RequestDonor> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Last Donated:', style: TextStyle(fontWeight: FontWeight.bold)),
+        const Text('Last Donated  (Leave it empty if you have not donated yet):', style: TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 10),
         TextFormField(
           controller: _dateController,
@@ -416,6 +436,30 @@ class _RequestDonorState extends State<RequestDonor> {
     );
   }
 
+  Widget _buildDateField2() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('First Donated (Leave it empty if you have not donated yet):', style: TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 10),
+        TextFormField(
+          controller: _dateController2,
+          decoration: InputDecoration(
+            labelText: "Select Date",
+            suffixIcon: IconButton(
+              icon: Icon(Icons.calendar_today, color: Colors.red[900]),
+              onPressed: () => _selectDate2(context),
+            ),
+            border: _buildBorder(),
+            enabledBorder: _buildBorder(),
+            focusedBorder: _buildBorder(),
+          ),
+          readOnly: true,
+          onTap: () => _selectDate2(context),
+        ),
+      ],
+    );
+  }
   Widget _buildDropdown(String label, List<String> items, Function(String?) onChanged) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -451,6 +495,7 @@ class _RequestDonorState extends State<RequestDonor> {
           runSpacing: 10.0,
           children: List<Widget>.generate(groups.length, (int index) {
             return ChoiceChip(
+              showCheckmark: false, // Hides the tick mark
               label: groups[index],
               selected: _selectedGroups[index],
               onSelected: (bool selected) {
@@ -487,6 +532,7 @@ class _RequestDonorState extends State<RequestDonor> {
           runSpacing: 13.0,
           children: List<Widget>.generate(genders.length, (int index) {
             return ChoiceChip(
+              showCheckmark: false, // Hides the tick mark
               label: genders[index],
               selected: _selectedGenders[index],
               onSelected: (bool selected) {
@@ -512,7 +558,7 @@ class _RequestDonorState extends State<RequestDonor> {
     return Container(
       alignment: Alignment.center,
       child: StreamBuilder<bool>(
-        stream: _firebaseDatabase.doesDonorExist(auth.currentUser !.uid),
+        stream: _firebaseDatabase.doesDonorExist(auth.currentUser!.uid),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const CircularProgressIndicator();
@@ -525,39 +571,51 @@ class _RequestDonorState extends State<RequestDonor> {
                 ? null
                 : () async {
               try {
-                // Format the date before passing it
-                String formattedDate = _selectedDate != null
-                    ? DateFormat('yyyy-MM-dd').format(_selectedDate!)
-                    : '';
+                if (_selectedDate==null && _selectedDate2==null || _selectedDate!.isAfter(_selectedDate2!) || _selectedDate==_selectedDate2) {
+                  // Format the date before passing it
+                  String formattedDate = _selectedDate != null
+                      ? DateFormat('yyyy-MM-dd').format(_selectedDate!)
+                      : '';
+                  String formattedDate2 = _selectedDate2 != null
+                      ? DateFormat('yyyy-MM-dd').format(_selectedDate2!)
+                      : '';
+                  await _firebaseDatabase.addDonor(
+                    name,
+                    contact,
+                    residence,
+                    noOfDonation,
+                    bloodGroup,
+                    gender,
+                    details,
+                    weight,
+                    age,
+                    formattedDate,
+                    formattedDate2,
+                    donationFrequency,
+                    highestEducation,
+                    currentOccupation!,
+                    currentLivingArrg,
+                    eligibilityTest,
+                    futureDonationWillingness,
+                  );
+                  setState(() {
+                    donorMode = true;
+                  });
 
-                await _firebaseDatabase.addDonor(
-                  name,
-                  contact,
-                  residence,
-                  noOfDonation,
-                  bloodGroup,
-                  gender,
-                  details,
-                  weight,
-                  age,
-                  formattedDate, // Pass the formatted date string
-                  donationFrequency,
-                  highestEducation,
-                  currentOccupation!,
-                  currentLivingArrg,
-                  eligibilityTest,
-                  futureDonationWillingness,
-                );
-
-                setState(() {
-                  donorMode = true;
-                });
-
-                Get.snackbar('Success', 'Donor added successfully!',
-                    backgroundColor: Colors.green,
-                    colorText: Colors.white,
-                    margin: const EdgeInsets.all(15),
-                    icon: const Icon(Icons.check, color: Colors.white));
+                  Get.snackbar('Success', 'Donor added successfully!',
+                      backgroundColor: Colors.green,
+                      colorText: Colors.white,
+                      margin: const EdgeInsets.all(15),
+                      icon: const Icon(Icons.check, color: Colors.white));
+                }
+                else {
+                  Get.snackbar('ERROR:',
+                      'First Donation date should be before Last Donation date!',
+                      backgroundColor: Colors.red[900],
+                      colorText: Colors.white,
+                      margin: const EdgeInsets.all(15),
+                      icon: const Icon(Icons.check, color: Colors.white));
+                }
               } catch (e) {
                 Get.snackbar('ERROR', e.toString(),
                     backgroundColor: Colors.red[900],

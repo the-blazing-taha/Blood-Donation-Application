@@ -95,6 +95,7 @@ class _AboutUsPageState extends State<AboutUsPage> {
             ),
           ],
         ),
+
       ),
     );
   }
@@ -164,7 +165,7 @@ class CompatibilityTable extends StatelessWidget {
     {
       'group': 'AB+',
       'donate': 'AB+ only',
-      'receive': 'All blood types (Universal Recipient)',
+      'receive': 'All blood types',
     },
   ];
 

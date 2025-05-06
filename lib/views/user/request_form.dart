@@ -26,10 +26,10 @@ class _RequestFormState extends State<RequestForm> {
   late int bags;
   late String hospital;
   late String patient;
-  late String residence;
+  late String? residence = null;
   late String donationCase;
-  late String contact;
-  late String details;
+  late String? contact = null;
+  late String? details = null;
 
   final List<bool> _selectedGenders = <bool>[false, false];
   final List<Widget> genders = <Widget>[
@@ -56,9 +56,11 @@ class _RequestFormState extends State<RequestForm> {
     'Hemophilia',
     'Sickle cell disease',
     'Weakness',
-    'Operational Blood loss'
+    'Operational Blood loss',
+    'Others'
   ];
-
+  bool _showOthersField = false;
+  final TextEditingController _othersController = TextEditingController();
   final TextEditingController _locationController = TextEditingController();
   final fireStoreDatabaseController _firebaseDatabase = fireStoreDatabaseController();
 
@@ -161,21 +163,35 @@ class _RequestFormState extends State<RequestForm> {
                     _buildTextField('Patient Name', 'e.g. Mohammad Aliar', (value) => patient = value),
                     const SizedBox(height: 15),
                     _buildPhoneField(),
-                    _buildTextField('Hospital Name', 'e.g Lahore Children Hospital', (value) => hospital = value),
-                    const SizedBox(height: 15),
                     _buildLocationField(),
                     const SizedBox(height: 15),
-                    _buildDropdown('Case', list, (value) => donationCase = value!),
+                  _buildDropdown(
+                    label: "Case (Reason you want blood)",
+                    items: list,
+                    onChanged: (value) {
+                      setState(() {
+                        donationCase = value!;
+                      });
+                    },
+                    othersController: _othersController,
+                    showOthersField: _showOthersField,
+                    onOthersSelected: (show) {
+                      setState(() {
+                        _showOthersField = show;
+                      });
+                    },
+                  ),
                     const SizedBox(height: 15),
-                    _buildTextField('Quantity of blood needed (pints)', 'e.g 15', (value) => bags = int.tryParse(value) ?? 0, keyboardType: TextInputType.number),
+                    _buildTextField('Quantity of blood needed (pints) (1 pint = 500ml)', 'e.g 3', (value) => bags = int.tryParse(value) ?? 0, keyboardType: TextInputType.number),
                     const SizedBox(height: 15),
-                    _buildTextField('Details', 'e.g I have been suffering a lot so kindly give me the blood.', (value) => details = value),
+                    _buildTextFieldDetails('Details (Optional)', 'Needed in emergence', (value) => details = value),
                     const SizedBox(height: 20),
                     _buildBloodGroupChips(),
                     const SizedBox(height: 20),
                     _buildGenderChips(),
                     const SizedBox(height: 30),
                     _buildSubmitButton(),
+                    const SizedBox(height: 50),
                   ],
                 ),
               ),
@@ -222,7 +238,7 @@ class _RequestFormState extends State<RequestForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Contact', style: TextStyle(fontWeight: FontWeight.bold)),
+        const Text('Contact (optional)', style: TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 10),
         IntlPhoneField(
           decoration: InputDecoration(
@@ -245,15 +261,15 @@ class _RequestFormState extends State<RequestForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Residence', style: TextStyle(fontWeight: FontWeight.bold)),
+        const Text('Hospital or place where you need blood (optional)', style: TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 10),
         TextFormField(
           controller: _locationController,
           onChanged: (value) {
-            residence = value;
+            hospital = value;
           },
           decoration: InputDecoration(
-            hintText: 'e.g. House 131, Street 2, Gulberg Sukh Chayn Gardens, Lahore',
+            hintText: 'e.g. Lahore children hospital',
             enabledBorder: _buildBorder(),
             focusedBorder: _buildBorder(),
             errorBorder: _buildBorder(),
@@ -278,7 +294,7 @@ class _RequestFormState extends State<RequestForm> {
                 if (_currentAddress.isNotEmpty) {
                   setState(() {
                     _locationController.text = _currentAddress;
-                    residence = _currentAddress;
+                    hospital = _currentAddress;
                   });
                 }
 
@@ -293,7 +309,14 @@ class _RequestFormState extends State<RequestForm> {
     );
   }
 
-  Widget _buildDropdown(String label, List<String> items, Function(String?) onChanged) {
+  Widget _buildDropdown({
+    required String label,
+    required List<String> items,
+    required Function(String?) onChanged,
+    required TextEditingController othersController,
+    required bool showOthersField,
+    required Function(bool) onOthersSelected,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -311,11 +334,34 @@ class _RequestFormState extends State<RequestForm> {
               child: Text(value),
             );
           }).toList(),
-          onChanged: onChanged,
+          onChanged: (value) {
+            if (value == "Others") {
+              onOthersSelected(true);
+              // When "Others" is selected, keep donationCase empty or set it to a default value
+              donationCase = '';
+            } else {
+              onOthersSelected(false);
+              donationCase = value!;
+            }
+            onChanged(donationCase);  // Pass the updated donationCase to the onChanged function
+          },
         ),
+        if (showOthersField) ...[
+          const SizedBox(height: 10),
+          TextFormField(
+            controller: othersController,
+            decoration: const InputDecoration(labelText: "Enter other option"),
+            onChanged: (value) {
+              donationCase = value;  // Update the donationCase with the typed value
+              onChanged(donationCase);  // Notify parent widget of the updated value
+            },
+          ),
+        ],
       ],
     );
   }
+
+
 
   Widget _buildBloodGroupChips() {
     return Column(
@@ -328,6 +374,7 @@ class _RequestFormState extends State<RequestForm> {
           runSpacing: 10.0,
           children: List<Widget>.generate(groups.length, (int index) {
             return ChoiceChip(
+              showCheckmark: false, // Hides the tick mark
               label: groups[index],
               selected: _selectedGroups[index],
               onSelected: (bool selected) {
@@ -353,7 +400,47 @@ class _RequestFormState extends State<RequestForm> {
       ],
     );
   }
+  Widget _buildTextFieldDetails(
+      String label,
+      String hint,
+      Function(String) onChanged, {
+        TextEditingController? controller,
+        TextInputType keyboardType = TextInputType.text,
+      }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 10),
+        TextFormField(
+          controller: controller,
+          onChanged: onChanged,
+          keyboardType: keyboardType,
+          textCapitalization: TextCapitalization.none, // Don't auto-capitalize every word
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9\s]')),
+            TextInputFormatter.withFunction((oldValue, newValue) {
+              if (newValue.text.isEmpty) return newValue;
 
+              String text = newValue.text;
+              String capitalized = text[0].toUpperCase() + text.substring(1);
+
+              return newValue.copyWith(
+                text: capitalized,
+                selection: TextSelection.collapsed(offset: capitalized.length),
+              );
+            }),
+          ],
+          decoration: InputDecoration(
+            hintText: hint,
+            enabledBorder: _buildBorder(),
+            focusedBorder: _buildBorder(),
+            errorBorder: _buildBorder(),
+          ),
+        ),
+      ],
+    );
+  }
   Widget _buildGenderChips() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -365,6 +452,7 @@ class _RequestFormState extends State<RequestForm> {
           runSpacing: 13.0,
           children: List<Widget>.generate(genders.length, (int index) {
             return ChoiceChip(
+              showCheckmark: false, // Hides the tick mark
               label: genders[index],
               selected: _selectedGenders[index],
               onSelected: (bool selected) {
@@ -402,12 +490,11 @@ class _RequestFormState extends State<RequestForm> {
                 patient.trim(),
                 contact,
                 hospital.trim(),
-                residence.trim(),
                 donationCase.trim(),
                 bags,
                 bloodGroup.trim(),
                 gender.trim(),
-                details.trim(),
+                details,
               );
               Get.snackbar('Success', 'Request added successfully!',
                   backgroundColor: Colors.green,

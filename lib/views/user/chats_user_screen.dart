@@ -3,15 +3,25 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'chat_screen.dart';
 
-class ChatUsersScreen extends StatelessWidget {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+class ChatUsersScreen extends StatefulWidget {
 
   ChatUsersScreen({Key? key}) : super(key: key);
 
   @override
+  State<ChatUsersScreen> createState() => _ChatUsersScreenState();
+}
+
+class _ChatUsersScreenState extends State<ChatUsersScreen> {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  @override
   Widget build(BuildContext context) {
     String currentUserId = _auth.currentUser!.uid;
+    double screenWidth = MediaQuery.of(context).size.width;
+    double avatarRadius = screenWidth * 0.08;
+    double horizontalPadding = screenWidth * 0.04;
 
     return Scaffold(
       backgroundColor: Colors.grey[100],
@@ -48,34 +58,65 @@ class ChatUsersScreen extends StatelessWidget {
           }
 
           return ListView.builder(
-            padding: const EdgeInsets.all(12),
+            padding: EdgeInsets.all(horizontalPadding),
             itemCount: chatUsers.length,
             itemBuilder: (context, index) {
               var chatUser = chatUsers[index];
 
               return Card(
-                elevation: 3,
-                margin: const EdgeInsets.symmetric(vertical: 8),
+                elevation: 2,
+                margin: EdgeInsets.symmetric(vertical: screenWidth * 0.02),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  leading: CircleAvatar(
-                    radius: 25,
-                    backgroundColor: Colors.deepPurple[200],
-                    child: const Icon(Icons.person, color: Colors.white),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: horizontalPadding,
+                    vertical: screenWidth * 0.025,
                   ),
+                  leading: FutureBuilder<DocumentSnapshot>(
+                future: _firestore.collection('users').doc(chatUser['chatWith']).get(),
+                builder: (context, userSnapshot) {
+                  if (userSnapshot.connectionState == ConnectionState.waiting) {
+                    return CircleAvatar(
+                      radius: avatarRadius,
+                      backgroundColor: Colors.grey[300],
+                      child: const Icon(Icons.person, color: Colors.white),
+                    );
+                  }
+
+                  final userData = userSnapshot.data?.data() as Map<String, dynamic>?;
+
+                  final profilePicUrl = userData?['profileImage'];
+
+                  return CircleAvatar(
+                    radius: avatarRadius,
+                    backgroundColor: Colors.grey[300],
+                    backgroundImage: (profilePicUrl != null && profilePicUrl.toString().isNotEmpty)
+                        ? NetworkImage(profilePicUrl)
+                        : null,
+                    child: (profilePicUrl == null || profilePicUrl.toString().isEmpty)
+                        ? const Icon(Icons.person, color: Colors.white)
+                        : null,
+                  );
+                },
+              ),
                   title: Text(
                     chatUser['chatWithName'],
-                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: screenWidth * 0.045,
+                    ),
                   ),
                   subtitle: chatUser['lastMessage'] != null
                       ? Text(
                     chatUser['lastMessage'],
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: Colors.grey, fontSize: 14),
+                    style: TextStyle(
+                      color: Colors.grey[700],
+                      fontSize: screenWidth * 0.035,
+                    ),
                   )
                       : null,
                   trailing: Column(
@@ -98,8 +139,7 @@ class ChatUsersScreen extends StatelessWidget {
                     ],
                   ),
                   onTap: () async {
-                    // Reset unread count when opening chat
-                    await FirebaseFirestore.instance
+                    await _firestore
                         .collection('users')
                         .doc(currentUserId)
                         .collection('chats')
@@ -117,7 +157,6 @@ class ChatUsersScreen extends StatelessWidget {
                     );
                   },
                 ),
-
               );
             },
           );

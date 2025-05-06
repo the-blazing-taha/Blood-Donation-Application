@@ -5,9 +5,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:timeago/timeago.dart' as timeago;
-import '../../controllers/auth_controller.dart';
 import '../../controllers/fireStoreDatabaseController.dart';
 import 'drawer.dart';
 
@@ -34,7 +34,8 @@ class _HomeState extends State<DonationAppeal> {
   final TextEditingController _donationsNumberController = TextEditingController();
   final TextEditingController _detailsController = TextEditingController();
   final fireStoreDatabaseController _firebaseDatabase = fireStoreDatabaseController();
-
+  DateTime? _selectedDate;
+  DateTime? _selectedDate2;
   static List<String> bloodTypes = <String>['None','A+', 'B+', 'AB+', 'O+','A-', 'B-', 'AB-', 'O-'];
   static List<String> genders = <String>['None','Male','Female'];
   static List<String> last_donated = <String>[
@@ -79,7 +80,8 @@ class _HomeState extends State<DonationAppeal> {
     'Registered Residence',
     'Non-registered Residence'
   ];
-
+  TextEditingController _lastDateController = TextEditingController();
+  TextEditingController _firstDateController = TextEditingController();
   String bloodGroup='';
   String gender='' ;
   String hospital='';
@@ -95,13 +97,45 @@ class _HomeState extends State<DonationAppeal> {
   String eligibilityTest = '';
   String highestEducation = '';
   String lastDonated = '';
+  String firstDonated = '';
+
   int age = -1;
   String futureDonationWill = '';
   bool isOtherSelected = false;
   TextEditingController otherOccupationController = TextEditingController();
   int weight = -1;
-  final FocusNode _focusNode = FocusNode();
 
+  Future<void> _selectDate(BuildContext context) async {
+    DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now(),
+    );
+
+    if (picked != null) {
+      setState(() {
+        _selectedDate = picked;
+        _lastDateController.text = "${picked.year}-${picked.month}-${picked.day}";
+      });
+    }
+  }
+
+  Future<void> _selectDate2(BuildContext context) async {
+    DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now(),
+    );
+
+    if (picked != null) {
+      setState(() {
+        _selectedDate2 = picked;
+        _firstDateController.text = "${picked.year}-${picked.month}-${picked.day}";
+      });
+    }
+  }
   void updateButton(String id) {
     showDialog(
       context: context,
@@ -231,7 +265,7 @@ class _HomeState extends State<DonationAppeal> {
                     ),
                   ),
                   initialCountryCode: 'PK',
-                  disableLengthCheck: true, // Prevents default length restriction
+                  disableLengthCheck: false, // Prevents default length restriction
                   inputFormatters: [
                     FilteringTextInputFormatter.digitsOnly, // Allows only digits (0-9)
                   ],
@@ -257,24 +291,9 @@ class _HomeState extends State<DonationAppeal> {
                         value: value, label: value);
                   }).toList(),
                 ),
-                DropdownMenu<String>(
-                  hintText: "Last Donated",
-                  inputDecorationTheme: InputDecorationTheme(
-                    border: const OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.red,width: 3,),
-                        borderRadius:BorderRadius.all(Radius.circular(10.0))
-                    ),
-                  ),
-                  width: 325,
-                  onSelected: (value) {
-                      lastDonated = value!;
-                  },
-                  dropdownMenuEntries: last_donated
-                      .map<DropdownMenuEntry<String>>((String value) {
-                    return DropdownMenuEntry<String>(
-                        value: value, label: value);
-                  }).toList(),
-                ),
+
+                _buildDateField(),
+                _buildDateField2(),
                 DropdownMenu<String>(
                   hintText: "Current Occupation",
                   inputDecorationTheme: InputDecorationTheme(
@@ -333,63 +352,83 @@ class _HomeState extends State<DonationAppeal> {
             actions: [
               TextButton(
                 onPressed: () {
+                  String lastDonation = _selectedDate != null
+                      ? DateFormat('yyyy-MM-dd').format(_selectedDate!)
+                      : '';
+                  String firstDonation = _selectedDate2 != null
+                      ? DateFormat('yyyy-MM-dd').format(_selectedDate2!)
+                      : '';
+
                   try {
-                    if (donor != '') {
-                      _firebaseDatabase.updateDonationAppeal(
-                          docId: id, name: donor.trim());
-                    }
-                    if (bloodGroup != '') {
-                      _firebaseDatabase.updateDonationAppeal(
-                          docId: id, bloodGroup: bloodGroup.trim());
-                    }
-                    if (gender != '') {
-                      _firebaseDatabase.updateDonationAppeal(
-                          docId: id, gender: gender.trim());
-                    }
-                    if (residence != '') {
-                      _firebaseDatabase.updateDonationAppeal(
-                          docId: id, residence: residence.trim());
-                    }
-                    if (contact != '') {
-                      _firebaseDatabase.updateDonationAppeal(
-                          docId: id, contact: contact.trim());
-                    }
-                    if (numberOfDonations != -1) {
-                      _firebaseDatabase.updateDonationAppeal(
-                          docId: id, donationsDone: numberOfDonations);
-                    }
-                    if (details != '') {
-                      _firebaseDatabase.updateDonationAppeal(
-                          docId: id, details: details.trim());
-                    }
-                    if (currentOccupation != '') {
-                      _firebaseDatabase.updateDonationAppeal(
-                          docId: id, currentOccupation: currentOccupation.trim());
-                    }
-                    if (donationFrequency != '') {
-                      _firebaseDatabase.updateDonationAppeal(
-                          docId: id, donationFrequency: donationFrequency.trim());
-                    }
-                    if (highestEducation != '') {
-                      _firebaseDatabase.updateDonationAppeal(
-                          docId: id, highestEducation: highestEducation.trim());
-                    }
-                    if (age != -1) {
-                      _firebaseDatabase.updateDonationAppeal(
-                          docId: id, age: age);
-                    }
-                    if (futureDonationWill != '') {
-                      _firebaseDatabase.updateDonationAppeal(
-                          docId: id, futureDonationWillingness: futureDonationWill);
-                    }
-                    if (weight != -1) {
-                      _firebaseDatabase.updateDonationAppeal(
-                          docId: id, weight: weight);
-                    }
-                    if (livingArrangement != '') {
-                      _firebaseDatabase.updateDonationAppeal(
-                          docId: id, currentLivingArrg: livingArrangement);
-                    }
+                    if (_selectedDate==null || _selectedDate2==null || _selectedDate!.isAfter(_selectedDate2!) || _selectedDate==_selectedDate2) {
+                      if (donor != '') {
+                        _firebaseDatabase.updateDonationAppeal(
+                            docId: id, name: donor.trim());
+                      }
+                      if (bloodGroup != '') {
+                        _firebaseDatabase.updateDonationAppeal(
+                            docId: id, bloodGroup: bloodGroup.trim());
+                      }
+                      if (lastDonation != '') {
+                        _firebaseDatabase.updateDonationAppeal(
+                            docId: id, lastDonation: lastDonation.trim());
+                      }
+                      if (firstDonation != '') {
+                        _firebaseDatabase.updateDonationAppeal(
+                            docId: id, firstDonation: firstDonation.trim());
+                      }
+                      if (gender != '') {
+                        _firebaseDatabase.updateDonationAppeal(
+                            docId: id, gender: gender.trim());
+                      }
+                      if (residence != '') {
+                        _firebaseDatabase.updateDonationAppeal(
+                            docId: id, residence: residence.trim());
+                      }
+                      if (contact != '') {
+                        _firebaseDatabase.updateDonationAppeal(
+                            docId: id, contact: contact.trim());
+                      }
+                      if (numberOfDonations != -1) {
+                        _firebaseDatabase.updateDonationAppeal(
+                            docId: id, donationsDone: numberOfDonations);
+                      }
+                      if (details != '') {
+                        _firebaseDatabase.updateDonationAppeal(
+                            docId: id, details: details.trim());
+                      }
+                      if (currentOccupation != '') {
+                        _firebaseDatabase.updateDonationAppeal(
+                            docId: id,
+                            currentOccupation: currentOccupation.trim());
+                      }
+                      if (donationFrequency != '') {
+                        _firebaseDatabase.updateDonationAppeal(
+                            docId: id,
+                            donationFrequency: donationFrequency.trim());
+                      }
+                      if (highestEducation != '') {
+                        _firebaseDatabase.updateDonationAppeal(
+                            docId: id,
+                            highestEducation: highestEducation.trim());
+                      }
+                      if (age != -1) {
+                        _firebaseDatabase.updateDonationAppeal(
+                            docId: id, age: age);
+                      }
+                      if (futureDonationWill != '') {
+                        _firebaseDatabase.updateDonationAppeal(
+                            docId: id,
+                            futureDonationWillingness: futureDonationWill);
+                      }
+                      if (weight != -1) {
+                        _firebaseDatabase.updateDonationAppeal(
+                            docId: id, weight: weight);
+                      }
+                      if (livingArrangement != '') {
+                        _firebaseDatabase.updateDonationAppeal(
+                            docId: id, currentLivingArrg: livingArrangement);
+                      }
 
                       _nameController.clear();
                       _bloodGroupController.clear();
@@ -398,18 +437,36 @@ class _HomeState extends State<DonationAppeal> {
                       _genderController.clear();
                       _donationsNumberController.clear();
                       _hospitalController.clear();
-                    Navigator.of(context).pop();
-                    Get.snackbar("Success: ", "Donor registration updated successfully!",
-                        backgroundColor: Colors.red,
-                        colorText: Colors.white,
-                        margin: const EdgeInsets.all(
-                          15,
-                        ),
-                        snackPosition: SnackPosition.BOTTOM,
-                        icon: const Icon(
-                          Icons.message,
-                          color: Colors.white,
-                        ));
+                      _lastDateController.clear();
+                      _firstDateController.clear();
+                      Navigator.of(context).pop();
+                      Get.snackbar("Success: ",
+                          "Donor registration updated successfully!",
+                          backgroundColor: Colors.red,
+                          colorText: Colors.white,
+                          margin: const EdgeInsets.all(
+                            15,
+                          ),
+                          snackPosition: SnackPosition.BOTTOM,
+                          icon: const Icon(
+                            Icons.message,
+                            color: Colors.white,
+                          ));
+                    }
+                    else{
+                      Get.snackbar("ERROR: ",
+                          "First Donation date should be before Last Donation date!",
+                          backgroundColor: Colors.red,
+                          colorText: Colors.white,
+                          margin: const EdgeInsets.all(
+                            15,
+                          ),
+                          snackPosition: SnackPosition.BOTTOM,
+                          icon: const Icon(
+                            Icons.message,
+                            color: Colors.white,
+                          ));
+                    }
                   }
                   catch(e){
                     Get.snackbar("Error updating the donor registration: ", e.toString(),
@@ -437,6 +494,8 @@ class _HomeState extends State<DonationAppeal> {
                   _genderController.clear();
                   _donationsNumberController.clear();
                   _hospitalController.clear();
+                  _lastDateController.clear();
+                  _firstDateController.clear();
                   Navigator.of(context).pop();
                 },
                 child: const Text('Cancel'),
@@ -652,37 +711,97 @@ class _HomeState extends State<DonationAppeal> {
                                         ),
                                       ),
                                       onPressed: () {
-                                        try {
-                                          firebaseDatabase.deleteDonation(data['docId']);
-                                          setState(() {donorMode=false;});
-                                          Get.snackbar("Success: ","Donation deleted successfully!",
-                                              backgroundColor: Colors.red,
-                                              colorText: Colors.white,
-                                              margin: const EdgeInsets.all(
-                                                15,
+                                        // Show confirmation dialog
+                                        showDialog(
+                                          context: context,
+                                          builder: (BuildContext context) {
+                                            return AlertDialog(
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(15),
                                               ),
-                                              snackPosition: SnackPosition.BOTTOM,
-                                              icon: const Icon(
-                                                Icons.message,
-                                                color: Colors.white,
-                                              ));
-                                        }
-                                        catch(e){
-                                          Get.snackbar("Error: ", e.toString(),
-                                              backgroundColor: Colors.red,
-                                              colorText: Colors.white,
-                                              margin: const EdgeInsets.all(
-                                                15,
+                                              backgroundColor: Colors.white,
+                                              title: Text(
+                                                'Confirm Deletion',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 18,
+                                                  color: Colors.red[900],
+                                                ),
                                               ),
-                                              snackPosition: SnackPosition.BOTTOM,
-                                              icon: const Icon(
-                                                Icons.message,
-                                                color: Colors.white,
-                                              ));
-                                        }
+                                              content: Text(
+                                                'Are you sure you want to delete this donation?',
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  color: Colors.black87,
+                                                ),
+                                              ),
+                                              actions: <Widget>[
+                                                TextButton(
+                                                  onPressed: () {
+                                                    // If user presses "No", close the dialog
+                                                    Navigator.of(context).pop();
+                                                  },
+                                                  child: Text(
+                                                    'No',
+                                                    style: TextStyle(
+                                                      color: Colors.red[900],
+                                                      fontWeight: FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                ),
+                                                ElevatedButton(
+                                                  style: ElevatedButton.styleFrom(
+                                                    foregroundColor: Colors.white, backgroundColor: Colors.red[900], // White text color
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius: BorderRadius.circular(8),
+                                                    ),
+                                                  ),
+                                                  onPressed: () {
+                                                    // If user presses "Yes", delete the donation and show snackbar
+                                                    try {
+                                                      firebaseDatabase.deleteDonation(data['docId']);
+                                                      setState(() {
+                                                        donorMode = false;
+                                                      });
+                                                      Navigator.of(context).pop(); // Close the dialog
+                                                      Get.snackbar(
+                                                        "Success:",
+                                                        "Donation deleted successfully!",
+                                                        backgroundColor: Colors.red,
+                                                        colorText: Colors.white,
+                                                        margin: const EdgeInsets.all(15),
+                                                        snackPosition: SnackPosition.BOTTOM,
+                                                        icon: const Icon(
+                                                          Icons.check_circle,
+                                                          color: Colors.white,
+                                                        ),
+                                                      );
+                                                    } catch (e) {
+                                                      Navigator.of(context).pop(); // Close the dialog
+                                                      Get.snackbar(
+                                                        "Error:",
+                                                        e.toString(),
+                                                        backgroundColor: Colors.red,
+                                                        colorText: Colors.white,
+                                                        margin: const EdgeInsets.all(15),
+                                                        snackPosition: SnackPosition.BOTTOM,
+                                                        icon: const Icon(
+                                                          Icons.error,
+                                                          color: Colors.white,
+                                                        ),
+                                                      );
+                                                    }
+                                                  },
+                                                  child: const Text('Yes'),
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        );
                                       },
                                       child: const Text('Delete'),
                                     ),
+
                                     const SizedBox(width: 6),
                                     ElevatedButton(
                                       style: ElevatedButton.styleFrom(
@@ -705,6 +824,7 @@ class _HomeState extends State<DonationAppeal> {
                                               details: data['details'],
                                               weight: data['weight'],
                                               age: data['age'],
+                                              firstDonated: data['firstDonated'],
                                               lastDonated: data['lastDonated'],
                                               donationFrequency: data['donationFrequency'],
                                               highestEducation: data['highestEducation'],
@@ -712,7 +832,8 @@ class _HomeState extends State<DonationAppeal> {
                                               currentLivingArrg: data['currentLivingArrg'],
                                               eligibilityTest: data['eligibilityTest'],
                                               futureDonationWillingness: data['futureDonationWillingness'],
-                                              email: data['profileUrl'],
+                                              email: data['email'],
+                                              profileImage: data['profileUrl'],
                                             ),
                                           ),
                                         );
@@ -737,6 +858,59 @@ class _HomeState extends State<DonationAppeal> {
       ),
     );
   }
+
+  Widget _buildDateField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextFormField(
+          controller: _lastDateController,
+          decoration: InputDecoration(
+            labelText: "Last Donated",
+            suffixIcon: IconButton(
+              icon: Icon(Icons.calendar_today),
+              onPressed: () => _selectDate(context),
+            ),
+            border: _buildBorder(),
+            enabledBorder: _buildBorder(),
+            focusedBorder: _buildBorder(),
+          ),
+          readOnly: true,
+          onTap: () => _selectDate(context),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDateField2() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextFormField(
+          controller: _firstDateController,
+          decoration: InputDecoration(
+            labelText: "First Donated",
+            suffixIcon: IconButton(
+              icon: Icon(Icons.calendar_today),
+              onPressed: () => _selectDate2(context),
+            ),
+            border: _buildBorder(),
+            enabledBorder: _buildBorder(),
+            focusedBorder: _buildBorder(),
+          ),
+          readOnly: true,
+          onTap: () => _selectDate2(context),
+        ),
+      ],
+    );
+  }
+  OutlineInputBorder _buildBorder() {
+    return OutlineInputBorder(
+      borderSide: BorderSide( width: 0),
+      borderRadius: BorderRadius.circular(10),
+    );
+  }
+
 }
 
 

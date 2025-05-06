@@ -34,7 +34,6 @@ class _RequestsState extends State<Requests> {
    int bags=-1;
    String hospital='';
    String patient='';
-   String residence='';
    String donationCase='';
    String contact='';
    String details='';
@@ -61,14 +60,7 @@ class _RequestsState extends State<Requests> {
                   textCapitalization: TextCapitalization.words,
                 ),
                 const SizedBox(height: 4,),
-                TextField(
-                  onChanged: (value){
-                      residence=value;
-                  },
-                  controller: _locationController,
-                  decoration: const InputDecoration(hintText: "Location"),
-                  textCapitalization: TextCapitalization.words,
-                ),
+
                 const SizedBox(height: 4,),
                 TextField(
                   keyboardType: TextInputType.number,
@@ -173,9 +165,6 @@ class _RequestsState extends State<Requests> {
                     }
                     if (gender != '') {
                       await firebaseDatabase.updateRequest(docId: id, gender: gender);
-                    }
-                    if (residence != '') {
-                      await firebaseDatabase.updateRequest(docId: id, residence: residence);
                     }
                     if (contact != '') {
                       await firebaseDatabase.updateRequest(docId: id, contact: contact);
@@ -439,39 +428,95 @@ class _RequestsState extends State<Requests> {
                                           ),
                                         ),
                                         onPressed: () {
-                                          // databaseService.deleteRequest(request.id);
-                                          try {
-                                            firebaseDatabase.deleteRequest(
-                                                data['docId']);
-                                            setState(() {});
-                                            Get.snackbar("Success: ","Request deleted successfully!",
-                                                backgroundColor: Colors.red,
-                                                colorText: Colors.white,
-                                                margin: const EdgeInsets.all(
-                                                  15,
+                                          // Show confirmation dialog
+                                          showDialog(
+                                            context: context,
+                                            builder: (BuildContext context) {
+                                              return AlertDialog(
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius: BorderRadius.circular(15),
                                                 ),
-                                                snackPosition: SnackPosition.BOTTOM,
-                                                icon: const Icon(
-                                                  Icons.message,
-                                                  color: Colors.white,
-                                                ));
-                                          }
-                                          catch(e){
-                                            Get.snackbar("Error: ", e.toString(),
-                                                backgroundColor: Colors.red,
-                                                colorText: Colors.white,
-                                                margin: const EdgeInsets.all(
-                                                  15,
+                                                backgroundColor: Colors.white,
+                                                title: Text(
+                                                  'Confirm Deletion',
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 18,
+                                                    color: Colors.red[900],
+                                                  ),
                                                 ),
-                                                snackPosition: SnackPosition.BOTTOM,
-                                                icon: const Icon(
-                                                  Icons.message,
-                                                  color: Colors.white,
-                                                ));
-                                          }
+                                                content: Text(
+                                                  'Are you sure you want to delete this request?',
+                                                  style: TextStyle(
+                                                    fontSize: 16,
+                                                    color: Colors.black87,
+                                                  ),
+                                                ),
+                                                actions: <Widget>[
+                                                  TextButton(
+                                                    onPressed: () {
+                                                      // If user presses "No", close the dialog
+                                                      Navigator.of(context).pop();
+                                                    },
+                                                    child: Text(
+                                                      'No',
+                                                      style: TextStyle(
+                                                        color: Colors.red[900],
+                                                        fontWeight: FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  ElevatedButton(
+                                                    style: ElevatedButton.styleFrom(
+                                                      foregroundColor: Colors.white, backgroundColor: Colors.red[900], // White text color
+                                                      shape: RoundedRectangleBorder(
+                                                        borderRadius: BorderRadius.circular(8),
+                                                      ),
+                                                    ),
+                                                    onPressed: () {
+                                                      // If user presses "Yes", delete the request and show snackbar
+                                                      try {
+                                                        firebaseDatabase.deleteRequest(data['docId']);
+                                                        setState(() {});
+                                                        Navigator.of(context).pop(); // Close the dialog
+                                                        Get.snackbar(
+                                                          "Success:",
+                                                          "Request deleted successfully!",
+                                                          backgroundColor: Colors.red,
+                                                          colorText: Colors.white,
+                                                          margin: const EdgeInsets.all(15),
+                                                          snackPosition: SnackPosition.BOTTOM,
+                                                          icon: const Icon(
+                                                            Icons.check_circle,
+                                                            color: Colors.white,
+                                                          ),
+                                                        );
+                                                      } catch (e) {
+                                                        Navigator.of(context).pop(); // Close the dialog
+                                                        Get.snackbar(
+                                                          "Error:",
+                                                          e.toString(),
+                                                          backgroundColor: Colors.red,
+                                                          colorText: Colors.white,
+                                                          margin: const EdgeInsets.all(15),
+                                                          snackPosition: SnackPosition.BOTTOM,
+                                                          icon: const Icon(
+                                                            Icons.error,
+                                                            color: Colors.white,
+                                                          ),
+                                                        );
+                                                      }
+                                                    },
+                                                    child: const Text('Yes'),
+                                                  ),
+                                                ],
+                                              );
+                                            },
+                                          );
                                         },
                                         child: const Text('Delete'),
                                       ),
+
                                       const SizedBox(width: 6),
                                       ElevatedButton(
                                         style: ElevatedButton.styleFrom(
@@ -488,12 +533,12 @@ class _RequestsState extends State<Requests> {
                                                 patient: data['name'],
                                                 contact: data['contact'],
                                                 hospital: data['hospital'],
-                                                residence: data['residence'],
                                                 case_: data['case'],
                                                 bags: data['bags'],
                                                 bloodGroup: data['bloodGroup'],
                                                 gender: data['gender'],
-                                                email: data['profileUrl'],
+                                                email: data['email'],
+                                                profileImage: data['profileUrl'],
                                                 details: data['details'],
                                               ),
                                             ),

@@ -284,6 +284,7 @@ class _AllDonorsState extends State<AllDonors> {
                                                   details: data['details'],
                                                   weight: data['weight'],
                                                   age: data['age'],
+                                                  firstDonated: data['firstDonated'],
                                                   lastDonated: data['lastDonated'],
                                                   donationFrequency: data['donationFrequency'],
                                                   highestEducation: data['highestEducation'],
