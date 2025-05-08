@@ -5,7 +5,6 @@ import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 
 
-
 class fireStoreDatabaseController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
@@ -115,6 +114,7 @@ class fireStoreDatabaseController {
     // continue accessing the position of the device.
     return await Geolocator.getCurrentPosition();
   }
+
   Future<String?> getProfileUrl() async {
     var userDoc = await FirebaseFirestore.instance
         .collection('users')

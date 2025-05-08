@@ -1,4 +1,4 @@
-package com.example.blood
+package com.nust.blood
 
 import io.flutter.embedding.android.FlutterFragmentActivity
 

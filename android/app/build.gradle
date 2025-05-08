@@ -11,7 +11,7 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 }
 android {
-    namespace = "com.example.blood"
+    namespace = "com.nust.blood"
     compileSdk = 35
     ndkVersion = "25.1.8937393"
 
@@ -26,7 +26,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.blood"
+        applicationId = "com.nust.blood"
         minSdk = 24
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
