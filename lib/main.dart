@@ -1,11 +1,13 @@
 import 'dart:io';
 import 'package:blood/views/user/allrequests.dart';
+import 'package:blood/views/user/keys.dart';
 import 'package:blood/views/user/wrapper.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:get/get.dart';
 
 final navigatorKey = GlobalKey<NavigatorState>();
@@ -50,6 +52,8 @@ Future<void> setUpNotifications() async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  Stripe.publishableKey = PublishableKey;
+  await Stripe.instance.applySettings();
 
   await initializeFirebase();
   await setUpNotifications();

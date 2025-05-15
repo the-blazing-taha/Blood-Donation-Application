@@ -1,15 +1,17 @@
 import 'dart:convert';
 import 'dart:math';
+import 'package:blood/views/user/keys.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_stripe/flutter_stripe.dart' as stripe;
 import 'package:geolocator/geolocator.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../../controllers/fireStoreDatabaseController.dart';
 import 'chat_screen.dart';
 import 'donor_details.dart';
 import 'package:http/http.dart' as http;
-
 class NearbyDonors extends StatefulWidget {
   const NearbyDonors({super.key});
   static const route = '/nearby-donors';
@@ -26,6 +28,9 @@ class _NearbyDonorsState extends State<NearbyDonors> {
   List<Map<String, dynamic>> nearbyDonors = [];
   bool isLoading = false;
   String selectedBloodGroup = '';
+  double amount = 20;
+  Map<String,dynamic>? intentPaymentData;
+
   final List<String> bloodGroups = [
     'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'
   ];
@@ -218,6 +223,74 @@ class _NearbyDonorsState extends State<NearbyDonors> {
     }
   }
 
+  makeIntentForPayment(amountToBeCharge,currency) async{
+    try{
+      Map<String,dynamic>? paymentInfo={
+        'amount': (int.parse(amountToBeCharge)*100).toString(),
+        'currency': currency,
+        'payment_method_types[]': "card",
+      };
+      var responseFromStripeAPI = await http.post(Uri.parse('https://api.stripe.com/v1/payment_intents'),body: paymentInfo,headers: {
+        "Authorization": "Bearer $SecretKey",
+        "Content-Type": "application/x-www-form-urlencoded"
+      });
+      print("response from API = " + responseFromStripeAPI.body);
+      return jsonDecode(responseFromStripeAPI.body);
+    }
+    catch(errorMsg){
+      if(kDebugMode){
+        print(errorMsg);
+      }
+      print(errorMsg.toString());
+
+    }
+  }
+  showPaymentSheet()async{
+    try{
+      await stripe.Stripe.instance.presentPaymentSheet().then((val){
+        intentPaymentData = null;
+      }).onError((errorMsg,sTrace){
+        if(kDebugMode){
+          print(errorMsg.toString()+sTrace.toString());
+        }
+      });
+    }
+    on stripe.StripeException catch(error){
+      if(kDebugMode){
+        print(error);
+      }
+      showDialog(context: context, builder: (c)=> const AlertDialog(
+        content: Text("Cancelled"),
+      ));
+    }
+    catch(errorMsg){
+      if(kDebugMode){
+        print(errorMsg);
+      }
+      print(errorMsg.toString());
+    }
+  }
+  paymentSheetInitialization(amountToBeCharge, currency)async{
+    try{
+      intentPaymentData = await makeIntentForPayment(amountToBeCharge,currency);
+      await stripe.Stripe.instance.initPaymentSheet(paymentSheetParameters: stripe.SetupPaymentSheetParameters(
+          allowsDelayedPaymentMethods: true,
+          paymentIntentClientSecret: intentPaymentData!['client_secret'],
+          style: ThemeMode.dark,
+          merchantDisplayName: "Company Name Example"
+      )
+      ).then((val){
+        print(val);
+      });
+      showPaymentSheet();
+    }
+    catch(errorMsg,s){
+      if(kDebugMode){
+        print(s);
+      }
+      print(errorMsg.toString());
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -266,6 +339,11 @@ class _NearbyDonorsState extends State<NearbyDonors> {
                   ? const CircularProgressIndicator(color: Colors.white)
                   : const Text("Find Nearby Donors", style: TextStyle(color: Colors.white)),
             ),
+            ElevatedButton(onPressed: (){
+                  paymentSheetInitialization(
+                    amount.round().toString(),"USD"
+                  );
+            }, child: Text("Payment ${amount}")),
             Expanded(
               child: nearbyDonors.isEmpty
                   ? const Center(child: Text("No nearby donors found"))
@@ -277,6 +355,7 @@ class _NearbyDonorsState extends State<NearbyDonors> {
                       ? (donor['createdAt'] as Timestamp).toDate()
                       : DateTime.now();
                   var timeAgo = timeago.format(createdAt);
+
                   return Card(
                     margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     elevation: 4,

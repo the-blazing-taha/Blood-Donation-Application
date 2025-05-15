@@ -175,7 +175,9 @@ class _RequestsState extends State<Requests> {
                     if (details != '') {
                       await firebaseDatabase.updateRequest(docId: id, details: details);
                     }
-
+                    if (hospital != '') {
+                      await firebaseDatabase.updateRequest(docId: id, details: hospital);
+                    }
                     Navigator.of(context).pop(); // Pop only once after all updates
 
                     setState(() {
