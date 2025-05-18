@@ -1,4 +1,5 @@
 import 'package:blood/views/user/drawer.dart';
+import 'package:blood/views/user/payment_screen.dart';
 import 'package:flutter/material.dart';
 
 class AboutUsPage extends StatefulWidget {
@@ -198,6 +199,14 @@ class CompatibilityTable extends StatelessWidget {
                   'Can Receive From: ${row['receive']}',
                   style: TextStyle(fontSize: 14, color: Colors.black54),
                 ),
+                ElevatedButton(onPressed: (){
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => PaymentScreen(),
+                    ),
+                  );
+                }, child: Text("payments")),
               ],
             ),
           ),

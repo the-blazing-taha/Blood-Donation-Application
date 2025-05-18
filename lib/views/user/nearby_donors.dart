@@ -1,17 +1,16 @@
 import 'dart:convert';
 import 'dart:math';
-import 'package:blood/views/user/keys.dart';
+import 'package:blood/views/user/payment_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_stripe/flutter_stripe.dart' as stripe;
 import 'package:geolocator/geolocator.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../../controllers/fireStoreDatabaseController.dart';
 import 'chat_screen.dart';
 import 'donor_details.dart';
 import 'package:http/http.dart' as http;
+
 class NearbyDonors extends StatefulWidget {
   const NearbyDonors({super.key});
   static const route = '/nearby-donors';
@@ -22,18 +21,14 @@ class NearbyDonors extends StatefulWidget {
 
 class _NearbyDonorsState extends State<NearbyDonors> {
   final FirebaseAuth auth = FirebaseAuth.instance;
-  final fireStoreDatabaseController firebaseDatabase =
-  fireStoreDatabaseController();
+  final fireStoreDatabaseController firebaseDatabase = fireStoreDatabaseController();
   Position? currentPosition;
   List<Map<String, dynamic>> nearbyDonors = [];
   bool isLoading = false;
   String selectedBloodGroup = '';
-  double amount = 20;
-  Map<String,dynamic>? intentPaymentData;
+  bool hasPaid = false;
 
-  final List<String> bloodGroups = [
-    'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'
-  ];
+  final List<String> bloodGroups = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
 
   final Map<String, List<String>> compatibleBloodGroups = {
     'A+': ['A+', 'A-', 'O+', 'O-'],
@@ -46,52 +41,87 @@ class _NearbyDonorsState extends State<NearbyDonors> {
     'AB-': ['A-', 'B-', 'O-', 'AB-'],
   };
 
-  Future<void> startLocationTracking() async {
-    bool serviceEnabled;
-    LocationPermission permission;
+  Future<void> checkPaymentAndTrackLocation() async {
+    if (selectedBloodGroup.isEmpty) return;
 
-    // Check if location services are enabled
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    setState(() => isLoading = true);
+
+    final userDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(auth.currentUser?.uid)
+        .get();
+
+    hasPaid = userDoc.data()?['paid'] ?? false;
+
+    await startLocationTracking();
+
+    if (!hasPaid) {
+      await showPaymentDialog();
+    } else {
+      await findNearbyDonors();
+    }
+
+    setState(() => isLoading = false);
+  }
+
+  Future<void> showPaymentDialog() async {
+    final donorCount = nearbyDonors.length;
+    await showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Payment Required'),
+        content: Text('There are $donorCount matching donors nearby. Please make a payment to view full details.'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PaymentScreen(),
+                ),
+              );            },
+            child: const Text('Proceed to Payment'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> startLocationTracking() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       await Geolocator.openLocationSettings();
       return;
     }
 
-    // Check location permission status
-    permission = await Geolocator.checkPermission();
+    LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        print("Location permission denied.");
-        return;
-      }
+      if (permission == LocationPermission.denied) return;
     }
 
-    if (permission == LocationPermission.deniedForever) {
-      print("Location permission permanently denied.");
-      return;
-    }
+    if (permission == LocationPermission.deniedForever) return;
 
     try {
-      Position position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high);
-
-      setState(() {
-        currentPosition = position;
-        isLoading = true;
-      });
+      currentPosition = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
 
       if (await doesUserExist()) {
         await firebaseDatabase.updateDonorPosition(
-            position.longitude, position.latitude);
+            currentPosition!.longitude, currentPosition!.latitude);
       }
 
-      await findNearbyDonors();
+      await findNearbyDonors(); // Always fetch donor count
     } catch (e) {
-      print("Error getting location: $e");
+      print("Location error: $e");
     }
   }
-
 
   Future<bool> doesUserExist() async {
     final doc = await FirebaseFirestore.instance
@@ -102,37 +132,29 @@ class _NearbyDonorsState extends State<NearbyDonors> {
   }
 
   double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
-    const double R = 6371; // Earth radius in km
+    const R = 6371;
     double dLat = (lat2 - lat1) * pi / 180;
     double dLon = (lon2 - lon1) * pi / 180;
     double a = sin(dLat / 2) * sin(dLat / 2) +
-        cos(lat1 * pi / 180) *
-            cos(lat2 * pi / 180) *
-            sin(dLon / 2) *
-            sin(dLon / 2);
+        cos(lat1 * pi / 180) * cos(lat2 * pi / 180) *
+            sin(dLon / 2) * sin(dLon / 2);
     double c = 2 * atan2(sqrt(a), sqrt(1 - a));
-    return R * c; // Distance in km
+    return R * c;
   }
-
 
   Future<void> findNearbyDonors() async {
     if (currentPosition == null || selectedBloodGroup.isEmpty) return;
 
-    setState(() {
-      isLoading = true;
-    });
-
-    FirebaseFirestore firestore = FirebaseFirestore.instance;
+    final firestore = FirebaseFirestore.instance;
     double lat = currentPosition!.latitude;
     double lon = currentPosition!.longitude;
     double searchRadiusKm = 15;
     double latChange = searchRadiusKm / 111.12;
     double lonChange = searchRadiusKm / (111.12 * cos(lat * pi / 180));
+    List<String> validBloodGroups = compatibleBloodGroups[selectedBloodGroup]!;
 
     try {
-      List<String> validBloodGroups = compatibleBloodGroups[selectedBloodGroup]!;
-
-      QuerySnapshot snapshot = await firestore
+      final snapshot = await firestore
           .collection('donors')
           .where('latitude', isGreaterThanOrEqualTo: lat - latChange)
           .where('latitude', isLessThanOrEqualTo: lat + latChange)
@@ -144,38 +166,33 @@ class _NearbyDonorsState extends State<NearbyDonors> {
           .get();
 
       List<Map<String, dynamic>> usersNearby = snapshot.docs
-          .map((doc) => doc.data() as Map<String, dynamic>)
+          .map((doc) => doc.data())
           .where((data) {
         double userLat = data['latitude'];
         double userLon = data['longitude'];
         return calculateDistance(lat, lon, userLat, userLon) <= searchRadiusKm;
-      })
-          .toList();
+      }).toList();
 
-      // Date parsing helper
-      DateTime? parseDate(dynamic value) {
-        if (value is Timestamp) {
-          return value.toDate();
-        } else if (value is String) {
-          return DateTime.tryParse(value);
-        } else {
-          return null;
-        }
+      if (!hasPaid) {
+        setState(() => nearbyDonors = usersNearby); // Only count
+        return;
       }
 
-      // Prepare data for API
+      // API Model Preparation
+      DateTime? parseDate(dynamic value) {
+        if (value is Timestamp) return value.toDate();
+        if (value is String) return DateTime.tryParse(value);
+        return null;
+      }
+
       List<Map<String, dynamic>> modelInput = usersNearby.map((donor) {
         final now = DateTime.now();
         DateTime? lastDonated = parseDate(donor['lastDonated']);
         DateTime? firstDonated = parseDate(donor['firstDonated']);
         double numDonations = double.tryParse(donor['donations_done']?.toString() ?? '0') ?? 0;
 
-        int monthsSinceLast = lastDonated != null
-            ? ((now.difference(lastDonated).inDays) / 30).floor()
-            : 0;
-        int monthsSinceFirst = firstDonated != null
-            ? ((now.difference(firstDonated).inDays) / 30).floor()
-            : 0;
+        int monthsSinceLast = lastDonated != null ? (now.difference(lastDonated).inDays / 30).floor() : 0;
+        int monthsSinceFirst = firstDonated != null ? (now.difference(firstDonated).inDays / 30).floor() : 0;
 
         return {
           "id": donor['userId'] ?? '',
@@ -185,7 +202,7 @@ class _NearbyDonorsState extends State<NearbyDonors> {
         };
       }).toList();
 
-      // Send to prediction API
+      // Call AI Prediction API
       final url = Uri.parse('https://web-production-5141f.up.railway.app//predict');
       final response = await http.post(
         url,
@@ -194,9 +211,7 @@ class _NearbyDonorsState extends State<NearbyDonors> {
       );
 
       if (response.statusCode == 200) {
-        final decoded = jsonDecode(response.body);
-        final predictions = List<Map<String, dynamic>>.from(decoded['predictions']);
-
+        final predictions = List<Map<String, dynamic>>.from(jsonDecode(response.body)['predictions']);
         for (var donor in usersNearby) {
           final matching = predictions.firstWhere(
                 (pred) => pred['id'] == donor['userId'],
@@ -205,315 +220,179 @@ class _NearbyDonorsState extends State<NearbyDonors> {
           donor['donation_probability'] = matching['donation_probability'];
         }
 
-        usersNearby.sort((a, b) =>
-            (b['donation_probability'] ?? 0.0).compareTo(a['donation_probability'] ?? 0.0));
-      } else {
-        throw Exception("Prediction API failed with status ${response.statusCode}");
+        usersNearby.sort((a, b) => (b['donation_probability'] ?? 0.0)
+            .compareTo(a['donation_probability'] ?? 0.0));
       }
 
-      setState(() {
-        nearbyDonors = usersNearby;
-        isLoading = false;
-      });
+      setState(() => nearbyDonors = usersNearby);
     } catch (e) {
       print("Error finding donors: $e");
-      setState(() {
-        isLoading = false;
-      });
-    }
-  }
-
-  makeIntentForPayment(amountToBeCharge,currency) async{
-    try{
-      Map<String,dynamic>? paymentInfo={
-        'amount': (int.parse(amountToBeCharge)*100).toString(),
-        'currency': currency,
-        'payment_method_types[]': "card",
-      };
-      var responseFromStripeAPI = await http.post(Uri.parse('https://api.stripe.com/v1/payment_intents'),body: paymentInfo,headers: {
-        "Authorization": "Bearer $SecretKey",
-        "Content-Type": "application/x-www-form-urlencoded"
-      });
-      print("response from API = " + responseFromStripeAPI.body);
-      return jsonDecode(responseFromStripeAPI.body);
-    }
-    catch(errorMsg){
-      if(kDebugMode){
-        print(errorMsg);
-      }
-      print(errorMsg.toString());
-
-    }
-  }
-  showPaymentSheet()async{
-    try{
-      await stripe.Stripe.instance.presentPaymentSheet().then((val){
-        intentPaymentData = null;
-      }).onError((errorMsg,sTrace){
-        if(kDebugMode){
-          print(errorMsg.toString()+sTrace.toString());
-        }
-      });
-    }
-    on stripe.StripeException catch(error){
-      if(kDebugMode){
-        print(error);
-      }
-      showDialog(context: context, builder: (c)=> const AlertDialog(
-        content: Text("Cancelled"),
-      ));
-    }
-    catch(errorMsg){
-      if(kDebugMode){
-        print(errorMsg);
-      }
-      print(errorMsg.toString());
-    }
-  }
-  paymentSheetInitialization(amountToBeCharge, currency)async{
-    try{
-      intentPaymentData = await makeIntentForPayment(amountToBeCharge,currency);
-      await stripe.Stripe.instance.initPaymentSheet(paymentSheetParameters: stripe.SetupPaymentSheetParameters(
-          allowsDelayedPaymentMethods: true,
-          paymentIntentClientSecret: intentPaymentData!['client_secret'],
-          style: ThemeMode.dark,
-          merchantDisplayName: "Company Name Example"
-      )
-      ).then((val){
-        print(val);
-      });
-      showPaymentSheet();
-    }
-    catch(errorMsg,s){
-      if(kDebugMode){
-        print(s);
-      }
-      print(errorMsg.toString());
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: MediaQuery.of(context).size.height,
-      width: MediaQuery.of(context).size.width,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text("Nearby Donors",
-              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-          backgroundColor: Colors.red[900],
-          centerTitle: true,
-          iconTheme: IconThemeData(
-            color: Colors.white,
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Nearby Donors", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+        backgroundColor: Colors.red[900],
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(10.0),
+            child: DropdownButtonFormField(
+              decoration: const InputDecoration(
+                labelText: "Select Blood Group",
+                border: OutlineInputBorder(),
+              ),
+              value: selectedBloodGroup.isEmpty ? null : selectedBloodGroup,
+              items: bloodGroups.map((bg) => DropdownMenuItem(value: bg, child: Text(bg))).toList(),
+              onChanged: (value) {
+                setState(() => selectedBloodGroup = value!);
+              },
+            ),
           ),
-        ),
-        body: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: DropdownButtonFormField(
-                decoration: const InputDecoration(
-                  labelText: "Select Blood Group",
-                  border: OutlineInputBorder(),
-                ),
-                value: selectedBloodGroup.isEmpty ? null : selectedBloodGroup,
-                items: bloodGroups.map((bg) => DropdownMenuItem(
-                  value: bg,
-                  child: Text(bg),
-                )).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    selectedBloodGroup = value!;
-                  });
-                },
-              ),
-            ),
-            ElevatedButton(
-              onPressed: isLoading || selectedBloodGroup.isEmpty
-                  ? null
-                  : startLocationTracking,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red[900],
-              ),
-              child: isLoading
-                  ? const CircularProgressIndicator(color: Colors.white)
-                  : const Text("Find Nearby Donors", style: TextStyle(color: Colors.white)),
-            ),
-            ElevatedButton(onPressed: (){
-                  paymentSheetInitialization(
-                    amount.round().toString(),"USD"
-                  );
-            }, child: Text("Payment ${amount}")),
-            Expanded(
-              child: nearbyDonors.isEmpty
-                  ? const Center(child: Text("No nearby donors found"))
-                  : ListView.builder(
-                itemCount: nearbyDonors.length,
-                itemBuilder: (context, index) {
-                  final donor = nearbyDonors[index];
-                  var createdAt = donor['createdAt'] != null
-                      ? (donor['createdAt'] as Timestamp).toDate()
-                      : DateTime.now();
-                  var timeAgo = timeago.format(createdAt);
+          ElevatedButton(
+            onPressed: isLoading || selectedBloodGroup.isEmpty ? null : checkPaymentAndTrackLocation,
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red[900]),
+            child: isLoading
+                ? const CircularProgressIndicator(color: Colors.white)
+                : const Text("Find Nearby Donors", style: TextStyle(color: Colors.white)),
+          ),
+          Expanded(
+            child: hasPaid
+                ? (nearbyDonors.isEmpty
+                ? const Center(child: Text("No nearby donors found"))
+                : ListView.builder(
+              itemCount: nearbyDonors.length,
+              itemBuilder: (context, index) {
+                final donor = nearbyDonors[index];
+                var createdAt = donor['createdAt'] != null
+                    ? (donor['createdAt'] as Timestamp).toDate()
+                    : DateTime.now();
+                var timeAgo = timeago.format(createdAt);
 
-                  return Card(
-                    margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    elevation: 4,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    child: Padding(
-                      padding: const EdgeInsets.all(10.0),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Text(
-                            timeAgo,
-                            style: const TextStyle(
-                              fontSize: 18, // Adjusted for better fit
-                              fontWeight: FontWeight.bold,
-                              color: Colors.grey,
+                return Card(
+                  margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(timeAgo, style: const TextStyle(fontSize: 16, color: Colors.grey)),
+                        Align(
+                          alignment: Alignment.topRight,
+                          child: Container(
+                            decoration: BoxDecoration(color: Colors.red[900], shape: BoxShape.circle),
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(donor['bloodGroup'] ?? 'N/A',
+                                style: const TextStyle(color: Colors.white, fontSize: 18)),
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: CircleAvatar(
+                            radius: 30,
+                            backgroundColor: Colors.black,
+                            child: ClipOval(
+                              child: donor['profileUrl'] != null && donor['profileUrl'].isNotEmpty
+                                  ? Image.network(donor['profileUrl'], width: 100, height: 100, fit: BoxFit.cover)
+                                  : const Icon(Icons.person, color: Colors.white, size: 40),
                             ),
                           ),
-                          Align(
-                            alignment: Alignment.topRight,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Colors.red[900],
-                                shape: BoxShape.circle,
-                              ),
-                              padding: const EdgeInsets.all(8.0),
-                              child: Text(
-                                nearbyDonors[index]['bloodGroup'] ?? 'N/A',
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 5),
-                          ListTile(
-                            contentPadding: EdgeInsets.zero,
-                            leading: CircleAvatar(
-                              radius: 30, // Adjust size as needed
-                              backgroundColor: Colors.black, // Fallback color
-                              child: ClipOval(
-                                child: donor['profileUrl'] != null &&
-                                    donor['profileUrl'].isNotEmpty
-                                    ? Image.network(
-                                  nearbyDonors[index]['profileUrl'],
-                                  width: 100, // 2 * radius
-                                  height: 100,
-                                  fit: BoxFit.cover,
-                                )
-                                    : const Icon(Icons.person,color: Colors.white,
-                                    size: 40), // Display default icon if no image
-                              ),
-                            ),
-                            title: Text(
-                              nearbyDonors[index]['name'] ?? 'Unknown',
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 1,
-                              softWrap: false,
-                            ),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    const Icon(Icons.location_on_rounded, size: 16),
-                                    const SizedBox(width: 4),
-                                    Expanded(
-                                      child: Text(
-                                        nearbyDonors[index]['residence'] ?? 'Unknown',
-                                        style: const TextStyle(fontSize: 14),
-                                        overflow: TextOverflow.ellipsis,
-                                        maxLines: 1,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  "${donor['gender'] ?? 'N/A'} | ${donor['donations_done'] ?? '0'} donations done",
-                                  style: const TextStyle(color: Colors.grey, fontSize: 14),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          Text(
-                            "Predicted Willingness: ${(donor['donation_probability'] * 100).toStringAsFixed(1)}%",
-                            style: const TextStyle(color: Colors.green, fontSize: 14),
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
+                          title: Text(donor['name'] ?? 'Unknown',
+                              style: const TextStyle(fontWeight: FontWeight.bold)),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              donor['userId'] != auth.currentUser!.uid
-                                  ? IconButton(
-                                onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => ChatScreen(receiverId: donor['userId'], receiverName: donor['name']),
-                                    ),
-                                  );
-                                },
-                                icon: const Icon(Icons.message_outlined),
-                              )
-                                  : const SizedBox.shrink(),
-                              ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red[900],
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                                onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => DonorDetails(
-                                        patient: donor['name'],
-                                        contact: donor['contact'],
-                                        residence: donor['residence'],
-                                        bloodGroup: donor['bloodGroup'],
-                                        gender: donor['gender'],
-                                        noOfDonations: donor['donations_done'],
-                                        details: donor['details'],
-                                        weight: donor['weight'],
-                                        age: donor['age'],
-                                        firstDonated: donor['firstDonated'],
-                                        lastDonated: donor['lastDonated'],
-                                        donationFrequency: donor['donationFrequency'],
-                                        highestEducation: donor['highestEducation'],
-                                        currentOccupation: donor['currentOccupation'],
-                                        currentLivingArrg: donor['currentLivingArrg'],
-                                        eligibilityTest: donor['eligibilityTest'],
-                                        futureDonationWillingness: donor['futureDonationWillingness'],
-                                        email: donor['email'],
-                                        profileImage: donor['profileUrl'],
-
-                                      ),
-                                    ),
-                                  );
-                                },
-                                child: const Text('Details', style: TextStyle(color: Colors.white)),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  const Icon(Icons.location_on_rounded, size: 16),
+                                  const SizedBox(width: 4),
+                                  Expanded(child: Text(donor['residence'] ?? 'Unknown')),
+                                ],
                               ),
+                              const SizedBox(height: 4),
+                              Text(
+                                  "${donor['gender'] ?? 'N/A'} | ${donor['donations_done'] ?? '0'} donations done",
+                                  style: const TextStyle(color: Colors.grey)),
                             ],
                           ),
-                        ],
-                      ),
+                        ),
+                        Text(
+                          "Predicted Willingness: ${(donor['donation_probability'] * 100).toStringAsFixed(1)}%",
+                          style: const TextStyle(color: Colors.green),
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            if (donor['userId'] != auth.currentUser!.uid)
+                              IconButton(
+                                icon: const Icon(Icons.message_outlined),
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => ChatScreen(
+                                          receiverId: donor['userId'],
+                                          receiverName: donor['name']),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red[900],
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              ),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => DonorDetails(
+                                      patient: donor['name'],
+                                      contact: donor['contact'],
+                                      residence: donor['residence'],
+                                      bloodGroup: donor['bloodGroup'],
+                                      gender: donor['gender'],
+                                      noOfDonations: donor['donations_done'],
+                                      details: donor['details'],
+                                      weight: donor['weight'],
+                                      age: donor['age'],
+                                      firstDonated: donor['firstDonated'],
+                                      lastDonated: donor['lastDonated'],
+                                      donationFrequency: donor['donationFrequency'],
+                                      highestEducation: donor['highestEducation'],
+                                      currentOccupation: donor['currentOccupation'],
+                                      currentLivingArrg: donor['currentLivingArrg'],
+                                      eligibilityTest: donor['eligibilityTest'],
+                                      futureDonationWillingness: donor['futureDonationWillingness'],
+                                      email: donor['email'],
+                                      profileImage: donor['profileUrl'],
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: const Text('Details', style: TextStyle(color: Colors.white)),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
+                  ),
+                );
+              },
+            ))
+                : const SizedBox(),
+          ),
+        ],
       ),
     );
   }

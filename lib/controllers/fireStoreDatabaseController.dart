@@ -270,7 +270,6 @@ class fireStoreDatabaseController {
         String name = '',
         String contact = '',
         String hospital = '',
-        String residence = '',
         String case_ = '',
         int bags = -1,
         String bloodGroup = '',
@@ -293,20 +292,11 @@ class fireStoreDatabaseController {
           'contact': contact,
         });
       }
-
       if (case_ != '') {
         firestore.collection('requests')
             .doc(docId)
             .update({
           'case': case_,
-        });
-      }
-
-      if (residence != '') {
-        firestore.collection('requests')
-            .doc(docId)
-            .update({
-          'residence': residence,
         });
       }
       if (bags != -1) {
@@ -330,7 +320,6 @@ class fireStoreDatabaseController {
           'gender': gender,
         });
       }
-
       if (details != '') {
         firestore.collection('requests')
             .doc(docId)

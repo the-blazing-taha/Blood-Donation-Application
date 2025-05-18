@@ -48,6 +48,7 @@ class AuthController{
         'email': email,
         'profileImage': downloadUrl ?? '', // Default empty string if no image
         'userId': userCredential.user!.uid,
+        'paid':false,
       });
 
       res = 'success';

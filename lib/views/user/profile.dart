@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/auth_controller.dart';
 import '../../controllers/fireStoreDatabaseController.dart';
-import 'globals.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -252,7 +251,7 @@ class _SettingsState extends State<Settings> {
     bool? mode = await _firebaseDatabase.getProfileDonorMode();
     if (mounted) {
       setState(() {
-        donorMode = mode ?? false;
+        donorMode = mode;
       });
     }
   }

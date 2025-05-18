@@ -22,7 +22,6 @@ class _RequestsState extends State<Requests> {
   final TextEditingController _genderController = TextEditingController();
   final TextEditingController _bloodGroupController = TextEditingController();
   final TextEditingController _hospitalController = TextEditingController();
-  final TextEditingController _locationController = TextEditingController();
   final TextEditingController _bagsController = TextEditingController();
   final TextEditingController _caseController = TextEditingController();
   final TextEditingController _detailsController = TextEditingController();
@@ -176,7 +175,7 @@ class _RequestsState extends State<Requests> {
                       await firebaseDatabase.updateRequest(docId: id, details: details);
                     }
                     if (hospital != '') {
-                      await firebaseDatabase.updateRequest(docId: id, details: hospital);
+                      await firebaseDatabase.updateRequest(docId: id, hospital: hospital);
                     }
                     Navigator.of(context).pop(); // Pop only once after all updates
 
@@ -184,7 +183,6 @@ class _RequestsState extends State<Requests> {
                       _genderController.clear();
                       _nameController.clear();
                       _bloodGroupController.clear();
-                      _locationController.clear();
                       _detailsController.clear();
                       _bagsController.clear();
                       _caseController.clear();
@@ -217,7 +215,6 @@ class _RequestsState extends State<Requests> {
                   _genderController.clear();
                   _nameController.clear();
                   _bloodGroupController.clear();
-                  _locationController.clear();
                   _detailsController.clear();
                   _bagsController.clear();
                   _genderController.clear();
