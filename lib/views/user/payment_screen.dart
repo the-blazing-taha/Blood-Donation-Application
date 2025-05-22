@@ -129,7 +129,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
       final paymentStatus = await _checkPaymentStatus(intentPaymentData!['id']);
       if (paymentStatus) {
-        await _firestore.collection("users").doc(FirebaseAuth.instance.currentUser?.uid).update({'paid': true});
+        await _firestore.collection("users").doc(FirebaseAuth.instance.currentUser?.uid).update({'paid': true,'paidAt': FieldValue.serverTimestamp(),});
         _showSuccessSnackBar();
       } else {
         _showFailureSnackBar();

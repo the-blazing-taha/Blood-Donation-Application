@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:intl_phone_field/intl_phone_field.dart';
 import '../../controllers/auth_controller.dart';
 import '../../controllers/fireStoreDatabaseController.dart';
 import 'details.dart';
@@ -88,6 +90,31 @@ class _RequestsState extends State<Requests> {
                   controller: _detailsController,
                   decoration: const InputDecoration(hintText: "Details"),
                   textCapitalization: TextCapitalization.words,
+                ),
+                IntlPhoneField(
+                  decoration: InputDecoration(
+                    hintText: '3221040476',
+                    border: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.red[900]!),
+                      borderRadius: BorderRadius.circular(100),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.red[900]!),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.red[900]!),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  initialCountryCode: 'PK',
+                  disableLengthCheck: false, // Prevents default length restriction
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly, // Allows only digits (0-9)
+                  ],
+                  onChanged: (phone) {
+                    contact = phone.completeNumber;
+                  },
                 ),
                 const SizedBox(height: 4,),
                 DropdownMenu<String>(

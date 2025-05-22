@@ -38,13 +38,7 @@ class _HomeState extends State<DonationAppeal> {
   DateTime? _selectedDate2;
   static List<String> bloodTypes = <String>['None','A+', 'B+', 'AB+', 'O+','A-', 'B-', 'AB-', 'O-'];
   static List<String> genders = <String>['None','Male','Female'];
-  static List<String> last_donated = <String>[
-    'None',
-    'Within last month',
-    'Within Last 3 months',
-    'Within Last 6 months',
-    'Last year'
-  ];
+
 
   static List<String> donation_frequency = <String>[
     'None',
